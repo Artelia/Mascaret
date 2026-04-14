@@ -80,20 +80,20 @@ class CtrlKs(ModelAssimBase):
 
             lst_obs.append(d_zone["lst_obs"])
 
-            pertub_list = (
-                d_ctrlks["ksmin_perturb"] if typ == "Ksmin" else d_ctrlks["ksmaj_perturb"]
-            )
+            pertub_list = d_ctrlks["ksmin_perturb"] if typ == "Ksmin" else d_ctrlks["ksmaj_perturb"]
             pertub = pertub_list[0] if pertub_list[0] != 0 else 1
 
             val_ref = val_ksmin if typ == "Ksmin" else val_ksmaj
             temp_val = val_ref + pertub
 
-            lst_cas.append({
-                "num_zone": d_zone["num_zone"],
-                "ksmin": temp_val if typ == "Ksmin" else val_ksmin,
-                "ksmaj": val_ksmaj if typ == "Ksmin" else temp_val,
-                "type": typ,
-            })
+            lst_cas.append(
+                {
+                    "num_zone": d_zone["num_zone"],
+                    "ksmin": temp_val if typ == "Ksmin" else val_ksmin,
+                    "ksmaj": val_ksmaj if typ == "Ksmin" else temp_val,
+                    "type": typ,
+                }
+            )
 
         d_obs = self._filter_obs(lst_obs)
         return lst_cas, d_obs
@@ -103,13 +103,13 @@ class CtrlKs(ModelAssimBase):
     # ------------------------------------------------------------------
 
     def build_ctrlks_instances(
-            self,
-            lst_case,
-            d_run,
-            d_scen,
-            order,
-            xcas_file,
-            xcas_file_init,
+        self,
+        lst_case,
+        d_run,
+        d_scen,
+        order,
+        xcas_file,
+        xcas_file_init,
     ):
         """Append ctrlKS run-instance entries to *d_scen*.
 
@@ -139,31 +139,35 @@ class CtrlKs(ModelAssimBase):
             )
 
             if d_run["has_run_init"]:
-                d_scen["instances"].append({
-                    "name": f"{name}_init",
-                    "name_xcas": xcas_file_init,
-                    "RUN_REP": os.path.join(folder_run, "run_init"),
-                    "type_ctrl": "ctrlKS",
-                    "has_casier": False,
-                    "has_tracer": False,
-                    "starttime": None,
-                    "order": order,
-                    "assim_info": assim_info,
-                })
+                d_scen["instances"].append(
+                    {
+                        "name": f"{name}_init",
+                        "name_xcas": xcas_file_init,
+                        "RUN_REP": os.path.join(folder_run, "run_init"),
+                        "type_ctrl": "ctrlKS",
+                        "has_casier": False,
+                        "has_tracer": False,
+                        "starttime": None,
+                        "order": order,
+                        "assim_info": assim_info,
+                    }
+                )
                 order += 1
 
-            d_scen["instances"].append({
-                "name": name,
-                "name_xcas": xcas_file,
-                "RUN_REP": folder_run,
-                "has_casier": d_run["has_casier"],
-                "has_tracer": d_run["has_tracer"],
-                "has_assim": d_run["has_assimilation"],
-                "starttime": starttime,
-                "type_ctrl": "ctrlKS",
-                "assim_info": assim_info,
-                "order": order,
-            })
+            d_scen["instances"].append(
+                {
+                    "name": name,
+                    "name_xcas": xcas_file,
+                    "RUN_REP": folder_run,
+                    "has_casier": d_run["has_casier"],
+                    "has_tracer": d_run["has_tracer"],
+                    "has_assim": d_run["has_assimilation"],
+                    "starttime": starttime,
+                    "type_ctrl": "ctrlKS",
+                    "assim_info": assim_info,
+                    "order": order,
+                }
+            )
             order += 1
 
         return d_scen, order
@@ -188,14 +192,21 @@ class CtrlKs(ModelAssimBase):
 
         lst_case, _ = self.get_list_cas_ks(self.data.raw)
         d_scen, order = self.build_ctrlks_instances(
-            lst_case, d_run, d_scen, order,
+            lst_case,
+            d_run,
+            d_scen,
+            order,
             xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
             xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
         )
-        d_scen, order = self.build_analyse_instance(d_run, d_scen, order, type_assim="ctrlKS",
-                                                    xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
-                                                    xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
-                                                    )
+        d_scen, order = self.build_analyse_instance(
+            d_run,
+            d_scen,
+            order,
+            type_assim="ctrlKS",
+            xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
+            xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
+        )
 
         self.data.dscen = d_scen
         self.export_data_json()
@@ -213,13 +224,13 @@ class CtrlKs(ModelAssimBase):
         if not assim_info:
             return
 
-        numz = assim_info['num_zone']
-        if assim_info['type_case'] == "Ksmaj":
+        numz = assim_info["num_zone"]
+        if assim_info["type_case"] == "Ksmaj":
             var = "coefLitMaj"
-        elif assim_info['type_case'] == "Ksmin":
+        elif assim_info["type_case"] == "Ksmin":
             var = "coefLitMin"
-        modif_ks = [(numz, var, assim_info['ks_pertub'])]
-        self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
+        modif_ks = [(numz, var, assim_info["ks_pertub"])]
+        self.modif_ctrl_ks(instance.get("name_xcas", "mascaret.xcas"), folder, modif_ks)
 
     def fill_ana_folder_ks(self, instance, folder):
         """Fill analysis folder for Ks assimilation with optimal values.
@@ -231,16 +242,16 @@ class CtrlKs(ModelAssimBase):
         if instance.get("type_ctrl") != "ctrlKS":
             return
         modif_ks = []
-        for zone in self.data['ctrlKS']['lst_zone']:
-            if not zone.get('xa'):
+        for zone in self.data["ctrlKS"]["lst_zone"]:
+            if not zone.get("xa"):
                 continue
-            numz = zone['num_zone']
+            numz = zone["num_zone"]
             if zone["type"] == "Ksmaj":
                 var = "coefLitMaj"
             elif zone["type"] == "Ksmin":
                 var = "coefLitMin"
-            modif_ks.append((numz, var, zone['xa'][0]))
+            modif_ks.append((numz, var, zone["xa"][0]))
         if modif_ks:
-            self.modif_ctrl_ks(instance.get('name_xcas', 'mascaret.xcas'), folder, modif_ks)
+            self.modif_ctrl_ks(instance.get("name_xcas", "mascaret.xcas"), folder, modif_ks)
         else:
-            print('Warning No assimiled Ks ')
+            print("Warning No assimiled Ks ")

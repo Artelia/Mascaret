@@ -147,9 +147,9 @@ class ClassStorageDB:
                 continue
 
             if zone["type"] == "Ksmin":
-                var = 'ks_min'
+                var = "ks_min"
             else:
-                var = 'ks_maj'
+                var = "ks_maj"
             id_ctrl = self.get_id_assim_ks(self.id_run, numz)
             self._insert_assim_res(id_ctrl, self.id_run, "ctrlKS", var, zone["xa"][0])
 
@@ -172,9 +172,12 @@ class ClassStorageDB:
                 continue
             id_ctrl = self.get_id_assim_law(self.id_run, id_law, source_law)
             self._insert_assim_res(id_ctrl, self.id_run, "ctrlLaw", loi["type"], loi["xa"][0])
-            self._insert_assim_res(id_ctrl, self.id_run, "ctrlLaw", f"{loi['type']}_val_min", loi["val_min"])
-            self._insert_assim_res(id_ctrl, self.id_run, "ctrlLaw", f"{loi['type']}_val_max", loi["val_max"])
-
+            self._insert_assim_res(
+                id_ctrl, self.id_run, "ctrlLaw", f"{loi['type']}_val_min", loi["val_min"]
+            )
+            self._insert_assim_res(
+                id_ctrl, self.id_run, "ctrlLaw", f"{loi['type']}_val_max", loi["val_max"]
+            )
 
     def _insert_or_ignore_assim_res_law(self, id_runs, id_law, source_law, name_file_law, name_law):
         """Insert a row into the ``assim_res_law`` table if the
@@ -208,7 +211,7 @@ class ClassStorageDB:
         self.mdb.run_query(insert_sql)
 
     def _insert_or_ignore_assim_res_ks(
-            self, id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj
+        self, id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj
     ):
         """Insert a row into the ``assim_res_ks`` table for a ks-zone if
         the combination (id_runs, zone_num, branchnum) does not already exist.
@@ -247,12 +250,12 @@ class ClassStorageDB:
         return True  # ligne insérée
 
     def _insert_assim_res(self, id_ctrl, id_runs, type_ctrl_, var, val):
-        """Insert a row into the ``assim_res`` table. 
+        """Insert a row into the ``assim_res`` table.
         :param id_ctrl: integer control identifier (foreign key to control table)
         :param id_runs: integer run identifier
         :param type_ctrl_: text controlling type (e.g. 'ctrlKS' or 'ctrlLaw')
         :param var: text name of the variable modified
-        :param val:  value 
+        :param val:  value
         """
         query = f"""
             INSERT INTO {self.mdb.SCHEMA}.assim_res 

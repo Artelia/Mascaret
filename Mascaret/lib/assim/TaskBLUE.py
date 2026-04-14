@@ -21,6 +21,7 @@ This module implements a QgsTask that submits multiple model runs to a thread po
 collects results and emits signals in the original submission order.
 
 """
+
 import concurrent.futures
 import os
 import subprocess
@@ -31,7 +32,7 @@ from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 
-MESSAGE_CATEGORY = 'TaskBlue'
+MESSAGE_CATEGORY = "TaskBlue"
 
 
 class TaskSignals(QObject):
@@ -47,7 +48,16 @@ class TaskBLUE(QgsTask):
     emitting progress signals in submission order.
     """
 
-    def __init__(self, description, base_folder, ctrl_type, scens, del_inter_assim, max_workers=None, debug=False):
+    def __init__(
+        self,
+        description,
+        base_folder,
+        ctrl_type,
+        scens,
+        del_inter_assim,
+        max_workers=None,
+        debug=False,
+    ):
         """Initialize BLUE computation task for parallel scenario processing.
 
         :param description: Task description displayed to user.
@@ -69,7 +79,7 @@ class TaskBLUE(QgsTask):
         self.del_inter_assim = del_inter_assim
 
         self.exc_start_time = None
-        self.error_txt = ''
+        self.error_txt = ""
 
         # Configure thread-based parallelism
         if max_workers is None:
@@ -147,12 +157,12 @@ class TaskBLUE(QgsTask):
         """
         path_scen = os.path.join(self.base_folder, scen)
         results = {
-            'scen': scen,
-            'success': False,
-            'output': '',
-            'error': '',
-            'start_time': time.time(),
-            'path_run': path_scen,
+            "scen": scen,
+            "success": False,
+            "output": "",
+            "error": "",
+            "start_time": time.time(),
+            "path_run": path_scen,
         }
 
         try:
@@ -163,13 +173,15 @@ class TaskBLUE(QgsTask):
                 shell=True,
                 text=True,
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
-            results.update({
-                'success': True,
-                'output': process.stdout,
-                'error': process.stderr,
-            })
+            results.update(
+                {
+                    "success": True,
+                    "output": process.stdout,
+                    "error": process.stderr,
+                }
+            )
             if self.del_inter_assim:
                 target = os.path.join(path_scen, f"run_{self.ctrl_type}")
                 if os.path.isdir(target):
@@ -179,12 +191,11 @@ class TaskBLUE(QgsTask):
                         # Ignore all remaining errors to prevent task crash
                         pass
         except subprocess.CalledProcessError as e:
-            results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
+            results["error"] = f"Process failed with exit code {e.returncode}: {e.stderr}"
         except Exception as e:
-            results['error'] = f"Unexpected error: {str(e)}"
+            results["error"] = f"Unexpected error: {str(e)}"
 
-        results['execution_time'] = time.time() - results['start_time']
-
+        results["execution_time"] = time.time() - results["start_time"]
 
         return results
 
@@ -197,9 +208,7 @@ class TaskBLUE(QgsTask):
 
         # try:
         # Create the thread pool executor
-        self.executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=1
-        )
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         self.on_message(
             f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
         )
@@ -231,7 +240,7 @@ class TaskBLUE(QgsTask):
                         self.on_progress(self.completed_count, self.total_models)
                         # Base message
                         # model_id = result.get('model_id', index)
-                        if result['success']:
+                        if result["success"]:
                             self.on_message(
                                 f"Scenario {result['scen']} :\n"
                                 "Blue calculation done in "
@@ -259,8 +268,9 @@ class TaskBLUE(QgsTask):
 
         # Shutdown the pool cleanly
         self.executor.shutdown(wait=True)
-        QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}",
-                                 MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(
+            f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY, Qgis.Info
+        )
         self.signal.launch_completed.emit(not bool(self.error_txt))
         return not bool(self.error_txt)
 
@@ -278,8 +288,8 @@ class TaskBLUE(QgsTask):
             execution_time = time.time() - self.exc_start_time
             message = (
                 f'  Task "{self.description}" was canceled\n'
-                f'  Execution time: {execution_time:.2f}s\n'
-                f'  Models completed: {self.completed_count}/{self.total_models}'
+                f"  Execution time: {execution_time:.2f}s\n"
+                f"  Models completed: {self.completed_count}/{self.total_models}"
             )
             QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Warning)
         super().cancel()
@@ -311,7 +321,5 @@ class TaskBLUE(QgsTask):
         """
         percentage = (completed / total) * 100 if total > 0 else 0
         QgsMessageLog.logMessage(
-            f"Progress: {completed}/{total} models ({percentage:.1f}%)",
-            MESSAGE_CATEGORY,
-            Qgis.Info
+            f"Progress: {completed}/{total} models ({percentage:.1f}%)", MESSAGE_CATEGORY, Qgis.Info
         )

@@ -80,9 +80,9 @@ class AssimData:
         self._convert_str_to_datetime(self.raw)
 
     def save(
-            self,
-            folder=None,
-            filename=None,
+        self,
+        folder=None,
+        filename=None,
     ):
         """Serialize internal data to a JSON file.
 
@@ -186,7 +186,7 @@ class AssimData:
         """
         d_folder = {}
         for instance in self.instances:
-            name = instance.get('name')
+            name = instance.get("name")
             if not name:
                 continue
             d_folder[name] = instance.get("RUN_REP")
@@ -199,7 +199,7 @@ class AssimData:
         :return: Instance dict or ``None`` if not found.
         """
         for instance in self.instances:
-            name = instance.get('name')
+            name = instance.get("name")
             if name == instance_name:
                 return instance
         return None

@@ -53,20 +53,20 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
     def check_obs(self, type_ctrl):
         # A ce stade, on suppose l'existence de la clé type_ctrl
         d_scen = self.data.dscen
-        path_instance = Path(d_scen.get("path_instance", '.'))
-        folder_obs = os.path.join(path_instance, 'Observations')
+        path_instance = Path(d_scen.get("path_instance", "."))
+        folder_obs = os.path.join(path_instance, "Observations")
         # On part du principe que folder obs est remplit avec toutes les observations, même si pas utilisées pour l'assim
         # nous on fait le check que sur celles de l'assimilation
         all_codes_obs = []
         all_dt_obs = []
         dico_obs = {}
-        key_zone = ''
-        if type_ctrl == 'ctrlLaw':
-            key_zone = 'lst_loi'
-        elif type_ctrl == 'ctrlKS':
-            key_zone = 'lst_zone'
+        key_zone = ""
+        if type_ctrl == "ctrlLaw":
+            key_zone = "lst_loi"
+        elif type_ctrl == "ctrlKS":
+            key_zone = "lst_zone"
         else:
-            raise ValueError('[ ERROR ] Unknown type_ctrl', type_ctrl)
+            raise ValueError("[ ERROR ] Unknown type_ctrl", type_ctrl)
 
         for zone in self.data.get(type_ctrl).get(key_zone):
             if zone.get("lst_obs", {}):
@@ -78,20 +78,24 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
             raise ValueError("[ ERROR ] No observation selected for assimilation")
 
         for c in all_codes_obs:
-            file_obs = os.path.join(folder_obs, c + '.loi')
+            file_obs = os.path.join(folder_obs, c + ".loi")
             if os.path.isfile(file_obs):
                 with open(file_obs) as f:
                     lines = f.readlines()[3:]
                     dt_obs = float(lines[1].split()[0]) - float(lines[0].split()[0]) * 3600
-                    dico_obs[c]['dt_obs'] = dt_obs
+                    dico_obs[c]["dt_obs"] = dt_obs
                     all_dt_obs.append(dt_obs)
             else:
-                raise FileNotFoundError(f'[ ERROR ]  File { c + ".loi"} is not found in Observation.')
+                raise FileNotFoundError(
+                    f'[ ERROR ]  File { c + ".loi"} is not found in Observation.'
+                )
 
-        with open(os.path.join(folder_obs, 'dico_base_obs.json'), 'w') as f:
+        with open(os.path.join(folder_obs, "dico_base_obs.json"), "w") as f:
             json.dump(dico_obs, f)
         if len(np.unique(all_dt_obs)) > 1:
-            raise ValueError('[ ERROR ] At least one observation has different timestep than the others')
+            raise ValueError(
+                "[ ERROR ] At least one observation has different timestep than the others"
+            )
 
     def fill_assim_folder(self, type_ctrl, if_analyse=False):
         """Fill assimilation or analysis folders with modified model files.
@@ -105,15 +109,15 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         """
         d_scen = self.data.dscen
         d_folder = self.data.get_folder()
-        path_instance = Path(d_scen.get("path_instance", '.'))
-        path_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
+        path_instance = Path(d_scen.get("path_instance", "."))
+        path_ref = path_instance / d_scen.get("folder_ref", "run_ref")
 
         path_init = None
 
-        if type_ctrl == "ctrlLaw" and self.data.get('ctrlKS', False):
-            path_ref = Path(path_instance, 'Analyse_ctrlKS')
+        if type_ctrl == "ctrlLaw" and self.data.get("ctrlKS", False):
+            path_ref = Path(path_instance, "Analyse_ctrlKS")
 
-        if d_scen.get("folder_init", '') != '':
+        if d_scen.get("folder_init", "") != "":
             path_init = path_ref / d_scen.get("folder_init")
 
         for name, folder in d_folder.items():
@@ -127,16 +131,16 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
             if type_ctrl != type_ctrl_instance:
                 continue
 
-            clone_source = path_init if name.endswith('_init') and path_init else path_ref
+            clone_source = path_init if name.endswith("_init") and path_init else path_ref
             self.clone_model(clone_source, folder)
 
-            if 'ctrlKS' == type_ctrl:
+            if "ctrlKS" == type_ctrl:
                 if if_analyse:
                     self.fill_ana_folder_ks(instance, folder)
                 else:
                     self.fill_assim_folder_ks(instance, folder)
 
-            if 'ctrlLaw' == type_ctrl:
+            if "ctrlLaw" == type_ctrl:
                 if if_analyse:
                     self.fill_ana_folder_law(instance, folder)
                 else:
@@ -157,7 +161,7 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
         self.read_data_js(path_scen, jsonfile)
 
         if not if_analyse:
-            if type_ctrl == 'ctrlKS':
+            if type_ctrl == "ctrlKS":
                 self.lst_instance_run_ctrlks_js()
             else:
                 self.lst_instance_run_ctrl_law_js()
@@ -177,9 +181,10 @@ if __name__ == "__main__":
     with open(jsonf) as json_data:
         dico = json.load(json_data)
     assimil = CreatModelAssim()
-    assimil.create_folder_assim(dico.get('path_scen'),
-                                dico.get('type_ctrl'),
-                                dico.get('if_analyse'),
-                                dico.get('json_file'),
-                                )
-    assimil.check_obs(dico.get('type_ctrl'))
+    assimil.create_folder_assim(
+        dico.get("path_scen"),
+        dico.get("type_ctrl"),
+        dico.get("if_analyse"),
+        dico.get("json_file"),
+    )
+    assimil.check_obs(dico.get("type_ctrl"))

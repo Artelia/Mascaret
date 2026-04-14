@@ -31,10 +31,8 @@ from .tooltips.tooltips import apply_tooltips_from_json
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_law.ui"))
 )
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
-D_PVAR = {0: 'perturbationsCote',
-          1: 'perturbationsDebit',
-          2: 'perturbationsDebitLineique'}
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+D_PVAR = {0: "perturbationsCote", 1: "perturbationsDebit", 2: "perturbationsDebitLineique"}
 
 
 class ClassAssimLawWidget(BASE, FORM_CLASS):
@@ -43,6 +41,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
     Allows users to define and edit hydraulic law control parameters for
     limnigraphs, hydrographs, and lateral inflow laws.
     """
+
     display_rb = pyqtSignal()
 
     def __init__(self, mgis, iface):
@@ -55,7 +54,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         super(ClassAssimLawWidget, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
-        apply_tooltips_from_json(self, 'assim_law_widget.json')
+        apply_tooltips_from_json(self, "assim_law_widget.json")
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False
@@ -86,8 +85,9 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
 
         laws_updated = self.verif_laws()
         if laws_updated:
-            QMessageBox.warning(None, "Warning", "Definition of some laws "
-                                                 "have been automatically upadated.")
+            QMessageBox.warning(
+                None, "Warning", "Definition of some laws " "have been automatically upadated."
+            )
 
         self.cur_perturb_var = str()
         self.cur_source = str()
@@ -126,25 +126,43 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         thresholds, sigma iterations, and perturbation values for law coefficients.
         :return: None. Updates UI widgets with loaded configuration.
         """
-        sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
-              "iterations_sigma, perturbation_val, perturbation_act " \
-              "FROM {0}.assim_config WHERE control_type = 'ctrlLaw'"
+        sql = (
+            "SELECT control_type, active, control_var, seuil_rejet_misfit, "
+            "iterations_sigma, perturbation_val, perturbation_act "
+            "FROM {0}.assim_config WHERE control_type = 'ctrlLaw'"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         if not rows:
-            recs = [[2, "ctrlLaw", False, "H", 50, 1,
-                     ["perturbationsCote", "perturbationsDebit", "perturbationsDebitLineique"],
-                     [[1.0, 0.5], [1.1, 6.0], [0.0, 0.0]], "perturbationsCote"]]
-            sql = "INSERT INTO {0}.assim_config (id_type, control_type, active, control_var, " \
-                  "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, " \
-                  "perturbation_act) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-                                          ', '.join(["%s"] * len(recs[0]))),
-                               many=True, list_many=recs)
+            recs = [
+                [
+                    2,
+                    "ctrlLaw",
+                    False,
+                    "H",
+                    50,
+                    1,
+                    ["perturbationsCote", "perturbationsDebit", "perturbationsDebitLineique"],
+                    [[1.0, 0.5], [1.1, 6.0], [0.0, 0.0]],
+                    "perturbationsCote",
+                ]
+            ]
+            sql = (
+                "INSERT INTO {0}.assim_config (id_type, control_type, active, control_var, "
+                "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, "
+                "perturbation_act) VALUES ({1})"
+            )
+            self.mdb.run_query(
+                sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
+                many=True,
+                list_many=recs,
+            )
 
-            sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
-                  "iterations_sigma, perturbation_val, perturbation_act " \
-                  "FROM {0}.assim_config WHERE control_type = 'ctrlLaw'"
+            sql = (
+                "SELECT control_type, active, control_var, seuil_rejet_misfit, "
+                "iterations_sigma, perturbation_val, perturbation_act "
+                "FROM {0}.assim_config WHERE control_type = 'ctrlLaw'"
+            )
             rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         row = rows[0]
@@ -172,12 +190,14 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
-        sql = "SELECT id, code FROM {0}.observations " \
-              "WHERE type = '{1}' AND code IN (SELECT code FROM {0}.outputs WHERE active IS True)" \
-              "ORDER BY code"
-        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-                                             self.cb_law_fld.currentText()),
-                                  fetch=True)
+        sql = (
+            "SELECT id, code FROM {0}.observations "
+            "WHERE type = '{1}' AND code IN (SELECT code FROM {0}.outputs WHERE active IS True)"
+            "ORDER BY code"
+        )
+        rows = self.mdb.run_query(
+            sql.format(self.mdb.SCHEMA, self.cb_law_fld.currentText()), fetch=True
+        )
         for row in rows:
             itm = QStandardItem()
             itm.setData(row[1], 0)
@@ -199,28 +219,34 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         :return: None. Updates UI to show relevant parameters and laws.
         """
         self.cur_perturb_var = D_PVAR[id_var]
-        if self.cur_perturb_var in ['perturbationsCote', 'perturbationsDebit']:
-            self.cur_source = 'extremities'
+        if self.cur_perturb_var in ["perturbationsCote", "perturbationsDebit"]:
+            self.cur_source = "extremities"
         else:
-            self.cur_source = 'lateral_inflows'
+            self.cur_source = "lateral_inflows"
 
-        for sb in [self.sb_cote_a, self.sb_cote_b, self.sb_debit_a, self.sb_debit_b,
-                   self.sb_debit_lin_a, self.sb_debit_lin_b]:
+        for sb in [
+            self.sb_cote_a,
+            self.sb_cote_b,
+            self.sb_debit_a,
+            self.sb_debit_b,
+            self.sb_debit_lin_a,
+            self.sb_debit_lin_b,
+        ]:
             sb.setEnabled(True)
 
-        if self.cur_perturb_var == 'perturbationsCote':
+        if self.cur_perturb_var == "perturbationsCote":
 
-            self.lbl_typ_law.setText('Limnigraphs')
+            self.lbl_typ_law.setText("Limnigraphs")
             for sb in [self.sb_debit_a, self.sb_debit_b, self.sb_debit_lin_a, self.sb_debit_lin_b]:
                 sb.setEnabled(False)
 
-        if self.cur_perturb_var == 'perturbationsDebit':
-            self.lbl_typ_law.setText('Hydrographs')
+        if self.cur_perturb_var == "perturbationsDebit":
+            self.lbl_typ_law.setText("Hydrographs")
             for sb in [self.sb_cote_a, self.sb_cote_b, self.sb_debit_lin_a, self.sb_debit_lin_b]:
                 sb.setEnabled(False)
 
-        if self.cur_perturb_var == 'perturbationsDebitLineique':
-            self.lbl_typ_law.setText('Laws')
+        if self.cur_perturb_var == "perturbationsDebitLineique":
+            self.lbl_typ_law.setText("Laws")
             for sb in [self.sb_cote_a, self.sb_cote_b, self.sb_debit_a, self.sb_debit_b]:
                 sb.setEnabled(False)
 
@@ -234,20 +260,30 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         :return: None. Updates database configuration.
         """
         if self.ui_loaded:
-            sql = "UPDATE {0}.assim_config SET " \
-                  "active = %s, " \
-                  "control_var = %s, " \
-                  "seuil_rejet_misfit = %s, " \
-                  "iterations_sigma = %s, " \
-                  "perturbation_val = %s, " \
-                  "perturbation_act = %s " \
-                  "WHERE control_type = 'ctrlLaw'".format(self.mdb.SCHEMA)
-            recs = [[self.cc_law_act.isChecked(), self.cb_law_fld.currentText(),
-                     self.sb_law_seuil.value(), self.sb_law_sigma.value(),
-                     [[self.sb_cote_a.value(), self.sb_cote_b.value()],
-                      [self.sb_debit_a.value(), self.sb_debit_b.value()],
-                      [self.sb_debit_lin_a.value(), self.sb_debit_lin_b.value()]],
-                     self.cur_perturb_var]]
+            sql = (
+                "UPDATE {0}.assim_config SET "
+                "active = %s, "
+                "control_var = %s, "
+                "seuil_rejet_misfit = %s, "
+                "iterations_sigma = %s, "
+                "perturbation_val = %s, "
+                "perturbation_act = %s "
+                "WHERE control_type = 'ctrlLaw'".format(self.mdb.SCHEMA)
+            )
+            recs = [
+                [
+                    self.cc_law_act.isChecked(),
+                    self.cb_law_fld.currentText(),
+                    self.sb_law_seuil.value(),
+                    self.sb_law_sigma.value(),
+                    [
+                        [self.sb_cote_a.value(), self.sb_cote_b.value()],
+                        [self.sb_debit_a.value(), self.sb_debit_b.value()],
+                        [self.sb_debit_lin_a.value(), self.sb_debit_lin_b.value()],
+                    ],
+                    self.cur_perturb_var,
+                ]
+            ]
             self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
     def verif_laws(self):
@@ -259,44 +295,72 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         """
         laws_updated = False
 
-        sql = "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
-              "'perturbationsCote' as id_type, geom as geom_obj " \
-              "FROM {0}.extremities WHERE active IS True AND type = 2 " \
-              "UNION " \
-              "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
-              "'perturbationsDebit' as id_type, geom as geom_obj " \
-              "FROM {0}.extremities WHERE active IS True AND type = 1 " \
-              "UNION " \
-              "SELECT gid as law_id, name as law_name, 'lateral_inflows' as source_law, " \
-              "'perturbationsDebitLineique' as id_type, geom as geom_obj " \
-              "FROM {0}.lateral_inflows WHERE active IS True " \
-              "ORDER BY id_type, law_name"
+        sql = (
+            "SELECT gid as law_id, name as law_name, 'extremities' as source_law, "
+            "'perturbationsCote' as id_type, geom as geom_obj "
+            "FROM {0}.extremities WHERE active IS True AND type = 2 "
+            "UNION "
+            "SELECT gid as law_id, name as law_name, 'extremities' as source_law, "
+            "'perturbationsDebit' as id_type, geom as geom_obj "
+            "FROM {0}.extremities WHERE active IS True AND type = 1 "
+            "UNION "
+            "SELECT gid as law_id, name as law_name, 'lateral_inflows' as source_law, "
+            "'perturbationsDebitLineique' as id_type, geom as geom_obj "
+            "FROM {0}.lateral_inflows WHERE active IS True "
+            "ORDER BY id_type, law_name"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         d_calc_law = dict()
         for p_law in rows:
             d_calc_law[(p_law[0], p_law[2], p_law[3])] = {"name": p_law[1], "geom": p_law[4]}
 
-        sql = "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, " \
-              "val_min, val_max, active_a, std_a, active_b, std_b FROM {0}.assim_law"
+        sql = (
+            "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, "
+            "val_min, val_max, active_a, std_a, active_b, std_b FROM {0}.assim_law"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         if not rows:
-            recs = [[p_law[0], p_law[1], p_law[2], False, False, [], [],
-                     0., 1000., False, 0.2, False, 5.]
-                    for p_law in d_calc_law.keys()]
-            sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, lst_obs_h, " \
-                  "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
-                               many=True, list_many=recs)
+            recs = [
+                [
+                    p_law[0],
+                    p_law[1],
+                    p_law[2],
+                    False,
+                    False,
+                    [],
+                    [],
+                    0.0,
+                    1000.0,
+                    False,
+                    0.2,
+                    False,
+                    5.0,
+                ]
+                for p_law in d_calc_law.keys()
+            ]
+            sql = (
+                "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, lst_obs_h, "
+                "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
+            )
+            self.mdb.run_query(
+                sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
+                many=True,
+                list_many=recs,
+            )
 
-            sql = "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, " \
-                  "val_min, val_max, active_a, std_a, active_b, std_b FROM {0}.assim_law"
+            sql = (
+                "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, "
+                "val_min, val_max, active_a, std_a, active_b, std_b FROM {0}.assim_law"
+            )
             rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         d_db_law = {tuple(row[0:3]): row for row in rows}
 
-        if not (len(d_db_law) == len(d_calc_law) and
-                all([k in d_db_law.keys() for k in d_calc_law.keys()])):
+        if not (
+            len(d_db_law) == len(d_calc_law)
+            and all([k in d_db_law.keys() for k in d_calc_law.keys()])
+        ):
             recs = []
             for p_law in d_calc_law.keys():
                 if p_law in d_db_law.keys():
@@ -304,16 +368,35 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                     recs.append(rec)
                 else:
                     recs.append(
-                        [p_law[0], p_law[1], p_law[2], False, True, [], [],
-                         0., 1000., False, 0., False, 0.])
+                        [
+                            p_law[0],
+                            p_law[1],
+                            p_law[2],
+                            False,
+                            True,
+                            [],
+                            [],
+                            0.0,
+                            1000.0,
+                            False,
+                            0.0,
+                            False,
+                            0.0,
+                        ]
+                    )
 
             sql = "DELETE FROM {0}.assim_law"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            sql = "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, " \
-                  "lst_obs_h, lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) " \
-                  "VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
-                               many=True, list_many=recs)
+            sql = (
+                "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, "
+                "lst_obs_h, lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) "
+                "VALUES ({1})"
+            )
+            self.mdb.run_query(
+                sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
+                many=True,
+                list_many=recs,
+            )
 
             laws_updated = True
 
@@ -327,8 +410,9 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         """
         laws_updated = self.verif_laws()
         if laws_updated:
-            QMessageBox.warning(None, "Warning", "Definition of some laws "
-                                                 "have been automatically upadated.")
+            QMessageBox.warning(
+                None, "Warning", "Definition of some laws " "have been automatically upadated."
+            )
             self.load_laws()
 
     def load_laws(self):
@@ -339,58 +423,70 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         :return: None. Populates *self.d_laws* dictionary.
         """
         self.d_laws.clear()
-        self.d_laws = {'perturbationsCote': {},
-                       'perturbationsDebit': {},
-                       'perturbationsDebitLineique': {}}
+        self.d_laws = {
+            "perturbationsCote": {},
+            "perturbationsDebit": {},
+            "perturbationsDebitLineique": {},
+        }
         # Geg SIRD of the sources table for PostGIS
-        sql_srid = ("SELECT f_table_name, srid "
-                    "FROM geometry_columns "
-                    "WHERE f_table_schema = '{schema}' "
-                    "AND f_table_name IN ('extremities', 'lateral_inflows')"
-                    ).format(schema=self.mdb.SCHEMA)
+        sql_srid = (
+            "SELECT f_table_name, srid "
+            "FROM geometry_columns "
+            "WHERE f_table_schema = '{schema}' "
+            "AND f_table_name IN ('extremities', 'lateral_inflows')"
+        ).format(schema=self.mdb.SCHEMA)
         srid_rows = self.mdb.run_query(sql_srid, fetch=True)
-        d_srid = {row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}")
-                  for row in srid_rows if row[1]}
+        d_srid = {
+            row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}") for row in srid_rows if row[1]
+        }
 
-        sql = "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
-              "'perturbationsCote' as id_type, ST_AsText(geom) as wkt_geom " \
-              "FROM {0}.extremities WHERE active IS True AND type = 2 " \
-              "UNION " \
-              "SELECT gid as law_id, name as law_name, 'extremities' as source_law, " \
-              "'perturbationsDebit' as id_type, ST_AsText(geom) as wkt_geom " \
-              "FROM {0}.extremities WHERE active IS True AND type = 1 " \
-              "UNION " \
-              "SELECT gid as law_id, name as law_name, 'lateral_inflows' as source_law, " \
-              "'perturbationsDebitLineique' as id_type, ST_AsText(geom) as wkt_geom " \
-              "FROM {0}.lateral_inflows WHERE active IS True " \
-              "ORDER BY id_type, law_name"
+        sql = (
+            "SELECT gid as law_id, name as law_name, 'extremities' as source_law, "
+            "'perturbationsCote' as id_type, ST_AsText(geom) as wkt_geom "
+            "FROM {0}.extremities WHERE active IS True AND type = 2 "
+            "UNION "
+            "SELECT gid as law_id, name as law_name, 'extremities' as source_law, "
+            "'perturbationsDebit' as id_type, ST_AsText(geom) as wkt_geom "
+            "FROM {0}.extremities WHERE active IS True AND type = 1 "
+            "UNION "
+            "SELECT gid as law_id, name as law_name, 'lateral_inflows' as source_law, "
+            "'perturbationsDebitLineique' as id_type, ST_AsText(geom) as wkt_geom "
+            "FROM {0}.lateral_inflows WHERE active IS True "
+            "ORDER BY id_type, law_name"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         d_calc_law = dict()
         for p_law in rows:
             d_calc_law[(p_law[0], p_law[2], p_law[3])] = {"name": p_law[1], "geom": p_law[4]}
 
-        sql = "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, " \
-              "val_min, val_max, active_a, std_a, active_b, std_b FROM {0}.assim_law"
+        sql = (
+            "SELECT id_law, source_law, id_type, active, auto_del, lst_obs_h, lst_obs_q, "
+            "val_min, val_max, active_a, std_a, active_b, std_b FROM {0}.assim_law"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         for row in rows:
             id_law = row[0]
             source_law = row[1]
             type_law = row[2]
-            self.d_laws[type_law][id_law] = {"law_name": d_calc_law[(row[0], row[1], row[2])]["name"],
-                                             "geom": QgsGeometry.fromWkt(d_calc_law[(row[0], row[1], row[2])]["geom"]),
-                                             "crs": d_srid.get(source_law, QgsCoordinateReferenceSystem()),
-                                             "active": row[3],
-                                             "auto_del": row[4],
-                                             "prm": {"lst_obs_h": row[5],
-                                                     "lst_obs_q": row[6],
-                                                     "val_min": row[7],
-                                                     "val_max": row[8],
-                                                     "active_a": row[9],
-                                                     "std_a": row[10],
-                                                     "active_b": row[11],
-                                                     "std_b": row[12]}}
+            self.d_laws[type_law][id_law] = {
+                "law_name": d_calc_law[(row[0], row[1], row[2])]["name"],
+                "geom": QgsGeometry.fromWkt(d_calc_law[(row[0], row[1], row[2])]["geom"]),
+                "crs": d_srid.get(source_law, QgsCoordinateReferenceSystem()),
+                "active": row[3],
+                "auto_del": row[4],
+                "prm": {
+                    "lst_obs_h": row[5],
+                    "lst_obs_q": row[6],
+                    "val_min": row[7],
+                    "val_max": row[8],
+                    "active_a": row[9],
+                    "std_a": row[10],
+                    "active_b": row[11],
+                    "std_b": row[12],
+                },
+            }
 
     def display_laws(self):
         """Display and populate law list view for current perturbation variable type.
@@ -429,16 +525,24 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         :param id_law: Law identifier to refresh.
         :return: None. Updates *self.d_laws* for the given law.
         """
-        sql = "SELECT lst_obs_h, lst_obs_q, val_min, val_max, " \
-              "active_a, std_a, active_b, std_b, auto_del FROM {0}.assim_law " \
-              "WHERE id_law = {1} AND id_type = '{2}'"
+        sql = (
+            "SELECT lst_obs_h, lst_obs_q, val_min, val_max, "
+            "active_a, std_a, active_b, std_b, auto_del FROM {0}.assim_law "
+            "WHERE id_law = {1} AND id_type = '{2}'"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_law, id_var), fetch=True)
         row = rows[0]
         self.d_laws[id_var][id_law]["auto_del"] = row[8]
-        self.d_laws[id_var][id_law]["prm"] = {"lst_obs_h": row[0], "lst_obs_q": row[1],
-                                              "val_min": row[2], "val_max": row[3],
-                                              "active_a": row[4], "std_a": row[5],
-                                              "active_b": row[6], "std_b": row[7]}
+        self.d_laws[id_var][id_law]["prm"] = {
+            "lst_obs_h": row[0],
+            "lst_obs_q": row[1],
+            "val_min": row[2],
+            "val_max": row[3],
+            "active_a": row[4],
+            "std_a": row[5],
+            "active_b": row[6],
+            "std_b": row[7],
+        }
 
     def current_law_changed(self):
         """Handle law selection change in the law list view.
@@ -492,8 +596,9 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         :return: None. Updates law active status in database.
         """
         sql = "UPDATE {0}.assim_law SET active = {1} WHERE id_law = {2} and id_type = '{3}'"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA, itm.checkState() == 2,
-                                      itm.data(32), self.cur_perturb_var))
+        self.mdb.run_query(
+            sql.format(self.mdb.SCHEMA, itm.checkState() == 2, itm.data(32), self.cur_perturb_var)
+        )
 
     def display_map_rb(self):
         self.draw_law_rb()
@@ -562,28 +667,43 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
         if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()):
-            QMessageBox.warning(None, "Warning", "Note that no observations have been checked.\n"
-                                                 "Please check at least one observation.")
+            QMessageBox.warning(
+                None,
+                "Warning",
+                "Note that no observations have been checked.\n"
+                "Please check at least one observation.",
+            )
             return
-        recs = [[self.sb_law_min.value(), self.sb_law_max.value(),
-                 self.gb_a_ctrl.isChecked(), self.sb_a_std.value(),
-                 self.gb_b_ctrl.isChecked(), self.sb_b_std.value(),
-                 l_obs]]
+        recs = [
+            [
+                self.sb_law_min.value(),
+                self.sb_law_max.value(),
+                self.gb_a_ctrl.isChecked(),
+                self.sb_a_std.value(),
+                self.gb_b_ctrl.isChecked(),
+                self.sb_b_std.value(),
+                l_obs,
+            ]
+        ]
 
-        sql = "UPDATE {0}.assim_law SET " \
-              "val_min = %s, " \
-              "val_max = %s, " \
-              "active_a = %s, " \
-              "std_a = %s, " \
-              "active_b = %s, " \
-              "std_b = %s, " \
-              "lst_obs_{1} = %s, " \
-              "auto_del = False " \
-              "WHERE id_law = {2} " \
-              "AND source_law = '{3}'".format(self.mdb.SCHEMA,
-                                              str(self.cb_law_fld.currentText()).lower(),
-                                              self.cur_law,
-                                              self.cur_source)
+        sql = (
+            "UPDATE {0}.assim_law SET "
+            "val_min = %s, "
+            "val_max = %s, "
+            "active_a = %s, "
+            "std_a = %s, "
+            "active_b = %s, "
+            "std_b = %s, "
+            "lst_obs_{1} = %s, "
+            "auto_del = False "
+            "WHERE id_law = {2} "
+            "AND source_law = '{3}'".format(
+                self.mdb.SCHEMA,
+                str(self.cb_law_fld.currentText()).lower(),
+                self.cur_law,
+                self.cur_source,
+            )
+        )
         self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
         self.disable_input()

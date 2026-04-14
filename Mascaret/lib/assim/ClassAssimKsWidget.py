@@ -32,7 +32,7 @@ from .tooltips.tooltips import apply_tooltips_from_json
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation_ks.ui"))
 )
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 class ClassAssimKsWidget(BASE, FORM_CLASS):
@@ -40,6 +40,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
 
     Allows users to define and edit Ks control zones and observation parameters.
     """
+
     display_rb = pyqtSignal()
 
     def __init__(self, mgis, iface):
@@ -52,7 +53,7 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         super(ClassAssimKsWidget, self).__init__()
         self.setupUi(self)
         self.mgis = mgis
-        apply_tooltips_from_json(self, 'assim_ks_widget.json')
+        apply_tooltips_from_json(self, "assim_ks_widget.json")
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False
@@ -79,8 +80,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
 
         ks_zones_updated = self.verif_ks_zones()
         if ks_zones_updated:
-            QMessageBox.warning(None, "Warning", "Definition of some controls zone "
-                                                 "have been automatically upadated.")
+            QMessageBox.warning(
+                None,
+                "Warning",
+                "Definition of some controls zone " "have been automatically upadated.",
+            )
 
         self.cur_zone_ks = None
         self.d_zone_ks = dict()
@@ -112,24 +116,31 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         thresholds, sigma iterations, and perturbation values.
         :return: None. Updates UI widgets with loaded configuration.
         """
-        sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
-              "iterations_sigma, perturbation_val " \
-              "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
+        sql = (
+            "SELECT control_type, active, control_var, seuil_rejet_misfit, "
+            "iterations_sigma, perturbation_val "
+            "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         if not rows:
-            recs = [[1, "ctrlKS", False, "H", 500, 1,
-                     ["ksMin", "ksMaj"], [[5], [1]], None]]
-            sql = "INSERT INTO {0}.assim_config (id_type, control_type, active, control_var, " \
-                  "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, " \
-                  "perturbation_act) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-                                          ', '.join(["%s"] * len(recs[0]))),
-                               many=True, list_many=recs)
+            recs = [[1, "ctrlKS", False, "H", 500, 1, ["ksMin", "ksMaj"], [[5], [1]], None]]
+            sql = (
+                "INSERT INTO {0}.assim_config (id_type, control_type, active, control_var, "
+                "seuil_rejet_misfit, iterations_sigma, perturbation_var, perturbation_val, "
+                "perturbation_act) VALUES ({1})"
+            )
+            self.mdb.run_query(
+                sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
+                many=True,
+                list_many=recs,
+            )
 
-            sql = "SELECT control_type, active, control_var, seuil_rejet_misfit, " \
-                  "iterations_sigma, perturbation_val " \
-                  "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
+            sql = (
+                "SELECT control_type, active, control_var, seuil_rejet_misfit, "
+                "iterations_sigma, perturbation_val "
+                "FROM {0}.assim_config WHERE control_type = 'ctrlKS'"
+            )
             rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         row = rows[0]
@@ -150,12 +161,14 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
-        sql = "SELECT id, code FROM {0}.observations " \
-              "WHERE type = '{1}' AND code IN (SELECT code FROM {0}.outputs WHERE active IS True)" \
-              "ORDER BY code"
-        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA,
-                                             self.cb_ks_fld.currentText()),
-                                  fetch=True)
+        sql = (
+            "SELECT id, code FROM {0}.observations "
+            "WHERE type = '{1}' AND code IN (SELECT code FROM {0}.outputs WHERE active IS True)"
+            "ORDER BY code"
+        )
+        rows = self.mdb.run_query(
+            sql.format(self.mdb.SCHEMA, self.cb_ks_fld.currentText()), fetch=True
+        )
         for row in rows:
             itm = QStandardItem()
             itm.setData(row[1], 0)
@@ -176,16 +189,24 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         :return: None. Updates database configuration.
         """
         if self.ui_loaded:
-            sql = "UPDATE {0}.assim_config SET " \
-                  "active = %s, " \
-                  "control_var = %s, " \
-                  "seuil_rejet_misfit = %s, " \
-                  "iterations_sigma = %s, " \
-                  "perturbation_val = %s " \
-                  "WHERE control_type = 'ctrlKS'".format(self.mdb.SCHEMA)
-            recs = [[self.cc_ks_act.isChecked(), self.cb_ks_fld.currentText(),
-                     self.sb_ks_seuil.value(), self.sb_ks_sigma.value(),
-                     [[self.sb_ks_pert_min.value()], [self.sb_ks_pert_maj.value()]]]]
+            sql = (
+                "UPDATE {0}.assim_config SET "
+                "active = %s, "
+                "control_var = %s, "
+                "seuil_rejet_misfit = %s, "
+                "iterations_sigma = %s, "
+                "perturbation_val = %s "
+                "WHERE control_type = 'ctrlKS'".format(self.mdb.SCHEMA)
+            )
+            recs = [
+                [
+                    self.cc_ks_act.isChecked(),
+                    self.cb_ks_fld.currentText(),
+                    self.sb_ks_seuil.value(),
+                    self.sb_ks_sigma.value(),
+                    [[self.sb_ks_pert_min.value()], [self.sb_ks_pert_maj.value()]],
+                ]
+            ]
             self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
     def verif_ks_zones(self):
@@ -199,37 +220,69 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
 
         d_calc_ks = self.mdb.zone_ks()
 
-        sql = "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, " \
-              "lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
-              "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks"
+        sql = (
+            "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, "
+            "lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, "
+            "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         if not rows:
-            recs = [[idx, d_calc_ks["branch"][idx],
-                     d_calc_ks["zoneabsstart"][idx], d_calc_ks["zoneabsend"][idx],
-                     False, False, [], [],
-                     False, 1, d_calc_ks["minbedcoef"][idx], d_calc_ks["minbedcoef"][idx],
-                     False, 1, d_calc_ks["majbedcoef"][idx], d_calc_ks["majbedcoef"][idx]]
-                    for idx in range(len(d_calc_ks["branch"]))]
-            sql = "INSERT INTO {0}.assim_ks (id_zone, branchnum, abs_min, abs_max, active, " \
-                  "auto_del, lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
-                  "active_maj, std_maj, val_inf_maj, val_sup_maj) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
-                               many=True, list_many=recs)
+            recs = [
+                [
+                    idx,
+                    d_calc_ks["branch"][idx],
+                    d_calc_ks["zoneabsstart"][idx],
+                    d_calc_ks["zoneabsend"][idx],
+                    False,
+                    False,
+                    [],
+                    [],
+                    False,
+                    1,
+                    d_calc_ks["minbedcoef"][idx],
+                    d_calc_ks["minbedcoef"][idx],
+                    False,
+                    1,
+                    d_calc_ks["majbedcoef"][idx],
+                    d_calc_ks["majbedcoef"][idx],
+                ]
+                for idx in range(len(d_calc_ks["branch"]))
+            ]
+            sql = (
+                "INSERT INTO {0}.assim_ks (id_zone, branchnum, abs_min, abs_max, active, "
+                "auto_del, lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, "
+                "active_maj, std_maj, val_inf_maj, val_sup_maj) VALUES ({1})"
+            )
+            self.mdb.run_query(
+                sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
+                many=True,
+                list_many=recs,
+            )
 
-            sql = "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, " \
-                  "lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
-                  "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks"
+            sql = (
+                "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, "
+                "lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, "
+                "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks"
+            )
             rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         d_db_ks = {tuple(row[1:4]): row for row in rows}
-        d_verif_ks = {(d_calc_ks["branch"][idx],
-                       d_calc_ks["zoneabsstart"][idx],
-                       d_calc_ks["zoneabsend"][idx]):
-                          (d_calc_ks["minbedcoef"][idx], d_calc_ks["majbedcoef"][idx])
-                      for idx in range(len(d_calc_ks["branch"]))}
+        d_verif_ks = {
+            (
+                d_calc_ks["branch"][idx],
+                d_calc_ks["zoneabsstart"][idx],
+                d_calc_ks["zoneabsend"][idx],
+            ): (
+                d_calc_ks["minbedcoef"][idx],
+                d_calc_ks["majbedcoef"][idx],
+            )
+            for idx in range(len(d_calc_ks["branch"]))
+        }
 
-        if not (len(d_db_ks) == len(d_verif_ks) and
-                all([k in d_db_ks.keys() for k in d_verif_ks.keys()])):
+        if not (
+            len(d_db_ks) == len(d_verif_ks)
+            and all([k in d_db_ks.keys() for k in d_verif_ks.keys()])
+        ):
             recs = []
             idx_ks = 0
             for id_ks, (min_coef, maj_coef) in d_verif_ks.items():
@@ -239,27 +292,47 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
                     recs.append(rec)
                 else:
                     recs.append(
-                        [idx_ks, *id_ks, False, True, [], [],
-                         False, 2, min_coef, min_coef,
-                         False, 3, maj_coef, maj_coef])
+                        [
+                            idx_ks,
+                            *id_ks,
+                            False,
+                            True,
+                            [],
+                            [],
+                            False,
+                            2,
+                            min_coef,
+                            min_coef,
+                            False,
+                            3,
+                            maj_coef,
+                            maj_coef,
+                        ]
+                    )
                 idx_ks += 1
 
             sql = "DELETE FROM {0}.assim_ks"
             self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-            sql = "INSERT INTO {0}.assim_ks (id_zone, branchnum, abs_min, abs_max, active, " \
-                  "auto_del, lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
-                  "active_maj, std_maj, val_inf_maj, val_sup_maj) VALUES ({1})"
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA, ', '.join(["%s"] * len(recs[0]))),
-                               many=True, list_many=recs)
+            sql = (
+                "INSERT INTO {0}.assim_ks (id_zone, branchnum, abs_min, abs_max, active, "
+                "auto_del, lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, "
+                "active_maj, std_maj, val_inf_maj, val_sup_maj) VALUES ({1})"
+            )
+            self.mdb.run_query(
+                sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
+                many=True,
+                list_many=recs,
+            )
             ks_zones_updated = True
 
-        sql = "SELECT branchnum, abs_min, abs_max," \
-              "val_inf_min, val_sup_min, val_inf_maj, val_sup_maj FROM {0}.assim_ks"
+        sql = (
+            "SELECT branchnum, abs_min, abs_max,"
+            "val_inf_min, val_sup_min, val_inf_maj, val_sup_maj FROM {0}.assim_ks"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         d_db_ks = {tuple(row[:3]): tuple(row[3:]) for row in rows}
 
-        d_edit = {"val_inf_min": [], "val_sup_min": [],
-                  "val_inf_maj": [], "val_sup_maj": []}
+        d_edit = {"val_inf_min": [], "val_sup_min": [], "val_inf_maj": [], "val_sup_maj": []}
         for id_ks, (min_coef, maj_coef) in d_verif_ks.items():
             db_ks = d_db_ks[id_ks]
             if db_ks[0] > min_coef:
@@ -273,10 +346,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
 
         for fld, recs in d_edit.items():
             if recs:
-                sql = "UPDATE {0}.assim_ks SET {1} = %s, active = False, auto_del = True " \
-                      "WHERE branchnum = %s AND abs_min = %s AND abs_max = %s"
-                self.mdb.run_query(sql.format(self.mdb.SCHEMA, fld),
-                                   many=True, list_many=recs)
+                sql = (
+                    "UPDATE {0}.assim_ks SET {1} = %s, active = False, auto_del = True "
+                    "WHERE branchnum = %s AND abs_min = %s AND abs_max = %s"
+                )
+                self.mdb.run_query(sql.format(self.mdb.SCHEMA, fld), many=True, list_many=recs)
                 ks_zones_updated = True
 
         return ks_zones_updated
@@ -289,8 +363,11 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         """
         ks_zones_updated = self.verif_ks_zones()
         if ks_zones_updated:
-            QMessageBox.warning(None, "Warning", "Definition of some controls zone "
-                                                 "have been automatically upadated.")
+            QMessageBox.warning(
+                None,
+                "Warning",
+                "Definition of some controls zone " "have been automatically upadated.",
+            )
             self.load_zone_ks()
 
     def load_zone_ks(self):
@@ -302,53 +379,66 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         """
         self.d_zone_ks.clear()
         # Get SIRD of the sources table for PostGIS
-        sql_srid = ("SELECT f_table_name, srid "
-                    "FROM geometry_columns "
-                    "WHERE f_table_schema = '{schema}' "
-                    "AND f_table_name IN ('branchs')"
-                    ).format(schema=self.mdb.SCHEMA)
+        sql_srid = (
+            "SELECT f_table_name, srid "
+            "FROM geometry_columns "
+            "WHERE f_table_schema = '{schema}' "
+            "AND f_table_name IN ('branchs')"
+        ).format(schema=self.mdb.SCHEMA)
         srid_rows = self.mdb.run_query(sql_srid, fetch=True)
-        d_srid = {row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}")
-                  for row in srid_rows if row[1]}
+        d_srid = {
+            row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}") for row in srid_rows if row[1]
+        }
 
         d_calc_ks = self.mdb.zone_ks()
-        d_info_ks = {(d_calc_ks["branch"][idx],
-                      d_calc_ks["zoneabsstart"][idx],
-                      d_calc_ks["zoneabsend"][idx]):
-                         {"num_zone": d_calc_ks["branch_zone"][idx],
-                          "min_coef": d_calc_ks["minbedcoef"][idx],
-                          "maj_coef": d_calc_ks["majbedcoef"][idx],
-                          "geom": d_calc_ks["geom"][idx]}
-                     for idx in range(len(d_calc_ks["branch"]))}
+        d_info_ks = {
+            (
+                d_calc_ks["branch"][idx],
+                d_calc_ks["zoneabsstart"][idx],
+                d_calc_ks["zoneabsend"][idx],
+            ): {
+                "num_zone": d_calc_ks["branch_zone"][idx],
+                "min_coef": d_calc_ks["minbedcoef"][idx],
+                "maj_coef": d_calc_ks["majbedcoef"][idx],
+                "geom": d_calc_ks["geom"][idx],
+            }
+            for idx in range(len(d_calc_ks["branch"]))
+        }
 
-        sql = "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, " \
-              "lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
-              "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks " \
-              "ORDER BY abs_min"
+        sql = (
+            "SELECT id_zone, branchnum, abs_min, abs_max, active, auto_del, "
+            "lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, "
+            "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks "
+            "ORDER BY abs_min"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
 
         for row in rows:
             info_ks = d_info_ks[tuple(row[1:4])]
-            self.d_zone_ks[row[0]] = {"zone_name": "Zone {}.{}".format(row[1], info_ks["num_zone"]),
-                                      "geom": QgsGeometry.fromWkt(info_ks["geom"]),
-                                      "crs": d_srid.get('branchs', QgsCoordinateReferenceSystem()),
-                                      "min_coef": info_ks["min_coef"],
-                                      "maj_coef": info_ks["maj_coef"],
-                                      "branch_num": row[1],
-                                      "abs_start": row[2],
-                                      "abs_end": row[3],
-                                      "active": row[4],
-                                      "auto_del": row[5],
-                                      "prm": {"lst_obs_h": row[6],
-                                              "lst_obs_q": row[7],
-                                              "active_min": row[8],
-                                              "std_min": row[9],
-                                              "val_inf_min": row[10],
-                                              "val_sup_min": row[11],
-                                              "active_maj": row[12],
-                                              "std_maj": row[13],
-                                              "val_inf_maj": row[14],
-                                              "val_sup_maj": row[15]}}
+            self.d_zone_ks[row[0]] = {
+                "zone_name": "Zone {}.{}".format(row[1], info_ks["num_zone"]),
+                "geom": QgsGeometry.fromWkt(info_ks["geom"]),
+                "crs": d_srid.get("branchs", QgsCoordinateReferenceSystem()),
+                "min_coef": info_ks["min_coef"],
+                "maj_coef": info_ks["maj_coef"],
+                "branch_num": row[1],
+                "abs_start": row[2],
+                "abs_end": row[3],
+                "active": row[4],
+                "auto_del": row[5],
+                "prm": {
+                    "lst_obs_h": row[6],
+                    "lst_obs_q": row[7],
+                    "active_min": row[8],
+                    "std_min": row[9],
+                    "val_inf_min": row[10],
+                    "val_sup_min": row[11],
+                    "active_maj": row[12],
+                    "std_maj": row[13],
+                    "val_inf_maj": row[14],
+                    "val_sup_maj": row[15],
+                },
+            }
 
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
@@ -380,16 +470,25 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         :param id_zone: Zone identifier to refresh.
         :return: None. Updates *self.d_zone_ks* for the given zone.
         """
-        sql = "SELECT lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, " \
-              "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks " \
-              "WHERE id_zone = {1}"
+        sql = (
+            "SELECT lst_obs_h, lst_obs_q, active_min, std_min, val_inf_min, val_sup_min, "
+            "active_maj, std_maj, val_inf_maj, val_sup_maj FROM {0}.assim_ks "
+            "WHERE id_zone = {1}"
+        )
         rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_zone), fetch=True)
         row = rows[0]
-        self.d_zone_ks[id_zone]["prm"] = {"lst_obs_h": row[0], "lst_obs_q": row[1],
-                                          "active_min": row[2], "std_min": row[3],
-                                          "val_inf_min": row[4], "val_sup_min": row[5],
-                                          "active_maj": row[6], "std_maj": row[7],
-                                          "val_inf_maj": row[8], "val_sup_maj": row[9]}
+        self.d_zone_ks[id_zone]["prm"] = {
+            "lst_obs_h": row[0],
+            "lst_obs_q": row[1],
+            "active_min": row[2],
+            "std_min": row[3],
+            "val_inf_min": row[4],
+            "val_sup_min": row[5],
+            "active_maj": row[6],
+            "std_maj": row[7],
+            "val_inf_maj": row[8],
+            "val_sup_maj": row[9],
+        }
 
     def zone_selected_from_map(self, selected_abs):
         """Select a Ks zone based on abscissa location from map interaction.
@@ -397,8 +496,9 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
         :param selected_abs: Abscissa value of the selected location on the branch.
         :return: None. Updates current zone selection in list view.
         """
-        sql = "SELECT id_zone FROM {0}.assim_ks WHERE " \
-              "abs_min <= {1} AND abs_max > {1}".format(self.mdb.SCHEMA, selected_abs)
+        sql = "SELECT id_zone FROM {0}.assim_ks WHERE " "abs_min <= {1} AND abs_max > {1}".format(
+            self.mdb.SCHEMA, selected_abs
+        )
         row = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
         if row:
             id_zone_selected = row[0][0]
@@ -542,29 +642,43 @@ class ClassAssimKsWidget(BASE, FORM_CLASS):
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
         if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()):
-            QMessageBox.warning(None, "Warning", "Note that no observations have been checked.\n"
-                                                 "Please check at least one observation.")
+            QMessageBox.warning(
+                None,
+                "Warning",
+                "Note that no observations have been checked.\n"
+                "Please check at least one observation.",
+            )
             return
-        recs = [[self.gb_minor.isChecked(), self.sb_minor_std.value(),
-                 self.sb_minor_inf.value(), self.sb_minor_sup.value(),
-                 self.gb_major.isChecked(), self.sb_major_std.value(),
-                 self.sb_major_inf.value(), self.sb_major_sup.value(),
-                 l_obs]]
+        recs = [
+            [
+                self.gb_minor.isChecked(),
+                self.sb_minor_std.value(),
+                self.sb_minor_inf.value(),
+                self.sb_minor_sup.value(),
+                self.gb_major.isChecked(),
+                self.sb_major_std.value(),
+                self.sb_major_inf.value(),
+                self.sb_major_sup.value(),
+                l_obs,
+            ]
+        ]
 
-        sql = "UPDATE {0}.assim_ks SET " \
-              "active_min = %s, " \
-              "std_min = %s, " \
-              "val_inf_min = %s, " \
-              "val_sup_min = %s, " \
-              "active_maj = %s, " \
-              "std_maj = %s, " \
-              "val_inf_maj = %s, " \
-              "val_sup_maj = %s, " \
-              "lst_obs_{1} = %s, " \
-              "auto_del = False " \
-              "WHERE id_zone = {2}".format(self.mdb.SCHEMA,
-                                           str(self.cb_ks_fld.currentText()).lower(),
-                                           self.cur_zone_ks)
+        sql = (
+            "UPDATE {0}.assim_ks SET "
+            "active_min = %s, "
+            "std_min = %s, "
+            "val_inf_min = %s, "
+            "val_sup_min = %s, "
+            "active_maj = %s, "
+            "std_maj = %s, "
+            "val_inf_maj = %s, "
+            "val_sup_maj = %s, "
+            "lst_obs_{1} = %s, "
+            "auto_del = False "
+            "WHERE id_zone = {2}".format(
+                self.mdb.SCHEMA, str(self.cb_ks_fld.currentText()).lower(), self.cur_zone_ks
+            )
+        )
         self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
 
         self.disable_input()

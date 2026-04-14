@@ -29,6 +29,7 @@ from ..Function import del_symbol
 
 class ClassAssimDB:
     """Class Assimilation gestion base donneee"""
+
     XCAS_FILE = "mascaret.xcas"
     XCAS_FILE_INIT = "mascaret_init.xcas"
     DATA_ASSIM_FILE = "data_assim.json"
@@ -57,10 +58,10 @@ class ClassAssimDB:
             self.data = {}
             return
 
-        for idx, ctrl_type in enumerate(data_config['control_type']):
-            if ctrl_type == 'ctrlKS':
+        for idx, ctrl_type in enumerate(data_config["control_type"]):
+            if ctrl_type == "ctrlKS":
                 self._update_ctrl_ks(idx, data_config)
-            elif ctrl_type == 'ctrlLaw':
+            elif ctrl_type == "ctrlLaw":
                 self._update_ctrl_law(idx, data_config)
 
     def _update_ctrl_ks(self, idx, data_config):
@@ -70,28 +71,27 @@ class ClassAssimDB:
         :param data_config: Configuration data dict containing control types and perturbations.
         :return: None. Modifies *self.data* ctrlKS entry.
         """
-        data_ks = self.mdb.select(
-            "assim_ks",
-            where="active and (active_min or active_maj) "
-        )
+        data_ks = self.mdb.select("assim_ks", where="active and (active_min or active_maj) ")
         if not data_ks:
             return
 
-        if 'ctrlKS' not in self.data:
-            self.data['ctrlKS'] = {}
+        if "ctrlKS" not in self.data:
+            self.data["ctrlKS"] = {}
 
-        d_perturb = dict(zip(
-            data_config['perturbation_var'][idx],
-            data_config['perturbation_val'][idx]))
-        obs_var = data_config['control_var'][idx]
-        self.data['ctrlKS'].update({
-            "obs_var": obs_var,
-            "seuil_rejet_misfit": data_config['seuil_rejet_misfit'][idx],
-            "iterations_sigma": data_config['iterations_sigma'][idx],
-            "ksmin_perturb": d_perturb['ksMin'],
-            "ksmaj_perturb": d_perturb['ksMaj'],
-            'lst_zone': self._build_ks_list(data_ks, obs_var)
-        })
+        d_perturb = dict(
+            zip(data_config["perturbation_var"][idx], data_config["perturbation_val"][idx])
+        )
+        obs_var = data_config["control_var"][idx]
+        self.data["ctrlKS"].update(
+            {
+                "obs_var": obs_var,
+                "seuil_rejet_misfit": data_config["seuil_rejet_misfit"][idx],
+                "iterations_sigma": data_config["iterations_sigma"][idx],
+                "ksmin_perturb": d_perturb["ksMin"],
+                "ksmaj_perturb": d_perturb["ksMaj"],
+                "lst_zone": self._build_ks_list(data_ks, obs_var),
+            }
+        )
 
     def _build_ks_list(self, data_ks, obs_var):
         """Build the list of Ks coefficient zones.
@@ -102,11 +102,11 @@ class ClassAssimDB:
         """
         list_ks = []
 
-        for idx in range(len(data_ks['id_zone'])):
-            if data_ks['active_min'][idx]:
-                list_ks.append(self._create_ks_entry(data_ks, idx, 'Ksmin', 'min', obs_var))
-            if data_ks['active_maj'][idx]:
-                list_ks.append(self._create_ks_entry(data_ks, idx, 'Ksmaj', 'maj', obs_var))
+        for idx in range(len(data_ks["id_zone"])):
+            if data_ks["active_min"][idx]:
+                list_ks.append(self._create_ks_entry(data_ks, idx, "Ksmin", "min", obs_var))
+            if data_ks["active_maj"][idx]:
+                list_ks.append(self._create_ks_entry(data_ks, idx, "Ksmaj", "maj", obs_var))
 
         return list_ks
 
@@ -119,12 +119,19 @@ class ClassAssimDB:
         :return: Dict of observation data with keys *id*, *code*, *stderr*, *rejectlimit*,
                  *abscissa*, *zero*.
         """
-        d_obs_f = {'id': [], 'code': [], 'stderr': [], 'rejectlimit': [], 'abscissa': [], 'zero': []}
-        lst_obs = data_ks[f'lst_obs_{obs_var.lower()}'][idx]
+        d_obs_f = {
+            "id": [],
+            "code": [],
+            "stderr": [],
+            "rejectlimit": [],
+            "abscissa": [],
+            "zero": [],
+        }
+        lst_obs = data_ks[f"lst_obs_{obs_var.lower()}"][idx]
 
         # Définir les colonnes selon obs_var
-        stderr_col = 'obsz_stderr' if obs_var == 'H' else 'obsq_stderr'
-        reject_col = 'obsz_rejectlimit' if obs_var == 'H' else 'obsq_rejectlimit'
+        stderr_col = "obsz_stderr" if obs_var == "H" else "obsq_stderr"
+        reject_col = "obsz_rejectlimit" if obs_var == "H" else "obsq_rejectlimit"
         if not lst_obs:
             return d_obs_f
 
@@ -140,12 +147,12 @@ class ClassAssimDB:
         if results:
             for row_ in results:
                 row = row_[0]
-                d_obs_f['id'].append(row[0])
-                d_obs_f['code'].append(row[1].strip() if isinstance(row[1], str) else row[1])
-                d_obs_f['stderr'].append(row[2])
-                d_obs_f['rejectlimit'].append(row[3])
-                d_obs_f['abscissa'].append(row[4])
-                d_obs_f['zero'].append(row[5])
+                d_obs_f["id"].append(row[0])
+                d_obs_f["code"].append(row[1].strip() if isinstance(row[1], str) else row[1])
+                d_obs_f["stderr"].append(row[2])
+                d_obs_f["rejectlimit"].append(row[3])
+                d_obs_f["abscissa"].append(row[4])
+                d_obs_f["zero"].append(row[5])
         return d_obs_f
 
     def _create_ks_entry(self, data_ks, idx, type_ks, val_type, obs_var):
@@ -159,24 +166,24 @@ class ClassAssimDB:
         :return: Dict containing zone info with observations and reference values.
         """
         d_obs_f = self._creat_lst_obs(idx, data_ks, obs_var)
-        # TODO: alert si d_obs_f est vide
+
         dico_ks = self.mdb.zone_ks()
-        ref_min = dico_ks["minbedcoef"][data_ks['id_zone'][idx]]
-        ref_maj = dico_ks["majbedcoef"][data_ks['id_zone'][idx]]
+        ref_min = dico_ks["minbedcoef"][data_ks["id_zone"][idx]]
+        ref_maj = dico_ks["majbedcoef"][data_ks["id_zone"][idx]]
         return {
-            "num_zone": data_ks['id_zone'][idx],
+            "num_zone": data_ks["id_zone"][idx],
             "type": type_ks,
-            "val_min": data_ks[f'val_inf_{val_type}'][idx],
-            "val_max": data_ks[f'val_sup_{val_type}'][idx],
-            "std": data_ks[f'std_{val_type}'][idx],
+            "val_min": data_ks[f"val_inf_{val_type}"][idx],
+            "val_max": data_ks[f"val_sup_{val_type}"][idx],
+            "std": data_ks[f"std_{val_type}"][idx],
             "lst_obs": d_obs_f,
-            'zone_info': {
-                "abs_min": data_ks['abs_min'][idx],
-                "abs_max": data_ks['abs_max'][idx],
-                'branchnum': data_ks['branchnum'][idx],
-                'ref_ks_min': ref_min,
-                'ref_ks_maj': ref_maj,
-            }
+            "zone_info": {
+                "abs_min": data_ks["abs_min"][idx],
+                "abs_max": data_ks["abs_max"][idx],
+                "branchnum": data_ks["branchnum"][idx],
+                "ref_ks_min": ref_min,
+                "ref_ks_maj": ref_maj,
+            },
         }
 
     def _update_ctrl_law(self, idx, data_config):
@@ -186,30 +193,29 @@ class ClassAssimDB:
         :param data_config: Configuration data dict containing control types and perturbations.
         :return: None. Modifies *self.data* ctrlLaw entry.
         """
-        data_law = self.mdb.select(
-            "assim_law",
-            where="active and (active_a or active_b)"
-        )
+        data_law = self.mdb.select("assim_law", where="active and (active_a or active_b)")
         if not data_law:
             return
 
-        if 'ctrlLaw' not in self.data:
-            self.data['ctrlLaw'] = {}
+        if "ctrlLaw" not in self.data:
+            self.data["ctrlLaw"] = {}
 
-        d_perturb = dict(zip(
-            data_config['perturbation_var'][idx],
-            data_config['perturbation_val'][idx]))
-        obs_var = data_config['control_var'][idx]
+        d_perturb = dict(
+            zip(data_config["perturbation_var"][idx], data_config["perturbation_val"][idx])
+        )
+        obs_var = data_config["control_var"][idx]
 
-        self.data['ctrlLaw'].update({
-            "obs_var": obs_var,
-            "seuil_rejet_misfit": data_config['seuil_rejet_misfit'][idx],
-            "iterations_sigma": data_config['iterations_sigma'][idx],
-            "lcote_perturb": d_perturb['perturbationsCote'],
-            "ldebit_perturb": d_perturb['perturbationsDebit'],
-            "ldebit_lin_perturb": d_perturb['perturbationsDebitLineique'],
-            'lst_loi': self._build_law_list(data_law, obs_var)
-        })
+        self.data["ctrlLaw"].update(
+            {
+                "obs_var": obs_var,
+                "seuil_rejet_misfit": data_config["seuil_rejet_misfit"][idx],
+                "iterations_sigma": data_config["iterations_sigma"][idx],
+                "lcote_perturb": d_perturb["perturbationsCote"],
+                "ldebit_perturb": d_perturb["perturbationsDebit"],
+                "ldebit_lin_perturb": d_perturb["perturbationsDebitLineique"],
+                "lst_loi": self._build_law_list(data_law, obs_var),
+            }
+        )
 
     def _build_law_list(self, data_law, obs_var):
         """Build the list of hydraulic laws.
@@ -219,11 +225,11 @@ class ClassAssimDB:
         :return: List of law entry dicts.
         """
         list_law = []
-        for idx in range(len(data_law['id_law'])):
-            if data_law['active_a'][idx]:
-                list_law.append(self._create_law_entry(data_law, idx, 'a', obs_var))
-            if data_law['active_b'][idx]:
-                list_law.append(self._create_law_entry(data_law, idx, 'b', obs_var))
+        for idx in range(len(data_law["id_law"])):
+            if data_law["active_a"][idx]:
+                list_law.append(self._create_law_entry(data_law, idx, "a", obs_var))
+            if data_law["active_b"][idx]:
+                list_law.append(self._create_law_entry(data_law, idx, "b", obs_var))
         return list_law
 
     def get_info_law(self, id_law, source_law):
@@ -234,10 +240,12 @@ class ClassAssimDB:
         :return: Tuple of ``(name, type)`` where *name* is the law name and *type* is
                  the law type code or -1 if not found.
         """
-        if source_law == 'extremities':
+        if source_law == "extremities":
             sql = f"SELECT name, type FROM {self.mdb.SCHEMA}.extremities WHERE active and gid={id_law}"
-        elif source_law == 'lateral_inflows':
-            sql = f"SELECT name FROM {self.mdb.SCHEMA}.lateral_inflows WHERE active and gid={id_law}"
+        elif source_law == "lateral_inflows":
+            sql = (
+                f"SELECT name FROM {self.mdb.SCHEMA}.lateral_inflows WHERE active and gid={id_law}"
+            )
         info = self.mdb.run_query(sql, fetch=True)
         if not info:
             return None, -1
@@ -257,16 +265,16 @@ class ClassAssimDB:
         """
         d_obs_f = self._creat_lst_obs(idx, data_law, obs_var)
 
-        name_law, type_loi = self.get_info_law(data_law['id_law'][idx], data_law['source_law'][idx])
+        name_law, type_loi = self.get_info_law(data_law["id_law"][idx], data_law["source_law"][idx])
         return {
-            "id_law": data_law['id_law'][idx],
-            'source_law': data_law['source_law'][idx],
+            "id_law": data_law["id_law"][idx],
+            "source_law": data_law["source_law"][idx],
             "name_law": del_symbol(name_law),
-            'type_law': type_loi,
-            'type': f'coef{typ_coef.upper()}',
-            "std": data_law[f'std_{typ_coef}'][idx],
-            "val_min": data_law['val_min'][idx],
-            "val_max": data_law['val_max'][idx],
+            "type_law": type_loi,
+            "type": f"coef{typ_coef.upper()}",
+            "std": data_law[f"std_{typ_coef}"][idx],
+            "val_min": data_law["val_min"][idx],
+            "val_max": data_law["val_max"][idx],
             "lst_obs": d_obs_f,
         }
 
@@ -282,18 +290,18 @@ class ClassAssimDB:
 
         :return: ``True`` if ctrlKS with zones is configured, ``False`` otherwise.
         """
-        cond = bool(self.data.get('ctrlKS'))
+        cond = bool(self.data.get("ctrlKS"))
         if cond:
-            return bool(self.data['ctrlKS'].get("lst_zone"))
+            return bool(self.data["ctrlKS"].get("lst_zone"))
 
     def check_assim_law(self):
         """Check if ctrlLaw assimilation is active.
 
         :return: ``True`` if ctrlLaw with laws is configured, ``False`` otherwise.
         """
-        cond = bool(self.data.get('ctrlLaw'))
+        cond = bool(self.data.get("ctrlLaw"))
         if cond:
-            return bool(self.data['ctrlLaw'].get("lst_loi"))
+            return bool(self.data["ctrlLaw"].get("lst_loi"))
         return cond
 
     def add_data_dgenerate(self, d_run, d_scen):
@@ -303,27 +311,27 @@ class ClassAssimDB:
         :param d_scen: Scenario dict with instances list.
         :return: None.  *self.data['generate_instance']*.
         """
-        path_ref = ''
-        path_init = ''
-        for idx, instance in enumerate(d_scen['instances']):
-            name = instance.get('name')
-            if name in 'ref':
-                path_ref = instance.get("RUN_REP", '')
-            elif name in 'init':
-                path_init = instance.get("RUN_REP", '')
-            if path_ref != '' and path_init != '':
+        path_ref = ""
+        path_init = ""
+        for idx, instance in enumerate(d_scen["instances"]):
+            name = instance.get("name")
+            if name in "ref":
+                path_ref = instance.get("RUN_REP", "")
+            elif name in "init":
+                path_init = instance.get("RUN_REP", "")
+            if path_ref != "" and path_init != "":
                 break
 
-        self.data['generate_instance'] = {
-            'drun': {
+        self.data["generate_instance"] = {
+            "drun": {
                 key: d_run[key]
                 for key in ["has_casier", "has_tracer", "has_assimilation", "has_run_init"]
             },
-            'dscen': {
+            "dscen": {
                 "path_instance": d_scen["path_instance"],
                 "starttime": d_scen.get("starttime"),
-                'name_xcas_init': self.XCAS_FILE_INIT,
-                'name_xcas': self.XCAS_FILE,
+                "name_xcas_init": self.XCAS_FILE_INIT,
+                "name_xcas": self.XCAS_FILE,
                 "folder_init": os.path.basename(path_init),
                 "folder_ref": os.path.basename(path_ref),
             },
@@ -341,17 +349,24 @@ class ClassAssimDB:
             return d_scen, order
 
         lst_case, d_obs = self.cl_creat_assim.get_list_cas_ks(self.data)
-        d_scen = self.update_obs_assim(d_scen, d_obs, self.data['ctrlKS'].get("obs_var"))
+        d_scen = self.update_obs_assim(d_scen, d_obs, self.data["ctrlKS"].get("obs_var"))
 
         d_scen, order = self.cl_creat_assim.build_ctrlks_instances(
-            lst_case, d_run, d_scen, order,
+            lst_case,
+            d_run,
+            d_scen,
+            order,
             xcas_file=self.XCAS_FILE,
             xcas_file_init=self.XCAS_FILE_INIT,
         )
-        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlKS',
-                                                                   xcas_file=self.XCAS_FILE,
-                                                                   xcas_file_init=self.XCAS_FILE_INIT,
-                                                                   )
+        d_scen, order = self.cl_creat_assim.build_analyse_instance(
+            d_run,
+            d_scen,
+            order,
+            type_assim="ctrlKS",
+            xcas_file=self.XCAS_FILE,
+            xcas_file_init=self.XCAS_FILE_INIT,
+        )
         self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 
@@ -363,12 +378,12 @@ class ClassAssimDB:
         :param typ_obs: Observation variable type ('H' or 'Q').
         :return: Updated *d_scen* dict.
         """
-        if d_scen.get('obs_assim'):
-            d_scen['obs_assim'].append(d_obs)
-            d_scen['type_obs_assim'].append(typ_obs)
+        if d_scen.get("obs_assim"):
+            d_scen["obs_assim"].append(d_obs)
+            d_scen["type_obs_assim"].append(typ_obs)
         else:
-            d_scen['obs_assim'] = [d_obs]
-            d_scen['type_obs_assim'] = [typ_obs]
+            d_scen["obs_assim"] = [d_obs]
+            d_scen["type_obs_assim"] = [typ_obs]
 
         return d_scen
 
@@ -383,15 +398,23 @@ class ClassAssimDB:
         if not self.check_assim_law():
             return d_scen, order
         lst_case, d_obs = self.cl_creat_assim.get_list_cas_law(self.data)
-        d_scen = self.update_obs_assim(d_scen, d_obs, self.data['ctrlLaw'].get("obs_var"))
-        d_scen, order = self.cl_creat_assim.build_ctrl_law_instance(lst_case, d_run, d_scen, order,
-                                                                    xcas_file=self.XCAS_FILE,
-                                                                    xcas_file_init=self.XCAS_FILE_INIT,
-                                                                    )
-        d_scen, order = self.cl_creat_assim.build_analyse_instance(d_run, d_scen, order, type_assim='ctrlLaw',
-                                                                   xcas_file=self.XCAS_FILE,
-                                                                   xcas_file_init=self.XCAS_FILE_INIT,
-                                                                   )
+        d_scen = self.update_obs_assim(d_scen, d_obs, self.data["ctrlLaw"].get("obs_var"))
+        d_scen, order = self.cl_creat_assim.build_ctrl_law_instance(
+            lst_case,
+            d_run,
+            d_scen,
+            order,
+            xcas_file=self.XCAS_FILE,
+            xcas_file_init=self.XCAS_FILE_INIT,
+        )
+        d_scen, order = self.cl_creat_assim.build_analyse_instance(
+            d_run,
+            d_scen,
+            order,
+            type_assim="ctrlLaw",
+            xcas_file=self.XCAS_FILE,
+            xcas_file_init=self.XCAS_FILE_INIT,
+        )
         self.add_data_dgenerate(d_run, d_scen)
         return d_scen, order
 
@@ -408,7 +431,7 @@ class ClassAssimDB:
         var_obs = obj_model.get_obs_param(scen)
         self._create_obs_file(path_scen, lst_obs, var_obs)
 
-    def _export_data(self, folder='.'):
+    def _export_data(self, folder="."):
         """Export assimilation data to JSON file.
 
         :param folder: Target directory path. Default is current directory.
@@ -445,21 +468,20 @@ class ClassAssimDB:
         :param var_obs: Variable observation dict with type_obs, starttime, endtime.
         :return: None. Creates observation boundary condition files.
         """
-        path_obs = os.path.join(path_scen, 'Observations')
+        path_obs = os.path.join(path_scen, "Observations")
         os.makedirs(path_obs, exist_ok=True)
         cl_bc = ClassBCWriter(self.mdb, path_obs)
         dict_obs = {}
         for num, obs in enumerate(data_obs):
             typ_crt = var_obs["type_obs"][num]
-            for icode, code in enumerate(obs.get('code', [])):
+            for icode, code in enumerate(obs.get("code", [])):
                 # decal_z = data_obs.get("zero", [0])[icode]
-                dict_tmp = {'type': typ_crt, 'formule': f'{code}[t] + {obs["zero"][icode]}'}
+                dict_tmp = {"type": typ_crt, "formule": f'{code}[t] + {obs["zero"][icode]}'}
                 dict_obs[code] = dict_tmp
 
-        err_txt = cl_bc.obs_to_file(dict_obs, var_obs['starttime'], var_obs["endtime"])
+        err_txt = cl_bc.obs_to_file(dict_obs, var_obs["starttime"], var_obs["endtime"])
         if err_txt:
             if self.mgis:
                 self.mgis.add_info(err_txt)
                 self.mgis.box.critic(err_txt, title="Critical Error")
             raise ValueError(err_txt)
-

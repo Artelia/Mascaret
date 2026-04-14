@@ -72,7 +72,7 @@ class classBLUE:
         # print('Using Blue in ', base_folder)
         self.base_folder = base_folder
         self.debug = debug
-        self.json_assim = os.path.join(self.base_folder, 'data_assim.json')
+        self.json_assim = os.path.join(self.base_folder, "data_assim.json")
         with open(self.json_assim) as f:
             self.data_assim = json.load(f)
         self.iterations_sigma = self.data_assim.get(ctrl_type, {}).get("iterations_sigma", 0)
@@ -86,13 +86,13 @@ class classBLUE:
         # Une valeur de sb par type de perturbation (Ksmin et Ksmaj par ex)
         self.sb = [1] * np.max(self.matrixes.type_perturb)
         self.old_sb = [1] * np.max(self.matrixes.type_perturb)
-        self.delta_so = 1.
+        self.delta_so = 1.0
         self.delta_sb = [1] * np.max(self.matrixes.type_perturb)
         self.raison_arret = ""
         self.trace_HBHT = []
 
     def compute_BLUE(self):
-        """ Computes different BLUE steps to get analysed state """
+        """Computes different BLUE steps to get analysed state"""
         for i in range(self.iterations_sigma):
             self.build_gain_K()
             self.build_analysis()
@@ -106,8 +106,10 @@ class classBLUE:
 
             # Arrêt si delta_sb et delta_so sont < 1e-3
             elif (self.delta_so < 1e-3) and (np.all(np.array(self.delta_sb) < 1e-3)):
-                self.raison_arret = ("'Arret sur critere de convergence de sb et so. Variation "
-                                     "inférieure à 1e-3 entre deux pas d'assimilation")
+                self.raison_arret = (
+                    "'Arret sur critere de convergence de sb et so. Variation "
+                    "inférieure à 1e-3 entre deux pas d'assimilation"
+                )
                 self.store_results(first=(i == 0), assim_step=i)
                 break
 
@@ -124,7 +126,7 @@ class classBLUE:
         self.raison_arret = "Nombre iterations sigma atteint"
 
     def build_gain_K(self):
-        """ Computes gain matrix K : K =BH^t (HBH^t + R)^-1 """
+        """Computes gain matrix K : K =BH^t (HBH^t + R)^-1"""
         # Calcul de BHt
         BHT = self.current_B @ self.matrixes.H.transpose()
         # Calcul de HBHt
@@ -135,7 +137,7 @@ class classBLUE:
 
         self.K = BHT @ HBHT_plus_R
         if self.debug:
-            print('[BLUE] : Calcul du gain K effectué.')
+            print("[BLUE] : Calcul du gain K effectué.")
 
     def calc_so_sb(self):
         self.trace_HBHT = []
@@ -153,13 +155,15 @@ class classBLUE:
 
         for itype, type_pert in enumerate(list(dict.fromkeys(self.matrixes.type_perturb))):
             idx_type_pert = int(type_pert - 1)
-            if self.trace_HBHT[itype] == 0.:
-                self.sb[idx_type_pert] = 0.
+            if self.trace_HBHT[itype] == 0.0:
+                self.sb[idx_type_pert] = 0.0
             else:
                 innovation_tempo = np.zeros(len(self.innovation))
                 innovation_tempo[itype] = self.innovation[itype]
-                self.sb[idx_type_pert] = np.divide(np.dot(self.matrixes.misfit, self.matrixes.H @ innovation_tempo),
-                                           self.trace_HBHT[itype])
+                self.sb[idx_type_pert] = np.divide(
+                    np.dot(self.matrixes.misfit, self.matrixes.H @ innovation_tempo),
+                    self.trace_HBHT[itype],
+                )
 
         self.residual = np.array(self.matrixes.misfit) - self.matrixes.H @ self.innovation
         # Ajout de la nouvelle valeur de so
@@ -169,7 +173,7 @@ class classBLUE:
         self.delta_sb = np.abs(np.subtract(self.sb, self.old_sb))
 
     def build_analysis(self):
-        """ Computes analysed state xa : x_a = x_b + K*misfit """
+        """Computes analysed state xa : x_a = x_b + K*misfit"""
 
         self.innovation = self.K @ self.matrixes.misfit
         self.analyse = self.matrixes.xb + self.innovation
@@ -183,19 +187,19 @@ class classBLUE:
                     self.analyse[ia] = self.matrixes.max_values[ia]
         self.matrixes.build_B_matrix_analysed(self.K)
 
-        print('[BLUE] : Calcul de l\'état analysé effectué')
+        print("[BLUE] : Calcul de l'état analysé effectué")
 
     def clean_result_file(self):
-        """ Overwrites matrix file """
+        """Overwrites matrix file"""
 
-        with open(os.path.join(self.base_folder, 'blue_results.txt'), 'w') as f:
-            f.write('BLUE assimilation step results \n')
-            f.write('--' * 50 + '\n')
+        with open(os.path.join(self.base_folder, "blue_results.txt"), "w") as f:
+            f.write("BLUE assimilation step results \n")
+            f.write("--" * 50 + "\n")
 
     def _update_xa(self, first):
         """Update xa values in data_assim dict."""
         dico = self.data_assim.get(self.ctrl_type, {})
-        lst_var = "lst_zone" if self.ctrl_type == 'ctrlKS' else "lst_loi"
+        lst_var = "lst_zone" if self.ctrl_type == "ctrlKS" else "lst_loi"
         for izone, lzone in enumerate(dico.get(lst_var, [])):
             if not lzone:
                 continue
@@ -205,12 +209,12 @@ class classBLUE:
             else:
                 # Keeping only last assimilation step value
                 dico[lst_var][izone]["xa"][0] = xa_val
-        with open(self.json_assim, 'w') as f:
+        with open(self.json_assim, "w") as f:
             json.dump(self.data_assim, f, indent=4)
 
     def _write_matrix(self, f, label, mat):
         """Write a labeled matrix to file."""
-        f.write(f'{label}\n')
+        f.write(f"{label}\n")
         write_matrix_auto(f, mat)
 
     def _write_matrix_safe(self, f, label, mat):
@@ -221,9 +225,9 @@ class classBLUE:
             print(e)
 
     def store_results(self, first, assim_step):
-        """ Store results in file
-         :param first: True if first assimilation step
-         """
+        """Store results in file
+        :param first: True if first assimilation step
+        """
         # First adding xa to data_assim.json
         # json_assim = os.path.join(self.base_folder, 'data_assim.json')
         # with open(json_assim) as f:
@@ -232,46 +236,47 @@ class classBLUE:
         self._update_xa(first)
 
         # Then storing in txt file every BLUE matrix for debug/verif
-        with open(os.path.join(self.base_folder, 'blue_results.assim_lis'), 'a') as f:
+        with open(os.path.join(self.base_folder, "blue_results.assim_lis"), "a") as f:
             if first:
                 if first:
-                    f.write(f'Assimilation - {self.ctrl_type}\n')
-                    self._write_matrix(f, 'H Matrix', self.matrixes.H)
-                    f.write(25 * '*-' + '\n')
+                    f.write(f"Assimilation - {self.ctrl_type}\n")
+                    self._write_matrix(f, "H Matrix", self.matrixes.H)
+                    f.write(25 * "*-" + "\n")
 
-            f.write(f'Assimilation step number {assim_step + 1}\n')
+            f.write(f"Assimilation step number {assim_step + 1}\n")
             for label, mat in [
-                ('B matrix diagonal', np.diagonal(self.current_B)),
-                ('R matrix diagonal', np.diagonal(self.current_R)),
-                ('Gain matrix K', self.K),
-                ('Analysed state x_a', self.analyse),
+                ("B matrix diagonal", np.diagonal(self.current_B)),
+                ("R matrix diagonal", np.diagonal(self.current_R)),
+                ("Gain matrix K", self.K),
+                ("Analysed state x_a", self.analyse),
                 ("Innovation vector", self.innovation),
-                ("Analysis error covariance matrix B_a", self.matrixes.B_analysed)
+                ("Analysis error covariance matrix B_a", self.matrixes.B_analysed),
             ]:
                 self._write_matrix(f, label, mat)
 
-            f.write('Sigma o\n')
-            f.write(str(np.sqrt(self.so)) + '\n')
+            f.write("Sigma o\n")
+            f.write(str(np.sqrt(self.so)) + "\n")
 
             for label, mat in [
-                ('Traces HBHT par type', self.trace_HBHT),
-                ('Sigma b par type', np.nan_to_num(np.sqrt(self.sb), nan=-9999)),
-                ('Residual', self.residual),
-                ('Misfit', self.matrixes.misfit),
-                ('Observations Y0', self.matrixes.y0),
-                ('Perturbation types', self.matrixes.type_perturb),
+                ("Traces HBHT par type", self.trace_HBHT),
+                ("Sigma b par type", np.nan_to_num(np.sqrt(self.sb), nan=-9999)),
+                ("Residual", self.residual),
+                ("Misfit", self.matrixes.misfit),
+                ("Observations Y0", self.matrixes.y0),
+                ("Perturbation types", self.matrixes.type_perturb),
             ]:
                 self._write_matrix_safe(f, label, mat)
 
-            f.write(25 * '*-' + '\n')
+            f.write(25 * "*-" + "\n")
             f.write(self.raison_arret)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) <= 2:
         raise ValueError(
             "No base folder file provided and no assimilation type . Usage: ClassBLUE.py <path> "
-            "<ctrl_type>")
+            "<ctrl_type>"
+        )
     base_folder = sys.argv[1]
     ctrl_type = sys.argv[2]
     debug = False
@@ -279,6 +284,6 @@ if __name__ == '__main__':
         debug = True
 
     # base_folder = r'../../mascaret/event1_1/'
-    print('[BLUE] : Working in folder :', base_folder)
+    print("[BLUE] : Working in folder :", base_folder)
     CB = classBLUE(base_folder, ctrl_type, debug)
     CB.compute_BLUE()

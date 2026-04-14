@@ -17,11 +17,8 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import (
-    QgsProject,
-    QgsCoordinateTransform,
-    QgsGeometry
-)
+from qgis.core import QgsProject, QgsCoordinateTransform, QgsGeometry
+
 
 def reproject_geom_to_project(geom, source_crs):
     """Reproject a geometry to the project CRS if needed.

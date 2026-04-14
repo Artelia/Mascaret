@@ -25,9 +25,12 @@ import numpy as np
 from pathlib import Path
 from .ClassAssimData import AssimData
 
+
 class ClassExtractAssim:
     """Class contain  model files creation and run model mascaret"""
+
     ASSIM_FILE = "data_assim.json"
+
     def __init__(self, run_path):
 
         self.dt_obs = 0
@@ -55,7 +58,7 @@ class ClassExtractAssim:
             if data_assim.is_file():
                 return directory
 
-        return '.'
+        return "."
 
     def init_assim(self, masc):
         size_x = masc.get_var_size("Model.X")[0]
@@ -65,15 +68,14 @@ class ClassExtractAssim:
 
     def extract_zq(self, masc, t0):
         # Periodic assimilation: store Z and Q at observation nodes
-            # Saving results for assimilation
-            try:
-                obs_keys = self.dict_obs  # node indices for observation points
-                val_z = np.round([masc.get("State.Z", i) for i in obs_keys], 3)
-                val_q = np.round([masc.get("State.Q", i) for i in obs_keys], 3)
-                self.store_result(val_z, val_q, t0)
-            except Exception as exc:
-                raise ValueError(exc) from exc
-
+        # Saving results for assimilation
+        try:
+            obs_keys = self.dict_obs  # node indices for observation points
+            val_z = np.round([masc.get("State.Z", i) for i in obs_keys], 3)
+            val_q = np.round([masc.get("State.Q", i) for i in obs_keys], 3)
+            self.store_result(val_z, val_q, t0)
+        except Exception as exc:
+            raise ValueError(exc) from exc
 
     def get_coords_assim(self, masc_xcoords):
         """
@@ -83,56 +85,66 @@ class ClassExtractAssim:
         """
         # self.dict_stations contient en clé un ID de zone à caler, et en valeurs un dico avec
         # - les coordonnées X des observations associées
-        self.assim_dict.load(self.assim_path,filename=self.ASSIM_FILE)
+        self.assim_dict.load(self.assim_path, filename=self.ASSIM_FILE)
         if self.assim_dict.get("ctrlKS", {}):
             for dico in self.assim_dict["ctrlKS"]["lst_zone"]:
-                self.dict_stations[str(dico["num_zone"])] = {'X': dico["lst_obs"]["abscissa"],
-                                                             'code': dico["lst_obs"]["code"]}
+                self.dict_stations[str(dico["num_zone"])] = {
+                    "X": dico["lst_obs"]["abscissa"],
+                    "code": dico["lst_obs"]["code"],
+                }
                 if str(dico["num_zone"]) not in self.zones:
                     self.zones.append(str(dico["num_zone"]))
-        if self.assim_dict.get('ctrlLaw', {}):
+        if self.assim_dict.get("ctrlLaw", {}):
             for dico in self.assim_dict["ctrlLaw"]["lst_loi"]:
-                self.dict_stations[str(dico["name_law"])] = {'X': dico["lst_obs"]["abscissa"],
-                                                             'code': dico["lst_obs"]["code"]}
+                self.dict_stations[str(dico["name_law"])] = {
+                    "X": dico["lst_obs"]["abscissa"],
+                    "code": dico["lst_obs"]["code"],
+                }
                 if str(dico["name_law"]) not in self.zones:
                     self.zones.append(str(dico["name_law"]))
         keys = np.array([k for k in self.dict_stations])
 
         for key in keys:
-            for ix, x in enumerate(self.dict_stations[str(key)]['X']):
+            for ix, x in enumerate(self.dict_stations[str(key)]["X"]):
                 # print(masc_xcoords)
                 index_obs = int(np.argmin(np.abs(np.subtract(masc_xcoords, x))))
-                code_obs = self.dict_stations[str(key)]['code'][ix]
-                obs_folder = os.path.join(self.assim_path, 'Observations')
-                file_obs = os.path.join(obs_folder, str(code_obs) + '.loi')
+                code_obs = self.dict_stations[str(key)]["code"][ix]
+                obs_folder = os.path.join(self.assim_path, "Observations")
+                file_obs = os.path.join(obs_folder, str(code_obs) + ".loi")
                 if os.path.isfile(file_obs):
                     with open(file_obs) as f:
                         lines = f.readlines()[3:]
-                        # TODO handle time units !!!
-                        self.dt_obs = (float(lines[1].split()[0]) - float(lines[0].split()[0])) * 3600
+                        self.dt_obs = (
+                            float(lines[1].split()[0]) - float(lines[0].split()[0])
+                        ) * 3600
                 else:
-                    raise FileNotFoundError(f'[ ERROR ] File {str(code_obs) + ".loi"} is not found in Observation folder.')
+                    raise FileNotFoundError(
+                        f'[ ERROR ] File {str(code_obs) + ".loi"} is not found in Observation folder.'
+                    )
                 if index_obs not in self.dict_obs:
-                    self.dict_obs[index_obs] = {'id_zone': [key],
-                                                'x_obs': masc_xcoords[index_obs],
-                                                'code': code_obs,
-                                                'dt_obs': self.dt_obs}
+                    self.dict_obs[index_obs] = {
+                        "id_zone": [key],
+                        "x_obs": masc_xcoords[index_obs],
+                        "code": code_obs,
+                        "dt_obs": self.dt_obs,
+                    }
                 else:
-                    self.dict_obs[index_obs]['id_zone'].append(key)
+                    self.dict_obs[index_obs]["id_zone"].append(key)
 
-        with open(os.path.join(self.run_path, 'dico_obs.json'), 'w') as f:
+        with open(os.path.join(self.run_path, "dico_obs.json"), "w") as f:
             json.dump(self.dict_obs, f)
         self.build_res_dict()
         self.num_zones = len(keys)
         # return self.dict_obs
 
     def build_res_dict(self):
-        self.dictRes = {'time': [],
-                        'Z': {n: {k: [] for k in self.dict_stations[n]["code"]} for n in self.zones},
-                        'Q': {n: {k: [] for k in self.dict_stations[n]["code"]} for n in self.zones},
-                        'Ksmaj': {n: -99 for n in self.zones},
-                        'Ksmin': {n: -99 for n in self.zones}
-                        }
+        self.dictRes = {
+            "time": [],
+            "Z": {n: {k: [] for k in self.dict_stations[n]["code"]} for n in self.zones},
+            "Q": {n: {k: [] for k in self.dict_stations[n]["code"]} for n in self.zones},
+            "Ksmaj": {n: -99 for n in self.zones},
+            "Ksmin": {n: -99 for n in self.zones},
+        }
 
     def store_KS_values(self, KSmin, KSmaj):
         """
@@ -143,8 +155,8 @@ class ClassExtractAssim:
         """
         for i in self.dict_obs:
             for zone in self.zones:
-                self.dictRes['Ksmin'][zone] = KSmin[i]
-                self.dictRes['Ksmaj'][zone] = KSmaj[i]
+                self.dictRes["Ksmin"][zone] = KSmin[i]
+                self.dictRes["Ksmaj"][zone] = KSmaj[i]
 
     def store_result(self, valZ, valQ, time, num_zone=None):
         """
@@ -156,19 +168,19 @@ class ClassExtractAssim:
         :return:
         """
         if num_zone:
-            self.dictRes['Z'][num_zone].append(valZ[num_zone])
-            self.dictRes['Q'][num_zone].append(valQ[num_zone])
-            self.dictRes['time'].append(time)
+            self.dictRes["Z"][num_zone].append(valZ[num_zone])
+            self.dictRes["Q"][num_zone].append(valQ[num_zone])
+            self.dictRes["time"].append(time)
         else:
             first = True
             for idx, i in enumerate(self.dict_obs):
-                key_station = self.dict_obs[i]['code']
+                key_station = self.dict_obs[i]["code"]
                 if first:
-                    self.dictRes['time'].append(time)
+                    self.dictRes["time"].append(time)
                     first = False
                 for zone in self.dict_obs[i]["id_zone"]:
-                    self.dictRes['Z'][str(zone)][key_station].append(valZ[idx])
-                    self.dictRes['Q'][str(zone)][key_station].append(valQ[idx])
+                    self.dictRes["Z"][str(zone)][key_station].append(valZ[idx])
+                    self.dictRes["Q"][str(zone)][key_station].append(valQ[idx])
 
     def write_results(self, folder, name):
         """
@@ -178,7 +190,7 @@ class ClassExtractAssim:
         :return:
         """
         if os.path.exists(self.run_path):
-            with open(os.path.join(folder, name), 'w') as f:
+            with open(os.path.join(folder, name), "w") as f:
                 json.dump(self.dictRes, f)
         else:
-            raise FileNotFoundError(f'Dossier {folder} inexistant')
+            raise FileNotFoundError(f"Dossier {folder} inexistant")

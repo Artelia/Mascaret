@@ -56,7 +56,7 @@ class ClassMatrix:
         self.max_values = []
 
         if not (os.path.exists(base_folder)):
-            raise FileNotFoundError(f'Unfound working folder : {base_folder}')
+            raise FileNotFoundError(f"Unfound working folder : {base_folder}")
         self.base_folder = base_folder
         self.zones = []
         self.nbzones = 0
@@ -66,41 +66,42 @@ class ClassMatrix:
         self.dict_assim.load(folder=self.base_folder)
 
         d_scen = self.dict_assim.dscen
-        path_instance = Path(d_scen.get("path_instance", '.'))
+        path_instance = Path(d_scen.get("path_instance", "."))
 
         # Retrieval of control type
         if self.dict_assim.get("ctrlKS") is not None and ctrl_type == "ctrlKS":
             self.ctrlKs = True
-            self.key_lst = 'lst_zone'
-            self.key_num = 'num_zone'
+            self.key_lst = "lst_zone"
+            self.key_num = "num_zone"
 
         if self.dict_assim.get("ctrlLaw") is not None and ctrl_type == "ctrlLaw":
             self.ctrlLaw = True
-            self.key_lst = 'lst_loi'
-            self.key_num = 'name_law'
+            self.key_lst = "lst_loi"
+            self.key_num = "name_law"
 
         self.ctrl_type = ctrl_type
 
-        config = {'H':'Z', 'Q':'Q'}
+        config = {"H": "Z", "Q": "Q"}
         self.type_field = config[self.dict_assim[ctrl_type]["obs_var"]]
         self.seuil_rejet_misfit = self.dict_assim[ctrl_type].get("seuil_rejet_misfit", 500)
 
         # Retrieval of zone count and zone list
         if self.ctrlKs or self.ctrlLaw:
-            self.zones = [dico.get(self.key_num) for dico in self.dict_assim[self.ctrl_type][self.key_lst]]
+            self.zones = [
+                dico.get(self.key_num) for dico in self.dict_assim[self.ctrl_type][self.key_lst]
+            ]
             self.zones = np.unique(self.zones)
             self.nb_zones = len(self.zones)
 
-        self.name_folder_ref = path_instance / d_scen.get("folder_ref", 'run_ref')
-        if self.ctrl_type == "ctrlLaw" and self.dict_assim.get('ctrlKS', False):
+        self.name_folder_ref = path_instance / d_scen.get("folder_ref", "run_ref")
+        if self.ctrl_type == "ctrlLaw" and self.dict_assim.get("ctrlKS", False):
             # Case with CtrlLaw after ctrlKs
-            self.name_folder_ref = Path(path_instance, 'Analyse_ctrlKS')
+            self.name_folder_ref = Path(path_instance, "Analyse_ctrlKS")
 
         # Retrieving total observation time steps
-        with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
+        with open(os.path.join(self.name_folder_ref, "Z_Q_assim.json")) as f:
             dict_ref = json.load(f)
-        self.nb_dt_obs = len(dict_ref['time'])
-
+        self.nb_dt_obs = len(dict_ref["time"])
 
         # Retrieving observation zeros and reject limits
         self.zero_obs = {}
@@ -126,7 +127,7 @@ class ClassMatrix:
                 if type_pert == "Ksmaj" or type_pert == "coefB":
                     self.nbperturb += 1
                     self.type_perturb.append(2)
-            print('[BLUE] : Total number of perturbations:', self.nbperturb)
+            print("[BLUE] : Total number of perturbations:", self.nbperturb)
 
     def build_all_matrix(self):
         """
@@ -151,11 +152,13 @@ class ClassMatrix:
                 std_zone = d["std"]
                 if d.get("std") is None:
                     raise KeyError("Key std not found in data_assim.json")
-                liste_sigma += [std_zone ** 2]
+                liste_sigma += [std_zone**2]
 
         if len(liste_sigma) != self.nbperturb:
-            raise ValueError(f'Problem with initial B matrix creation. '
-                             f'Size should be {self.nbperturb}, it is {len(liste_sigma)}')
+            raise ValueError(
+                f"Problem with initial B matrix creation. "
+                f"Size should be {self.nbperturb}, it is {len(liste_sigma)}"
+            )
         self.B = np.diag(liste_sigma, 0)
 
     def build_B_matrix_analysed(self, K):
@@ -181,8 +184,9 @@ class ClassMatrix:
                     if code not in num_obs:
                         if dict2.get("stderr") is None:
                             raise KeyError("Key std_obs not found in data_assim.json")
-                        diag_R += [float(dict2["stderr"][icode]) ** 2 for i in
-                                   range(self.nb_dt_obs)]
+                        diag_R += [
+                            float(dict2["stderr"][icode]) ** 2 for i in range(self.nb_dt_obs)
+                        ]
                         num_obs.append(code)
 
         self.R = np.array(diag_R)
@@ -202,7 +206,7 @@ class ClassMatrix:
 
         :return: None
         """
-        with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
+        with open(os.path.join(self.name_folder_ref, "Z_Q_assim.json")) as f:
             dict_ref = json.load(f)
 
         val_ref = {}
@@ -217,23 +221,23 @@ class ClassMatrix:
             for station in dict_ref[self.type_field][str(zone)]:
                 val_ref[station] += dict_ref[self.type_field][str(zone)][station]
 
-        obs_folder = os.path.join(self.base_folder, 'Observations')
+        obs_folder = os.path.join(self.base_folder, "Observations")
         self.val_obs = {}
         for station in val_ref.keys():
-            self.val_obs[station] = {'time': [], self.type_field: []}
-            file_name = os.path.join(obs_folder, str(station) + '.loi')
+            self.val_obs[station] = {"time": [], self.type_field: []}
+            file_name = os.path.join(obs_folder, str(station) + ".loi")
             with open(file_name) as f:
                 all_lines = f.readlines()
                 unit_time = all_lines[2].split()[0]
-                if unit_time == 'H':
-                    fact_time = 3600.
-                elif unit_time == 'S':
-                    fact_time = 1.
+                if unit_time == "H":
+                    fact_time = 3600.0
+                elif unit_time == "S":
+                    fact_time = 1.0
                 lines = all_lines[3:]
-                self.val_obs[station]['time'] = [float(l.split()[0]) * fact_time for l in lines]
+                self.val_obs[station]["time"] = [float(l.split()[0]) * fact_time for l in lines]
                 self.val_obs[station][self.type_field] = [float(l.split()[1]) for l in lines]
 
-        for it, time in enumerate(dict_ref['time']):
+        for it, time in enumerate(dict_ref["time"]):
             for station in val_ref.keys():
                 obs = self.val_obs[station][self.type_field][it]
                 ref = val_ref[station][it]
@@ -242,12 +246,14 @@ class ClassMatrix:
 
                 # Apply threshold on observations
                 if obs < self.reject_obs[station]:
-                    print(f'[BLUE] : Station {station} has at least one value below '
-                          f'threshold {self.reject_obs[station]}')
-                    delta_z = 0.
+                    print(
+                        f"[BLUE] : Station {station} has at least one value below "
+                        f"threshold {self.reject_obs[station]}"
+                    )
+                    delta_z = 0.0
                 # Apply misfit rejection threshold
                 if abs(100 * np.divide(delta_z, ref)) > self.seuil_rejet_misfit:
-                    delta_z = 0.
+                    delta_z = 0.0
                 self.misfit.append(delta_z)
 
     def get_perturb_dict_js(self, base_folder, iperturb):
@@ -257,18 +263,21 @@ class ClassMatrix:
         :param iperturb: Perturbation index.
         :return: Tuple (folder_name, perturbation_type, value, zone).
         """
-        print('[BLUE] : Finding perturbation folders in', base_folder)
+        print("[BLUE] : Finding perturbation folders in", base_folder)
         instances = self.dict_assim.instances
         if not instances:
-            raise Exception(f'Perturbation number {iperturb} not found in the Json data')
+            raise Exception(f"Perturbation number {iperturb} not found in the Json data")
 
-        instances = [inst for inst in instances if
-                     inst['name'].startswith(self.ctrl_type) and not inst['name'].endswith('_init')]
+        instances = [
+            inst
+            for inst in instances
+            if inst["name"].startswith(self.ctrl_type) and not inst["name"].endswith("_init")
+        ]
         try:
             inst = instances[iperturb]
             name_folder = os.path.basename(inst["RUN_REP"])
             type_perturb = inst["assim_info"]["type_case"]
-            if self.ctrl_type == 'ctrlLaw':
+            if self.ctrl_type == "ctrlLaw":
                 val_perturb = inst["assim_info"]["coef_pertub"]
                 zone_perturb = inst["assim_info"]["name_law"]
             else:  # ctrlKs
@@ -276,8 +285,10 @@ class ClassMatrix:
                 zone_perturb = inst["assim_info"]["num_zone"]
             return name_folder, type_perturb, val_perturb, zone_perturb
         except Exception as err:
-            raise Exception(f'Perturbation number {iperturb} not found in the Json data : {str(err)},\n'
-                            f' traceback: {traceback.format_exc()}')
+            raise Exception(
+                f"Perturbation number {iperturb} not found in the Json data : {str(err)},\n"
+                f" traceback: {traceback.format_exc()}"
+            )
 
     def build_H_matrix(self):
         """
@@ -287,8 +298,8 @@ class ClassMatrix:
         H = []
         # Getting Zref and KS values
 
-        base_folder_perturb = os.path.join(self.base_folder, f'run_{self.ctrl_type}')
-        with open(os.path.join(self.name_folder_ref, 'Z_Q_assim.json')) as f:
+        base_folder_perturb = os.path.join(self.base_folder, f"run_{self.ctrl_type}")
+        with open(os.path.join(self.name_folder_ref, "Z_Q_assim.json")) as f:
             dict_ref = json.load(f)
 
         val_ref = []
@@ -305,31 +316,44 @@ class ClassMatrix:
         # Getting initial values of KS
         if self.ctrlKs:
             data = self.dict_assim["ctrlKS"]
-            KSminref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_min"]
-                        for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
-            KSmajref = {str(zone["num_zone"]): zone["zone_info"]["ref_ks_maj"]
-                        for zone in data["lst_zone"] if zone["num_zone"] in self.zones}
-            self.param_ref = {'Ksmin': KSminref, 'Ksmaj': KSmajref}
+            KSminref = {
+                str(zone["num_zone"]): zone["zone_info"]["ref_ks_min"]
+                for zone in data["lst_zone"]
+                if zone["num_zone"] in self.zones
+            }
+            KSmajref = {
+                str(zone["num_zone"]): zone["zone_info"]["ref_ks_maj"]
+                for zone in data["lst_zone"]
+                if zone["num_zone"] in self.zones
+            }
+            self.param_ref = {"Ksmin": KSminref, "Ksmaj": KSmajref}
 
         if self.ctrlLaw:
             data = self.dict_assim["ctrlLaw"]
             # Pour les lois on part d'un coeff ref a = 1, b=0
-            coefAref = {str(zone["name_law"]): 1
-                        for zone in data["lst_loi"] if zone["name_law"] in self.zones}
-            coefBref = {str(zone["name_law"]): 0
-                        for zone in data["lst_loi"] if zone["name_law"] in self.zones}
-            self.param_ref = {'coefA': coefAref, 'coefB': coefBref}
+            coefAref = {
+                str(zone["name_law"]): 1
+                for zone in data["lst_loi"]
+                if zone["name_law"] in self.zones
+            }
+            coefBref = {
+                str(zone["name_law"]): 0
+                for zone in data["lst_loi"]
+                if zone["name_law"] in self.zones
+            }
+            self.param_ref = {"coefA": coefAref, "coefB": coefBref}
 
         # Getting Z perturb and building H
         for i in range(self.nbperturb):
-            print('[BLUE] : Building H matrix, perturbed run', i)
+            print("[BLUE] : Building H matrix, perturbed run", i)
             # Fonctionne pour Law et KS normalement
             name_folder_pertub, type_perturb, param_perturb, zone_perturb = (
-                self.get_perturb_dict_js(base_folder_perturb, i))
+                self.get_perturb_dict_js(base_folder_perturb, i)
+            )
 
-            print('[BLUE] : Type of perturbation :', type_perturb)
+            print("[BLUE] : Type of perturbation :", type_perturb)
             name_folder_pertub = os.path.join(base_folder_perturb, name_folder_pertub)
-            with open(os.path.join(name_folder_pertub, 'Z_Q_assim.json')) as f:
+            with open(os.path.join(name_folder_pertub, "Z_Q_assim.json")) as f:
                 dict_perturb = json.load(f)
 
             val_perturb = []
@@ -348,6 +372,7 @@ class ClassMatrix:
         H = np.array(H)
         H = H.T
         self.H = H
+
 
 # if __name__ == '__main__':
 #     M = ClassMatrix(base_folder)

@@ -32,7 +32,7 @@ from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 
-MESSAGE_CATEGORY = 'TaskCreatFAssim'
+MESSAGE_CATEGORY = "TaskCreatFAssim"
 
 
 class TaskSignals(QObject):
@@ -48,7 +48,9 @@ class TaskCreatFAssim(QgsTask):
     emitting progress signals in submission order.
     """
 
-    def __init__(self, description, scens, type_ctrl, if_analyse=False, base_folder='.', max_workers=None):
+    def __init__(
+        self, description, scens, type_ctrl, if_analyse=False, base_folder=".", max_workers=None
+    ):
         """Initialize TaskCreatFAssim for parallel assimilation folder creation.
 
         :param description: Description string for the QGIS task.
@@ -69,7 +71,7 @@ class TaskCreatFAssim(QgsTask):
         self.if_analyse = if_analyse
 
         self.exc_start_time = None
-        self.error_txt = ''
+        self.error_txt = ""
 
         # Configure thread-based parallelism
         if max_workers is None:
@@ -147,9 +149,7 @@ class TaskCreatFAssim(QgsTask):
 
         try:
             # Create the thread pool executor
-            self.executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=self.max_workers
-            )
+            self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers)
 
             self.on_message(
                 f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
@@ -185,7 +185,7 @@ class TaskCreatFAssim(QgsTask):
 
                             # Base message
 
-                            if result['success']:
+                            if result["success"]:
                                 self.on_message(
                                     f"{result.get('output', '')}\n"
                                     f"Creation folder completed for {result.get('scenario', '***')}."
@@ -193,7 +193,9 @@ class TaskCreatFAssim(QgsTask):
                                 )
                             else:
                                 self.error_txt += f"\nScenario {result.get('scenario', '***')}({index + 1}): {result['error']}"
-                                self.on_message(f"Scenario {result.get('scenario', '***')} (#{index + 1}) failed")
+                                self.on_message(
+                                    f"Scenario {result.get('scenario', '***')} (#{index + 1}) failed"
+                                )
 
                             # Process results in order
                             self._process_completed_results()
@@ -216,8 +218,9 @@ class TaskCreatFAssim(QgsTask):
 
             # Shutdown the pool cleanly
             self.executor.shutdown(wait=True)
-            QgsMessageLog.logMessage(f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY,
-                                     Qgis.Info)
+            QgsMessageLog.logMessage(
+                f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY, Qgis.Info
+            )
             self.signal.launch_completed.emit(not bool(self.error_txt))
             return not bool(self.error_txt)
 
@@ -235,8 +238,8 @@ class TaskCreatFAssim(QgsTask):
             execution_time = time.time() - self.exc_start_time
             message = (
                 f'  Task "{self.description}" was canceled\n'
-                f'  Execution time: {execution_time:.2f}s\n'
-                f'  Models completed: {self.completed_count}/{self.total_models}'
+                f"  Execution time: {execution_time:.2f}s\n"
+                f"  Models completed: {self.completed_count}/{self.total_models}"
             )
             QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Warning)
         super().cancel()
@@ -268,9 +271,7 @@ class TaskCreatFAssim(QgsTask):
         """
         percentage = (completed / total) * 100 if total > 0 else 0
         QgsMessageLog.logMessage(
-            f"Progress: {completed}/{total} models ({percentage:.1f}%)",
-            MESSAGE_CATEGORY,
-            Qgis.Info
+            f"Progress: {completed}/{total} models ({percentage:.1f}%)", MESSAGE_CATEGORY, Qgis.Info
         )
 
     def create_json_param(self, path_scen, param_file):
@@ -282,12 +283,13 @@ class TaskCreatFAssim(QgsTask):
         """
         # Create parameter input file (with index to avoid conflicts)
 
-        d_json = {'path_scen': path_scen,
-                  'if_analyse': self.if_analyse,
-                  'type_ctrl': self.type_ctrl,
-                  'json_file': "data_assim.json"
-                  }
-        with open(param_file, 'w') as fp:
+        d_json = {
+            "path_scen": path_scen,
+            "if_analyse": self.if_analyse,
+            "type_ctrl": self.type_ctrl,
+            "json_file": "data_assim.json",
+        }
+        with open(param_file, "w") as fp:
             json.dump(d_json, fp)
         return param_file
 
@@ -300,20 +302,20 @@ class TaskCreatFAssim(QgsTask):
         :return: Dict with scenario results: success status, output, errors, timing, and path.
         """
         path_scen = os.path.join(self.base_folder, scen)
-        param_file = os.path.join(path_scen, 'd_creat_folder.json')
+        param_file = os.path.join(path_scen, "d_creat_folder.json")
         self.create_json_param(path_scen, param_file)
         results = {
-            'scenario': scen,
-            'success': False,
-            'output': '',
-            'error': '',
-            'start_time': time.time(),
-            'path_run': path_scen
+            "scenario": scen,
+            "success": False,
+            "output": "",
+            "error": "",
+            "start_time": time.time(),
+            "path_run": path_scen,
         }
 
         if not os.path.isdir(path_scen):
-            results['error'] = f"Process failed because the folder is not found: {path_scen}"
-            results['execution_time'] = time.time() - results['start_time']
+            results["error"] = f"Process failed because the folder is not found: {path_scen}"
+            results["execution_time"] = time.time() - results["start_time"]
         try:
             script_dir = os.path.dirname(__file__)
             os.chdir(script_dir)
@@ -322,21 +324,23 @@ class TaskCreatFAssim(QgsTask):
                 shell=True,
                 text=True,
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
 
-            results.update({
-                'success': True,
-                'output': process.stdout,
-                'error': process.stderr,
-            })
+            results.update(
+                {
+                    "success": True,
+                    "output": process.stdout,
+                    "error": process.stderr,
+                }
+            )
 
-            results['success'] = True
+            results["success"] = True
         except subprocess.CalledProcessError as e:
-            results['error'] = f"Process failed with exit code {e.returncode}: {e.stderr}"
+            results["error"] = f"Process failed with exit code {e.returncode}: {e.stderr}"
         except Exception as e:
-            results['error'] = f"Unexpected error: {str(e)}"
-        results['execution_time'] = time.time() - results['start_time']
+            results["error"] = f"Unexpected error: {str(e)}"
+        results["execution_time"] = time.time() - results["start_time"]
 
         if os.path.exists(param_file):
             os.remove(param_file)

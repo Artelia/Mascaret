@@ -20,20 +20,17 @@ email                :
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt,qVersion
+from qgis.PyQt.QtCore import Qt, qVersion
 from qgis.PyQt.QtGui import QColor, QIcon
 
-from qgis.core import (
-    QgsApplication,
-    QgsWkbTypes
-)
+from qgis.core import QgsApplication, QgsWkbTypes
 from qgis.gui import QgsRubberBand
 
 from .FunctionAssimDialog import reproject_geom_to_project
 from .ClassAssimKsWidget import ClassAssimKsWidget
 from .ClassAssimLawWidget import ClassAssimLawWidget
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 FORM_CLASS, BASE = uic.loadUiType(
@@ -59,7 +56,7 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.setupUi(self)
         self.mgis = mgis
         self.iface = iface
-        self.cur_wgt = 'ks'
+        self.cur_wgt = "ks"
 
         self.rb_format = QgsWkbTypes.LineGeometry
         self.rb = QgsRubberBand(iface.mapCanvas(), self.rb_format)
@@ -92,16 +89,16 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         if QT_VERSION > 5:
             qt_magenta = Qt.GlobalColor.magenta
         else:
-            qt_magenta =Qt.magenta
+            qt_magenta = Qt.magenta
         if self.tab_assim.currentIndex() == 0:
-            self.cur_wgt = 'ks'
+            self.cur_wgt = "ks"
             self.rb_format = QgsWkbTypes.LineGeometry
             self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
             self.rb.setColor(qt_magenta)
             self.rb.setFillColor(QColor("transparent"))
             self.rb.setWidth(8)
         else:
-            self.cur_wgt = 'law'
+            self.cur_wgt = "law"
             self.rb_format = QgsWkbTypes.PointGeometry
             self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
             self.rb.setColor(qt_magenta)
@@ -120,15 +117,15 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.rb.reset(self.rb_format)
         rb_visible = False
         rb_geom = None
-        if self.cur_wgt == 'ks':
+        if self.cur_wgt == "ks":
             wgt = self.wgt_ks
             rb_visible = wgt.bt_disp_zone.isChecked()
             rb_geom = wgt.d_zone_ks[wgt.cur_zone_ks]["geom"]
             rb_geom_crs = wgt.d_zone_ks[wgt.cur_zone_ks].get("crs", None)
-        elif self.cur_wgt == 'law':
+        elif self.cur_wgt == "law":
             wgt = self.wgt_law
             rb_visible = wgt.bt_disp_law.isChecked()
-            if wgt.d_laws[wgt.cur_perturb_var].get(wgt.cur_law, None) :
+            if wgt.d_laws[wgt.cur_perturb_var].get(wgt.cur_law, None):
                 rb_geom = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law]["geom"]
                 rb_geom_crs = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law].get("crs", None)
 
@@ -136,7 +133,6 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
             geom_to_display = reproject_geom_to_project(rb_geom, rb_geom_crs)
             self.rb.addGeometry(geom_to_display)
             self.rb.show()
-
 
     def closeEvent(self, event):
         """Handle dialog close event.

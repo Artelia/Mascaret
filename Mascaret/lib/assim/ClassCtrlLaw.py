@@ -70,19 +70,23 @@ class CtrlLaw(ModelAssimBase):
                 if len(parts) >= 2:
                     parts[1] = round(coef_a * float(parts[1]) + coef_b, 6)
                     if parts[1] > coefs["max"] and cond_max:
-                        self.add_info(f"Warning : One value of law {folder_name}/{name_law} is higher than "
-                                      f"maximum value ({coefs['max']}) for A={coef_a} and B={coef_b}."
-                                      f"Please change max value or adapt A or B coefficient.")
+                        self.add_info(
+                            f"Warning : One value of law {folder_name}/{name_law} is higher than "
+                            f"maximum value ({coefs['max']}) for A={coef_a} and B={coef_b}."
+                            f"Please change max value or adapt A or B coefficient."
+                        )
                         cond_max = False
                     if parts[1] < coefs["min"] and cond_min:
-                        self.add_info(f"Warning : One value of law {folder_name}/{name_law} is lower than "
-                                      f"minimum value ({coefs['min']}) for A={coef_a} and B={coef_b}."
-                                      f"Please change min value or adapt A or B coefficient.")
+                        self.add_info(
+                            f"Warning : One value of law {folder_name}/{name_law} is lower than "
+                            f"minimum value ({coefs['min']}) for A={coef_a} and B={coef_b}."
+                            f"Please change min value or adapt A or B coefficient."
+                        )
                         cond_min = False
 
                     # Threshold on laws, if needed
-                    parts[1] = min(parts[1], coefs['max'])
-                    parts[1] = max(parts[1], coefs['min'])
+                    parts[1] = min(parts[1], coefs["max"])
+                    parts[1] = max(parts[1], coefs["min"])
                     fileout.write(" ".join(str(p) for p in parts) + "\n")
 
         os.remove(file_tmp)
@@ -108,8 +112,10 @@ class CtrlLaw(ModelAssimBase):
         perturb_sources = {
             ("extremities", 1): ("perturbationsDebit", d_ctrl_law["ldebit_perturb"]),
             ("extremities", 2): ("perturbationsCote", d_ctrl_law["lcote_perturb"]),
-            ("lateral_inflows", None): ("perturbationsDebitLineique",
-                                        d_ctrl_law["ldebit_lin_perturb"]),
+            ("lateral_inflows", None): (
+                "perturbationsDebitLineique",
+                d_ctrl_law["ldebit_lin_perturb"],
+            ),
         }
 
         for d_loi in list_law:
@@ -147,12 +153,14 @@ class CtrlLaw(ModelAssimBase):
             # Construction du cas
             # -----------------------------
             dnew = d_loi.copy()
-            dnew.update({
-                "name_law": name_law,
-                "type_law": type_law,
-                "pertub": pertubf,
-                "val_coef": val_coef,
-            })
+            dnew.update(
+                {
+                    "name_law": name_law,
+                    "type_law": type_law,
+                    "pertub": pertubf,
+                    "val_coef": val_coef,
+                }
+            )
 
             lst_cas.append(dnew)
 
@@ -164,13 +172,13 @@ class CtrlLaw(ModelAssimBase):
     # ------------------------------------------------------------------
 
     def build_ctrl_law_instance(
-            self,
-            lst_case,
-            d_run,
-            d_scen,
-            order,
-            xcas_file,
-            xcas_file_init,
+        self,
+        lst_case,
+        d_run,
+        d_scen,
+        order,
+        xcas_file,
+        xcas_file_init,
     ):
         """Append ctrlLaw run-instance entries to *d_scen*.
 
@@ -200,35 +208,39 @@ class CtrlLaw(ModelAssimBase):
                 "source_law": case["source_law"],
                 "coef_pertub": val,
                 "val_min": case["val_min"],
-                "val_max": case["val_max"]
+                "val_max": case["val_max"],
             }
 
             if d_run["has_run_init"]:
-                d_scen["instances"].append({
-                    "name": f"{name}_init",
-                    "name_xcas": xcas_file_init,
-                    "RUN_REP": os.path.join(folder_run, "run_init"),
-                    "type_ctrl": "ctrlLaw",
-                    "has_casier": False,
-                    "has_tracer": False,
-                    "starttime": None,
-                    "order": order,
-                    "assim_info": assim_info,
-                })
+                d_scen["instances"].append(
+                    {
+                        "name": f"{name}_init",
+                        "name_xcas": xcas_file_init,
+                        "RUN_REP": os.path.join(folder_run, "run_init"),
+                        "type_ctrl": "ctrlLaw",
+                        "has_casier": False,
+                        "has_tracer": False,
+                        "starttime": None,
+                        "order": order,
+                        "assim_info": assim_info,
+                    }
+                )
                 order += 1
 
-            d_scen["instances"].append({
-                "name": name,
-                "name_xcas": xcas_file,
-                "RUN_REP": folder_run,
-                "has_casier": d_run["has_casier"],
-                "has_tracer": d_run["has_tracer"],
-                "has_assim": d_run["has_assimilation"],
-                "starttime": starttime,
-                "type_ctrl": "ctrlLaw",
-                "assim_info": assim_info,
-                "order": order,
-            })
+            d_scen["instances"].append(
+                {
+                    "name": name,
+                    "name_xcas": xcas_file,
+                    "RUN_REP": folder_run,
+                    "has_casier": d_run["has_casier"],
+                    "has_tracer": d_run["has_tracer"],
+                    "has_assim": d_run["has_assimilation"],
+                    "starttime": starttime,
+                    "type_ctrl": "ctrlLaw",
+                    "assim_info": assim_info,
+                    "order": order,
+                }
+            )
             order += 1
 
         return d_scen, order
@@ -250,14 +262,21 @@ class CtrlLaw(ModelAssimBase):
 
         lst_case, _ = self.get_list_cas_law(self.data.raw)
         d_scen, order = self.build_ctrl_law_instance(
-            lst_case, d_run, d_scen, order,
+            lst_case,
+            d_run,
+            d_scen,
+            order,
             xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
             xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
         )
-        d_scen, order = self.build_analyse_instance(d_run, d_scen, order, type_assim="ctrlLaw",
-                                                    xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
-                                                    xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
-                                                    )
+        d_scen, order = self.build_analyse_instance(
+            d_run,
+            d_scen,
+            order,
+            type_assim="ctrlLaw",
+            xcas_file=d_scen.get("name_xcas", "mascaret.xcas"),
+            xcas_file_init=d_scen.get("name_xcas_init", "mascaret_init.xcas"),
+        )
 
         self.data.dscen = d_scen
         self.export_data_json()
@@ -282,7 +301,7 @@ class CtrlLaw(ModelAssimBase):
             "coefA": assim_info["coef_pertub"] if assim_info["type_case"] == "coefA" else 1,
             "coefB": assim_info["coef_pertub"] if assim_info["type_case"] == "coefB" else 0,
             "min": assim_info["val_min"],
-            "max": assim_info["val_max"]
+            "max": assim_info["val_max"],
         }
         self.modif_ctrl_law(name_law, folder, coefs)
 
@@ -298,10 +317,10 @@ class CtrlLaw(ModelAssimBase):
         if instance.get("type_ctrl") != "ctrlLaw":
             return
         lst_modif = {}
-        for loi in self.data['ctrlLaw']['lst_loi']:
-            if not loi.get('xa'):
+        for loi in self.data["ctrlLaw"]["lst_loi"]:
+            if not loi.get("xa"):
                 continue
-            xa = loi['xa']
+            xa = loi["xa"]
             coefs = {loi.get("type"): xa[0]}
             suffix = "_init.loi" if instance["name"].endswith("_init") else ".loi"
             name_law = f"{loi['name_law']}{suffix}"
@@ -315,4 +334,4 @@ class CtrlLaw(ModelAssimBase):
             for name_law, coefs in lst_modif.items():
                 self.modif_ctrl_law(name_law, folder, coefs)
         else:
-            print('[WARNING] Warning No assimiled Law ')
+            print("[WARNING] Warning No assimiled Law ")
