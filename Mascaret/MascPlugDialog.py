@@ -298,7 +298,7 @@ class MascPlugDialog(QMainWindow):
         self.ui.action_create_lig_file.triggered.connect(self.creat_lig)
 
         self.ui.actionTest.triggered.connect(self.fct_test)
-        self.ui.actionTest.setVisible(True)
+        self.ui.actionTest.setVisible(False)
 
         self.ui.actionReadLisFile.triggered.connect(self.read_lis_file)
 
@@ -1154,12 +1154,8 @@ Version : {}
         # get_laws
         self.chkt.debug_update_vers_meta(version="6.3.0")
         # cl.creat_file_no_keep_break()
-        self.chkt.update_version('640')
+        #self.chkt.update_version('640')
 
-        # from .lib.assim.ClassAssimDB import ClassAssimDB
-        # cl =  ClassAssimDB(self.mdb)
-        # print(cl.data)
-        # cl.export_data_json(os.path.join(self.masplugPath, 'mascaret'))
         pass
 
     def update_ks_mesh_planim(self):
@@ -1414,3 +1410,4 @@ Version : {}
                 self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidgetAssim)
 
         self.main_graph()
+
