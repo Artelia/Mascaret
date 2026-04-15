@@ -450,7 +450,7 @@ class ClassGetResults:
         # Import mobile gate old results if available
         crest_file = os.path.join(folder, self.OLD_WEIRS_RES_FILE)
         if os.path.isfile(crest_file):
-            self.cl_res_str.read_mobil_gate_res(id_run)
+            self.cl_res_str.read_mobil_gate_res(id_run, crest_file)
 
     def _read_res_json(self, struct_file):
         # Import API structure results if available

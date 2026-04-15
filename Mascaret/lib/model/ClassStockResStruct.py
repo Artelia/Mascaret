@@ -276,16 +276,13 @@ class ClassStockResStruct:
 
         return info["gid"][0] if info.get("gid") else None
 
-    def read_mobil_gate_res(self, id_run, folder):
+    def read_mobil_gate_res(self, id_run, file_path):
         """Read and import mobile gate results from file.
 
         :param id_run: Run identifier.
-        :param folder: Folder path containing crest file.
+        :param file_path: crest file.
         :return: None
         """
-        file_path = os.path.join(folder)
-        if not os.path.isfile(file_path):
-            return
         try:
             dico_res = self._parse_crest_file(file_path)
             if not dico_res:
