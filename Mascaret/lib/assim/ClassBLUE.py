@@ -30,10 +30,11 @@ import json
 
 
 def write_matrix_auto(f, matrix, decimals=5):
-    """Writes matrix to file
-    :param f: file object (already opened by python),
-    :param matrix: matrix to write (1 or 2 dimensions)
-    :param decimals: number of decimal places to use
+    """Write a 1-D or 2-D numpy matrix to an open file, right-justified per column.
+
+    :param f: Open file object to write into.
+    :param matrix: 1-D or 2-D numpy array to write.
+    :param decimals: Number of decimal places.
     """
     if len(matrix.shape) == 2:
         # Formater toutes les valeurs en chaînes
@@ -62,9 +63,15 @@ def write_matrix_auto(f, matrix, decimals=5):
 
 
 class classBLUE:
-    """Class that computes the analysed state of parameters using BLUE method"""
+    """Compute the analysed state of parameters using the BLUE method."""
 
     def __init__(self, base_folder, ctrl_type, debug=False):
+        """Initialize BLUE with assimilation data and build all matrices.
+
+        :param base_folder: Scenario directory containing ``data_assim.json``.
+        :param ctrl_type: Control type (``'ctrlKS'`` or ``'ctrlLaw'``).
+        :param debug: Enable debug printing when ``True``.
+        """
         self.analyse = None
         self.innovation = None
         self.K = None
@@ -140,6 +147,7 @@ class classBLUE:
             print("[BLUE] : Calcul du gain K effectué.")
 
     def calc_so_sb(self):
+        """Compute the variance scaling factors *so* (observation) and *sb* (background)."""
         self.trace_HBHT = []
         self.old_sb = np.copy(self.sb)
         self.old_so = np.copy(self.so)

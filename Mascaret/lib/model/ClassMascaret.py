@@ -37,9 +37,10 @@ QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 class ClassMascaret:
-    """Class contain  model files creation and run model mascaret"""
+    """Model files creation and run manager for Mascaret."""
 
     def __init__(self, main):
+        """Initialize the instance with the main plugin object *main*."""
         self.mgis = main
         self.dbg = main.DEBUG
         self.mdb = self.mgis.mdb
@@ -58,6 +59,7 @@ class ClassMascaret:
         self.cond_cancel = False
 
     def mascaret_ui(self):
+        """Open the kernel selection dialog and start the run if confirmed."""
         # state list
 
         case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
@@ -70,13 +72,17 @@ class ClassMascaret:
 
         dlg = ClassRunUIDialog(self.mgis, kernel, self.obj_model)
         if QT_VERSION > 5:
-            result = dlg.exec()  # PyQt6
+            result = dlg.exec()
+            if result == QDialog.DialogCode.Accepted:
+                self.launch_run()            # PyQt6
         else:
             result = dlg.exec_()  # PyQt5
-        if result == QDialog.Accepted:
-            self.launch_run()
+            if result == QDialog.Accepted:
+                self.launch_run()
+
 
     def launch_run(self):
+        """Build the task queue and start the execution sequence."""
         # creation des repertoires
         clam = ClassInitializeModel(self.mgis, self.obj_model)
         clam.main()
@@ -124,6 +130,11 @@ class ClassMascaret:
         self.process_next_task()
 
     def launch_ref_task(self, type_="ref"):
+        """Launch a reference or initialisation task.
+
+        :param type_: Task type (``'ref'`` or ``'init'``).
+        :type type_: str
+        """
         self.mgis.add_info(
             f"[ RUN   ] Executing task: {type_} *****************************************************"
         )
@@ -165,6 +176,13 @@ class ClassMascaret:
                 self.process_next_task()
 
     def launch_ctrl_creat(self, type_ctrl_creat):
+        """Create the assimilation folder structure for CtrlKS or CtrlLaw.
+
+        :param type_ctrl_creat: One of ``'ctrlKS_creat_folder'``,
+            ``'ctrlKS_creat_analyse'``, ``'ctrlLaw_creat_folder'``,
+            ``'ctrlLaw_creat_analyse'``.
+        :type type_ctrl_creat: str
+        """
         CONFIG = {
             "ctrlKS_creat_folder": ("Control Ks folder", "ctrlKS", False),
             "ctrlKS_creat_analyse": ("Control Ks analysis CtrlKS folder", "ctrlKS", True),
@@ -214,6 +232,15 @@ class ClassMascaret:
                 self.process_next_task()
 
     def launch_ctrl_task(self, type_ctrl, type_init=False, if_analyse=False):
+        """Launch a CtrlKS or CtrlLaw model execution task.
+
+        :param type_ctrl: ``'ctrlKS'`` or ``'ctrlLaw'``.
+        :type type_ctrl: str
+        :param type_init: ``True`` for an initialisation task.
+        :type type_init: bool
+        :param if_analyse: ``True`` to save results to the database.
+        :type if_analyse: bool
+        """
         CONFIG = {
             # (type_ctrl, type_init, if_analyse)
             ("ctrlKS", False, False): (
@@ -305,6 +332,11 @@ class ClassMascaret:
                 self.process_next_task()
 
     def launch_ctrl_BLUE(self, typ_ctrl):
+        """Launch the BLUE assimilation task for CtrlKS or CtrlLaw.
+
+        :param typ_ctrl: ``'ctrlKS'`` or ``'ctrlLaw'``.
+        :type typ_ctrl: str
+        """
         CONFIG = {
             "ctrlKS": (
                 "[ ASSIM ] Starting Control Ks (BLUE) *****************************************************",
@@ -351,6 +383,15 @@ class ClassMascaret:
                 self.process_next_task()
 
     def launch_task(self, task, description="Mascaret Models Execution"):
+        """Submit *task* to the QGIS task manager with automatic retries.
+
+        :param task: Task to submit.
+        :type task: QgsTask
+        :param description: Human-readable label used in logs.
+        :type description: str
+        :return: Task identifier on success, ``None`` otherwise.
+        :rtype: int or None
+        """
         if self.dbg:
             print("Launching task...")
         task_manager = QgsApplication.taskManager()
@@ -414,7 +455,15 @@ class ClassMascaret:
         return None  # Retourne None si toutes les tentatives échouent
 
     def on_task_completed(self, completed_task_id, expected_task_id, task_type):
-        """Callback universel appelé quand une task se termine"""
+        """Disconnect the handler and advance the queue if IDs match.
+
+        :param completed_task_id: ID of the finished task.
+        :type completed_task_id: int
+        :param expected_task_id: ID of the awaited task.
+        :type expected_task_id: int
+        :param task_type: Task label for log messages.
+        :type task_type: str
+        """
         if completed_task_id == expected_task_id:
             # Déconnecter le handler actuel
             task_manager = QgsApplication.taskManager()
@@ -430,7 +479,7 @@ class ClassMascaret:
             self.process_next_task()
 
     def process_next_task(self):
-        """Traite la prochaine task dans la queue"""
+        """Pop and dispatch the next task in the queue."""
         if not self.task_queue:
             self.on_all_tasks_completed()
             return
@@ -471,7 +520,11 @@ class ClassMascaret:
             # self.launch_ctrl_analyse()
 
     def on_all_tasks_completed(self):
-        """Appelé quand toutes les tasks sont terminées"""
+        """Called when all tasks are done.
+
+        Checks that no task remains active in the QGIS task manager, then logs
+        a final success message.
+        """
         # Vérification qu'il ne reste plus aucune tâche active
         task_manager = QgsApplication.taskManager()
         active_tasks = task_manager.tasks()
@@ -484,8 +537,11 @@ class ClassMascaret:
         QgsMessageLog.logMessage("All Mascaret tasks completed", "TaskMascaret", Qgis.Success)
 
     def on_task_completed(self, task_type):
-        """Callback appelé quand une task se termine avec succès"""
+        """Log success and advance the queue.
 
+        :param task_type: Completed task label.
+        :type task_type: str
+        """
         self.mgis.add_info(
             f"[ SUCCESS ] {task_type} task completed successfully, processing next..."
         )
@@ -497,7 +553,11 @@ class ClassMascaret:
         self.process_next_task()
 
     def on_task_failed(self, task_type):
-        """Callback appelé quand une task échoue"""
+        """Log failure and advance the queue.
+
+        :param task_type: Failed task label.
+        :type task_type: str
+        """
         nex_txt = ", processing next..."
         if self.cond_cancel:
             nex_txt = "."
@@ -512,18 +572,24 @@ class ClassMascaret:
         self.process_next_task()
 
     def user_cancel(self, task_type):
-        """Callback appelé quand une task échoue"""
+        """Clear the queue and flag cancellation.
+
+        :param task_type: Cancelled task label.
+        :type task_type: str
+        """
         self.mgis.add_info(f"[ FAILED ]{task_type} task canceled.")
         QgsMessageLog.logMessage(f"Task '{task_type}' canceled", "TaskMascaret", Qgis.Warning)
         self.task_queue.clear()
         self.cond_cancel = True
 
     def display_message(self, success, dtxt):
-        """
+        """Print run output, errors and timing in the QGIS message panel.
 
-        :param success:
-        :param txt:
-        :return:
+        :param success: ``True`` if the run succeeded.
+        :type success: bool
+        :param dtxt: Dict with keys ``'output'``, ``'error'``,
+            ``'execution_time'``, ``'id_run'``, ``'path_run'``.
+        :type dtxt: dict
         """
         self.mgis.add_info(dtxt.get("output", ""))
 

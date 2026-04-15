@@ -31,7 +31,7 @@ except ImportError:
 
 
 class ClassMatrix:
-    """Build matrices from assimilation data and perturbation runs."""
+    """Build BLUE matrices (B, R, H, misfit) from assimilation data and perturbation runs."""
 
     def __init__(self, base_folder, ctrl_type, json_assim=None):
         """Initialize ClassMatrix with assimilation data and control type.
@@ -130,10 +130,7 @@ class ClassMatrix:
             print("[BLUE] : Total number of perturbations:", self.nbperturb)
 
     def build_all_matrix(self):
-        """
-        Builds all matrixes needed for BLUE computation : B matrix, R matrix then H and misfit
-        :return: None
-        """
+        """Build all matrices required for BLUE: B, R, H and misfit."""
         self.build_B_matrix_ini()
         self.build_diago_R_matrix_ini()
         self.build_H_matrix()
@@ -192,11 +189,7 @@ class ClassMatrix:
         self.R = np.array(diag_R)
 
     def build_min_max_values(self):
-        """
-        Builds minimal and maximal values vectors for assim parameters
-        It is stored in the same order than in data_assim json file.
-        :return: None
-        """
+        """Build min/max value vectors for each assimilation parameter."""
         for dico in self.dict_assim.get(self.ctrl_type).get(self.key_lst):
             self.min_values.append(dico.get("val_min"))
             self.max_values.append(dico.get("val_max"))
@@ -291,10 +284,7 @@ class ClassMatrix:
             )
 
     def build_H_matrix(self):
-        """
-        Builds the H matrix for BLUE algorithm
-        :return None
-        """
+        """Build the observation operator matrix H for the BLUE algorithm."""
         H = []
         # Getting Zref and KS values
 
