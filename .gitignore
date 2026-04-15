@@ -15,4 +15,5 @@ Mascaret/icones/Thumbs.db
 Mascaret/.idea/*
 .idea/*
 .vscode/*
+.ruff_cache/*
 
