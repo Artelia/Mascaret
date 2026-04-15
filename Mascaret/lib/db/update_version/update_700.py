@@ -20,17 +20,17 @@ email                :
 from lib.db import MasObject as Maso
 
 
-class ClassUpdate640:
+class ClassUpdate700:
 
     def __init__(self, check_tab):
         self.mdb = check_tab.mdb
         self.mgis = check_tab.mgis
         self.cht = check_tab
 
-    def update640(self):
-        self.mgis.add_info("*** Update 6.4.0  ***")
+    def update700(self):
+        self.mgis.add_info("*** Update 7.0.0  ***")
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
-        lst_add_tab = ["assim_config", "assim_ks", "assim_law","assim_res","assim_res_ks", "assim_res_law"]
+        lst_add_tab = ["assim_config", "assim_ks", "assim_law", "assim_res", "assim_res_ks", "assim_res_law"]
         valide = True
         for attr in lst_add_tab:
             if attr not in tabs:
@@ -49,7 +49,7 @@ class ClassUpdate640:
         for sql in lst_alt:
             try:
                 self.mdb.execute(sql.format(self.mdb.SCHEMA))
-            except Exception :
+            except Exception:
                 self.mgis.add_info("Alter  the output table - ERROR")
                 valide = False
         return valide

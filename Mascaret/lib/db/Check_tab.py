@@ -102,7 +102,8 @@ class CheckTab:
             "6.2.2",
             "6.3.0",
             "6.3.1",
-            "6.4.0"
+            "6.4.0",
+            "7.0.0",
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -307,7 +308,8 @@ class CheckTab:
             "6.2.2": {},
             "6.3.0": {},
             "6.3.1": {},
-            "6.4.0": {"fct": [lambda: self.update_version("640")]},
+            "6.4.0": {},
+            "7.0.0": {"fct": [lambda: self.update_version("700")]},
 
             # '3.0.x': { },
         }
