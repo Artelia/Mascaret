@@ -30,14 +30,14 @@
        <attribute name="headerCascadingSectionResizes">
         <bool>true</bool>
        </attribute>
+       <attribute name="headerMinimumSectionSize">
+        <number>31</number>
+       </attribute>
        <attribute name="headerDefaultSectionSize">
         <number>300</number>
        </attribute>
        <attribute name="headerHighlightSections">
         <bool>true</bool>
-       </attribute>
-       <attribute name="headerMinimumSectionSize">
-        <number>31</number>
        </attribute>
        <attribute name="headerShowSortIndicator" stdset="0">
         <bool>false</bool>
@@ -79,6 +79,16 @@
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QCheckBox" name="ch_vaccum">
+         <property name="text">
+          <string>Enable vacuum after delete</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">

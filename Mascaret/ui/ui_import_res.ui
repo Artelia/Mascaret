@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>573</width>
-    <height>259</height>
+    <height>279</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -19,8 +19,74 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
+     <item row="3" column="2">
+      <widget class="QPushButton" name="bt_path">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Model Path </string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="ed_scen"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="ed_run"/>
+     </item>
+     <item row="6" column="2">
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QCheckBox" name="checkBox">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Initial Date</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QTextEdit" name="textEdit_com"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="txt_path"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Scenario name : </string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
@@ -40,39 +106,6 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="2">
-      <widget class="QPushButton" name="bt_path">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Model Path </string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="txt_path"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="QCheckBox" name="checkBox">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Initial Date</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="3">
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
@@ -85,18 +118,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item row="5" column="2">
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-       </property>
-      </widget>
      </item>
      <item row="0" column="2">
       <spacer name="horizontalSpacer">
@@ -111,25 +132,7 @@
        </property>
       </spacer>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Scenario name : </string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="ed_run"/>
-     </item>
-     <item row="3" column="2">
+     <item row="4" column="2">
       <widget class="QgsDateTimeEdit" name="mDateTimeEdit">
        <property name="time">
         <time>
@@ -143,16 +146,28 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QTextEdit" name="textEdit_com"/>
-     </item>
-     <item row="4" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="label_3">
        <property name="text">
         <string>Comments : </string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="txt_base_name"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Base name file</string>
        </property>
       </widget>
      </item>

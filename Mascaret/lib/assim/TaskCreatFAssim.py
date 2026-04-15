@@ -1,0 +1,348 @@
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+Name                 : Mascaret
+Description          : Pre and Postprocessing for Mascaret for QGIS
+Date                 : June,2017
+copyright            : (C) 2017 by Artelia
+email                :
+***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
+TaskMascaret - A QGIS Task for running multiple Mascaret models in parallel using threads.
+This module implements a QgsTask that submits multiple model runs to a thread pool,
+collects results and emits signals in the original submission order.
+
+"""
+import concurrent.futures
+import os
+import subprocess
+import json
+import time
+
+from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.PyQt.QtCore import pyqtSignal, QObject
+
+
+MESSAGE_CATEGORY = "TaskCreatFAssim"
+
+
+class TaskSignals(QObject):
+    model_completed = pyqtSignal(int, dict)
+    launch_completed = pyqtSignal(bool)
+    model_cancel = pyqtSignal(bool)
+
+
+class TaskCreatFAssim(QgsTask):
+    """QGIS Task for creating assimilation folder structures for multiple scenarios in parallel.
+
+    Submits scenario folder creation jobs to a thread pool and collects results,
+    emitting progress signals in submission order.
+    """
+
+    def __init__(
+        self, description, scens, type_ctrl, if_analyse=False, base_folder=".", max_workers=None
+    ):
+        """Initialize TaskCreatFAssim for parallel assimilation folder creation.
+
+        :param description: Description string for the QGIS task.
+        :param scens: List of scenario identifiers to process.
+        :param type_ctrl: Control type ('ctrlKS' or 'ctrlLaw').
+        :param if_analyse: ``False`` for perturbation folders, ``True`` for analysis folders.
+        :param base_folder: Base directory containing scenario folders (default '.').
+        :param max_workers: Maximum number of concurrent worker threads. Auto-calculated if None.
+        :return: None.
+        """
+
+        super().__init__(description, QgsTask.CanCancel)
+        self.signal = TaskSignals()
+
+        self.scens = scens
+        self.base_folder = base_folder
+        self.type_ctrl = type_ctrl
+        self.if_analyse = if_analyse
+
+        self.exc_start_time = None
+        self.error_txt = ""
+
+        # Configure thread-based parallelism
+        if max_workers is None:
+            max_workers = min(len(scens), (os.cpu_count() or 1))
+        self.max_workers = max_workers
+
+        # Ordered queue management
+        self.running_futures = {}  # {index: future}
+        self.completed_results = {}  # {index: result}
+        self.next_to_process = 0  # Next index to process (in-order emission)
+        self.next_to_submit = 0  # Next index to submit to executor
+        self.total_models = len(scens)
+        self.completed_count = 0
+        self.executor = None
+
+    def update_params(self, scens, max_workers=None):
+        """Update task parameters and max_workers.
+
+        :param scens: List of scenario identifiers to process.
+        :param max_workers: Maximum number of parallel workers. Auto-calculated if None.
+        :return: None
+        """
+        self.scens = scens
+        self.total_models = len(scens)
+        if max_workers is None:
+            max_workers = min(len(scens), (os.cpu_count() or 1) * 2)
+        self.max_workers = max_workers
+
+    def _submit_next_model(self):
+        """Submit next model to thread pool if workers available.
+
+        :return: ``True`` if submitted, ``False`` otherwise.
+        """
+        if self.next_to_submit >= self.total_models:
+            return False
+
+        if len(self.running_futures) >= self.max_workers:
+            return False
+
+        index = self.next_to_submit
+
+        scen = self.scens[index]
+        # Submit the model to the thread pool
+        future = self.executor.submit(self.creat_assim_folder, scen)
+        self.running_futures[index] = future
+
+        self.next_to_submit += 1
+
+        self.on_message(
+            f"Launching model (#{index + 1}/{self.total_models}) "
+            f"[{len(self.running_futures)}/{self.max_workers} workers active]"
+        )
+
+        return True
+
+    def _process_completed_results(self):
+        """Emit results in order even if completed out-of-order.
+
+        :return: None
+        """
+        while self.next_to_process in self.completed_results:
+            result = self.completed_results.pop(self.next_to_process)
+
+            # Emit the signal for the processed result (in order)
+            self.signal.model_completed.emit(self.next_to_process, result)
+
+            self.next_to_process += 1
+
+    def run(self):
+        """Execute task: run scenario folder creation in parallel using threads.
+
+        :return: ``True`` if all scenarios completed successfully, ``False`` otherwise.
+        """
+        self.exc_start_time = time.time()
+
+        try:
+            # Create the thread pool executor
+            self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers)
+
+            self.on_message(
+                f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
+            )
+
+            # Submit the initial workers
+            for _ in range(min(self.max_workers, self.total_models)):
+                self._submit_next_model()
+
+            # Main loop: process results as they complete
+            while self.running_futures or self.next_to_submit < self.total_models:
+                if self.isCanceled():
+                    self.signal.model_cancel.emit(True)
+                    # Shutdown executor without waiting for remaining tasks
+                    self.executor.shutdown(wait=False, cancel_futures=True)
+                    return False
+
+                # Check for completed futures
+                done_indices = []
+                for index, future in list(self.running_futures.items()):
+                    if future.done():
+                        done_indices.append(index)
+
+                        try:
+                            result = future.result()
+
+                            # Store the result
+                            self.completed_results[index] = result
+                            self.completed_count += 1
+
+                            # Emit progress
+                            self.on_progress(self.completed_count, self.total_models)
+
+                            # Base message
+
+                            if result["success"]:
+                                self.on_message(
+                                    f"{result.get('output', '')}\n"
+                                    f"Creation folder completed for {result.get('scenario', '***')}."
+                                    f"{result.get('execution_time', 0):.1f}s"
+                                )
+                            else:
+                                self.error_txt += (f"\nScenario {result.get('scenario', '***')}"
+                                                   f"({index + 1}): {result['error']}")
+                                self.on_message(
+                                    f"Scenario {result.get('scenario', '***')} (#{index + 1}) failed"
+                                )
+
+                            # Process results in order
+                            self._process_completed_results()
+
+                        except Exception as e:
+                            self.error_txt += f"\nError processing model {index + 1}: {str(e)}"
+                            self.on_message(f"Error processing model #{index + 1}")
+
+                # Remove completed futures and submit the next ones
+                for index in done_indices:
+                    del self.running_futures[index]
+                    # Submit the next model if available
+                    self._submit_next_model()
+
+                # Small sleep to avoid CPU spin
+                time.sleep(0.05)
+
+            # Ensure all results are processed
+            self._process_completed_results()
+
+            # Shutdown the pool cleanly
+            self.executor.shutdown(wait=True)
+            QgsMessageLog.logMessage(
+                f"END Run {not bool(self.error_txt)} {self.error_txt}", MESSAGE_CATEGORY, Qgis.Info
+            )
+            self.signal.launch_completed.emit(not bool(self.error_txt))
+            return not bool(self.error_txt)
+
+        except Exception as e:
+            self.error_txt = f"Task failed: {str(e)}"
+            self.signal.launch_completed.emit(False)
+            return False
+
+    def cancel(self):
+        """Cancel task execution and log execution summary.
+
+        :return: None
+        """
+        if self.exc_start_time:
+            execution_time = time.time() - self.exc_start_time
+            message = (
+                f'  Task "{self.description}" was canceled\n'
+                f"  Execution time: {execution_time:.2f}s\n"
+                f"  Models completed: {self.completed_count}/{self.total_models}"
+            )
+            QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Warning)
+        super().cancel()
+
+    def onCancel(self):
+        """Handle QGIS task cancellation.
+
+        :return: None
+        """
+        self.cancel()
+
+    def on_message(self, message):
+        """Log progress message.
+
+        :param message: Message text to log.
+        :type message: str
+        :return: None
+        """
+        QgsMessageLog.logMessage(message, MESSAGE_CATEGORY, Qgis.Info)
+
+    def on_progress(self, completed, total):
+        """Log completion progress.
+
+        :param completed: Number of completed scenarios.
+        :type completed: int
+        :param total: Total number of scenarios.
+        :type total: int
+        :return: None
+        """
+        percentage = (completed / total) * 100 if total > 0 else 0
+        QgsMessageLog.logMessage(
+            f"Progress: {completed}/{total} models ({percentage:.1f}%)", MESSAGE_CATEGORY, Qgis.Info
+        )
+
+    def create_json_param(self, path_scen, param_file):
+        """Create parameter JSON file for folder creation subprocess.
+
+        :param path_scen: Path to scenario directory.
+        :param param_file: Path to write parameter JSON file.
+        :return: Path to created parameter file.
+        """
+        # Create parameter input file (with index to avoid conflicts)
+
+        d_json = {
+            "path_scen": path_scen,
+            "if_analyse": self.if_analyse,
+            "type_ctrl": self.type_ctrl,
+            "json_file": "data_assim.json",
+        }
+        with open(param_file, "w") as fp:
+            json.dump(d_json, fp)
+        return param_file
+
+    def creat_assim_folder(self, scen):
+        """Create assimilation folder structure for scenario (thread worker).
+
+        Generates parameter file, invokes folder creation subprocess, and captures results.
+
+        :param scen: Scenario identifier to process.
+        :return: Dict with scenario results: success status, output, errors, timing, and path.
+        """
+        path_scen = os.path.join(self.base_folder, scen)
+        param_file = os.path.join(path_scen, "d_creat_folder.json")
+        self.create_json_param(path_scen, param_file)
+        results = {
+            "scenario": scen,
+            "success": False,
+            "output": "",
+            "error": "",
+            "start_time": time.time(),
+            "path_run": path_scen,
+        }
+
+        if not os.path.isdir(path_scen):
+            results["error"] = f"Process failed because the folder is not found: {path_scen}"
+            results["execution_time"] = time.time() - results["start_time"]
+        try:
+            script_dir = os.path.dirname(__file__)
+            os.chdir(script_dir)
+            process = subprocess.run(
+                ["python", "ClassCreatModelAssim.py", param_file],
+                shell=True,
+                text=True,
+                check=True,
+                capture_output=True,
+            )
+
+            results.update(
+                {
+                    "success": True,
+                    "output": process.stdout,
+                    "error": process.stderr,
+                }
+            )
+
+            results["success"] = True
+        except subprocess.CalledProcessError as e:
+            results["error"] = f"Process failed with exit code {e.returncode}: {e.stderr}"
+        except Exception as e:
+            results["error"] = f"Unexpected error: {str(e)}"
+        results["execution_time"] = time.time() - results["start_time"]
+
+        if os.path.exists(param_file):
+            os.remove(param_file)
+        return results

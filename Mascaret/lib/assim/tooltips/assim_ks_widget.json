@@ -1,0 +1,33 @@
+{
+  "gb_param_ks": "General parameters used for BLUE assimilation of Strickler Ks values.",
+  "cc_ks_act": "Enable or disable  assimilation for the current Ks configuration.",
+
+  "label_ks_fld": "Select the observation variable used: H (water elevation) or Q (discharge).",
+  "label_ks_seuil": "Misfit rejection threshold (%) for Ks assimilation.\nObservations whose relative misfit (%) from the reference model exceeds this threshold are excluded from BLUE analysis.",
+  "label_ks_pert_min": "Initial perturbation applied to minor-bed Ks values. Used to build the background covariance matrix B.",
+  "label_ks_pert_maj": "Initial perturbation applied to major-bed Ks values. Used to build the background covariance structure for major-bed corrections.",
+  "label_ks_sigma": "Standard deviation scaling applied at each iteration. Controls the magnitude of Ks corrections.",
+
+  "label_ctrl_zone": "Define spatial control zones used.",
+  "bt_sel_zone": "Select spatial control zones for Ks assimilation directly on the map.",
+  "bt_reload_ks": "Reload the control zones from the project.",
+  "bt_edit_zone": "Enable/disable edition mode for Ks parameters and Observations selection.",
+
+  "label_ks_obs": "Observation configuration for assimilation (std deviations, min/max bounds).",
+
+  "gb_minor": "Parameters controlling assimilation for minor-bed Ks.",
+  "label_minor_std": "Standard deviation applied to minor-bed Ks corrections.",
+  "label_minor_inf": "Minimum allowed minor-bed Ks value after BLUE correction.",
+  "label_minor_sup": "Maximum allowed minor-bed Ks value after BLUE correction.",
+
+  "gb_major": "Parameters controlling assimilation for major-bed Ks.",
+  "label_major_std": "Standard deviation applied to major-bed Ks corrections.",
+  "label_major_inf": "Minimum allowed major-bed Ks value.",
+  "label_major_sup": "Maximum allowed major-bed Ks value.",
+
+  "bt_cancel_ks": "Cancel changes.",
+  "bt_zoom_zone": "Zoom on the map.",
+  "bt_disp_zone": "Display the geometric object.",
+  "bt_valid_ks": "Close the window."
+
+}

@@ -20,8 +20,8 @@ about= Plugin dedicated to the building and exploitation of Mascaret models.
 qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
-version=6.4.0
 
+version=6.4.0
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,9 +32,15 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    6.3.1/6.4.0: Added Configurable valve behavior during floods based on opening/closing elevation comparison.
-        API version V9.0 d'OpenTelemac
-    6.3.0: Fixed bug related to QGIS 3.40
+    6.4.0 : Refactoring of the Run execution process
+            Add GUI for Run definition
+            Add GUI to read listing files
+            Add data assimilation functionality
+            Adapt hydrograph menu to display assimilated coefficients
+            Add visualization of modified laws
+    6.3.1 : Added Configurable valve behavior during floods based on opening/closing elevation comparison.
+            API version V9.0 d'OpenTelema
+    6.3.0 : Fixed bug related to QGIS 3.40
     6.2.2 : Update branch style to limit extremities
             Fixed the data acquisition of thickness in the style of weirs for the weir law
             Fixed the floodgate rise speed with the tide option
@@ -46,7 +52,6 @@ changelog=
     6.1.1 : Fix the bug for methods using several observations with different time offsets
     6.1.0 : New experimental version
             Clear Qgis2 code 
-    6.0.4 : Adjust the observation time window for the creation of observation law
     6.0.3 : Added the traceback message for the debug mode
             Bug fixe to display the profile graph
             Bug fixe for the dates in the hydraulic laws
@@ -56,7 +61,7 @@ changelog=
     6.0.1 : Fix the bug for methods using several observations with different time offsets
     6.0.0 : Merge experimental version into master
             Clear Qgis2 code 
-    5.1.13 : Bug fix to print log mascaret in window main
+    5.1.13 : Bug fix to print log mascaret in window fct_main
     5.1.12 : Addition of Bulk Chart Export Feature
              Addition of display weirs for the longitudinal profile
              Bug fix to work in QGIS 3.38.
@@ -299,9 +304,8 @@ category=Database
 icon=icones/icon_base.png
 # experimental flag
 experimental=True
-
+supportsQt6=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
-
 

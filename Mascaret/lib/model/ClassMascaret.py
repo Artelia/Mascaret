@@ -1,0 +1,607 @@
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+Name                 : Mascaret
+Description          : Pre and Postprocessing for Mascaret for QGIS
+Date                 : June,2017
+copyright            : (C) 2017 by Artelia
+email                :
+***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
+"""
+from time import sleep
+import traceback
+
+from qgis.PyQt.QtCore import qVersion
+from qgis.PyQt.QtWidgets import QInputDialog, QDialog
+from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
+
+from .ClassInitializeModel import ClassInitializeModel
+from .ClassDictRun import ClassDictRun
+from .ClassRunUIDialog import ClassRunUIDialog
+
+from .TaskMascaret import TaskMascaret
+from ..assim.TaskBLUE import TaskBLUE
+from ..assim.TaskCreatFAssim import TaskCreatFAssim
+
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
+
+class ClassMascaret:
+    """Model files creation and run manager for Mascaret."""
+
+    def __init__(self, main):
+        """Initialize the instance with the main plugin object *main*."""
+        self.mgis = main
+        self.dbg = main.DEBUG
+        self.mdb = self.mgis.mdb
+        self.iface = self.mgis.iface
+        self.listeState = ["Steady", "Unsteady", "Transcritical unsteady"]
+        # kernel list
+        self.Klist = ["steady", "unsteady", "transcritical"]
+        self.obj_model = ClassDictRun(self.mgis)
+        self.task_init = None
+        self.task_ref = None
+        self.limit_core = 1
+        self.max_retries = 5
+        self.use_task = self.mgis.task_use
+        self.task_blue = None
+        self.cond_api = self.mgis.cond_api
+        self.cond_cancel = False
+
+    def mascaret_ui(self):
+        """Open the kernel selection dialog and start the run if confirmed."""
+        # state list
+
+        case, ok = QInputDialog.getItem(None, "Study case", "Kernel", self.listeState, 0, False)
+        if not ok:
+            return
+
+        kernel = self.Klist[self.listeState.index(case)]
+        if self.dbg:
+            self.mgis.add_info(f"Kernel {kernel}")
+
+        dlg = ClassRunUIDialog(self.mgis, kernel, self.obj_model)
+        if QT_VERSION > 5:
+            result = dlg.exec()
+            if result == QDialog.DialogCode.Accepted:
+                self.launch_run()            # PyQt6
+        else:
+            result = dlg.exec_()  # PyQt5
+            if result == QDialog.Accepted:
+                self.launch_run()
+
+
+    def launch_run(self):
+        """Build the task queue and start the execution sequence."""
+        # creation des repertoires
+        clam = ClassInitializeModel(self.mgis, self.obj_model)
+        clam.main()
+
+        drun = self.obj_model.get_drun()
+        self.limit_core = self.obj_model.get_drun()["limit_core"]
+        self.del_inter_assim = self.obj_model.get_drun()["del_inter_assim"]
+
+        # File d'attente des tasks à exécuter
+        self.task_queue = []
+
+        # Construire la séquence de tasks nécessaires
+        if drun["has_run_init"]:
+            self.task_queue.append("init")
+        self.task_queue.append("ref")  # Toujours exécuter ref ?
+        if not self.cond_api:
+            drun["has_assimilation"] = False
+
+        # Assimilation Control Ks *************
+        if drun["has_assimilation"]:
+            if self.obj_model.assim.check_assim_ks():
+                self.task_queue.append("ctrl_ks_creat")
+                if drun["has_run_init"]:
+                    self.task_queue.append("ctrl_ks_init")
+                self.task_queue.append("ctrl_ks_perturb")
+                self.task_queue.append("ctrl_ks_blue")
+                self.task_queue.append("ctrl_ks_creat_ana")
+                if drun["has_run_init"]:
+                    self.task_queue.append("ctrl_ks_ana_init")
+                self.task_queue.append("ctrl_ks_ana")
+
+            # Assimilation Control Law *************
+            if self.obj_model.assim.check_assim_law():
+                self.task_queue.append("ctrl_law_creat")
+                if drun["has_run_init"]:
+                    self.task_queue.append("ctrl_law_init")
+                self.task_queue.append("ctrl_law_perturb")
+                self.task_queue.append("ctrl_law_blue")
+                self.task_queue.append("ctrl_law_creat_ana")
+                if drun["has_run_init"]:
+                    self.task_queue.append("ctrl_law_ana_init")
+                self.task_queue.append("ctrl_law_ana")
+
+        # Lancer la première task de la queue
+        self.process_next_task()
+
+    def launch_ref_task(self, type_="ref"):
+        """Launch a reference or initialisation task.
+
+        :param type_: Task type (``'ref'`` or ``'init'``).
+        :type type_: str
+        """
+        self.mgis.add_info(
+            f"[ RUN   ] Executing task: {type_} *****************************************************"
+        )
+        task_params_ref = self.obj_model.get_list_type_instance(type_)
+
+        if not task_params_ref:
+            QgsMessageLog.logMessage(f"No '{type_}' model to run.", "TaskMascaret", Qgis.Warning)
+            # Passer à la suivante même si pas de modèle ref
+            self.process_next_task()
+            return
+
+        description = f"Mascaret Models Execution, '{type_}'"
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params_ref,
+            max_workers=self.limit_core,
+            database=self.mdb,
+            cond_api=self.cond_api,
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params_ref):
+                results = self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+
+            # Connecter les signaux
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(type_))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(type_))
+            self.task_ref.signal.model_completed.connect(self.display_message)
+            self.task_ref.signal.model_cancel.connect(lambda: self.user_cancel(type_))
+
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage(
+                    f"{type_} task failed to launch, skipping...", "TaskMascaret", Qgis.Warning
+                )
+                self.process_next_task()
+
+    def launch_ctrl_creat(self, type_ctrl_creat):
+        """Create the assimilation folder structure for CtrlKS or CtrlLaw.
+
+        :param type_ctrl_creat: One of ``'ctrlKS_creat_folder'``,
+            ``'ctrlKS_creat_analyse'``, ``'ctrlLaw_creat_folder'``,
+            ``'ctrlLaw_creat_analyse'``.
+        :type type_ctrl_creat: str
+        """
+        CONFIG = {
+            "ctrlKS_creat_folder": ("Control Ks folder", "ctrlKS", False),
+            "ctrlKS_creat_analyse": ("Control Ks analysis CtrlKS folder", "ctrlKS", True),
+            "ctrlLaw_creat_folder": ("Control Law folder", "ctrlLaw", False),
+            "ctrlLaw_creat_analyse": ("Control Law analysis folder", "ctrlLaw", True),
+        }
+
+        label, type_ctrl, if_analyse = CONFIG[type_ctrl_creat]
+        self.mgis.add_info(
+            f"[ INIT  ] Creating {label} *****************************************************"
+        )
+        description = f"Execution of {label}"
+
+        scens = self.obj_model.get_list_name_scenario()
+        base_folder = self.obj_model.dmodel["general"]["path_runs"]
+
+        self.task_creat_fassim = TaskCreatFAssim(
+            description=description,
+            scens=scens,
+            type_ctrl=type_ctrl,
+            if_analyse=if_analyse,
+            base_folder=base_folder,
+            max_workers=self.limit_core,
+        )
+
+        if not self.use_task:
+            for scen in scens:
+                self.task_creat_fassim.creat_assim_folder(scen)
+            self.process_next_task()
+        else:
+            self.task_creat_fassim.taskCompleted.connect(
+                lambda: self.on_task_completed(type_ctrl_creat)
+            )
+            self.task_creat_fassim.taskTerminated.connect(
+                lambda: self.on_task_failed(type_ctrl_creat)
+            )
+            self.task_creat_fassim.signal.model_completed.connect(self.display_message)
+            self.task_creat_fassim.signal.model_cancel.connect(
+                lambda: self.user_cancel(type_ctrl_creat)
+            )
+            task_id = self.launch_task(self.task_creat_fassim, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage(
+                    "Create folder task failed to launch, skipping...", "TaskMascaret", Qgis.Warning
+                )
+                self.process_next_task()
+
+    def launch_ctrl_task(self, type_ctrl, type_init=False, if_analyse=False):
+        """Launch a CtrlKS or CtrlLaw model execution task.
+
+        :param type_ctrl: ``'ctrlKS'`` or ``'ctrlLaw'``.
+        :type type_ctrl: str
+        :param type_init: ``True`` for an initialisation task.
+        :type type_init: bool
+        :param if_analyse: ``True`` to save results to the database.
+        :type if_analyse: bool
+        """
+        CONFIG = {
+            # (type_ctrl, type_init, if_analyse)
+            ("ctrlKS", False, False): (
+                "Mascaret Execution – CtrlKS Perturbation",
+                "ctrlKS_pertub",
+                "CtrlKS Perturbation",
+                "Control Ks │ Perturbation",
+            ),
+            ("ctrlKS", True, False): (
+                "Mascaret Execution – CtrlKS Init",
+                "ctrlKS_init",
+                "CtrlKS Init",
+                "Ctrl Ks │ Initialisation",
+            ),
+            ("ctrlKS", False, True): (
+                "Mascaret Execution – CtrlKS Analysis",
+                "ctrlKS_analyse",
+                "CtrlKS Analysis",
+                "Control Ks │ Analysis",
+            ),
+            ("ctrlKS", True, True): (
+                "Mascaret Execution – CtrlKS Analysis Init",
+                "ctrlKS_analyse_init",
+                "CtrlKS Analysis Init",
+                "Control Ks │ Analysis + Init.",
+            ),
+            ("ctrlLaw", False, False): (
+                "Mascaret Execution – CtrlLaw Perturbation",
+                "ctrlLaw_pertub",
+                "CtrlLaw Perturbation",
+                "Control Law │ Perturbation",
+            ),
+            ("ctrlLaw", True, False): (
+                "Mascaret Execution – CtrlLaw Init",
+                "ctrlLaw_init",
+                "CtrlLaw Init",
+                "Control Law │ Initialisation",
+            ),
+            ("ctrlLaw", False, True): (
+                "Mascaret Execution – CtrlLaw Analysis",
+                "ctrlLaw_analyse",
+                "CtrlLaw Analysis",
+                "Control Law │ Analysis",
+            ),
+            ("ctrlLaw", True, True): (
+                "Mascaret Execution – CtrlLaw Analysis Init",
+                "ctrlLaw_analyse_init",
+                "CtrlLaw Analysis Init",
+                "Control Law │ Analysis + Init.",
+            ),
+        }
+        description, name_task, log_inf, label = CONFIG[(type_ctrl, type_init, if_analyse)]
+        self.mgis.add_info(
+            f"[ RUN   ] {label} *****************************************************"
+        )
+
+        task_params = self.obj_model.get_list_type_instance_assim(
+            type_ctrl, type_init=type_init, if_ana=if_analyse
+        )
+        if not task_params:
+            QgsMessageLog.logMessage(f"No '{log_inf}' model to run.", "TaskMascaret", Qgis.Warning)
+            self.process_next_task()
+            return
+        # Save analyse
+        database = self.mdb if if_analyse else None
+
+        self.task_ref = TaskMascaret(
+            description=description,
+            task_params=task_params,
+            max_workers=self.limit_core,
+            database=database,
+        )
+
+        if not self.use_task:
+            for idx, param in enumerate(task_params):
+                self.task_ref.run_model(param, idx)
+            self.process_next_task()
+        else:
+            self.task_ref.taskCompleted.connect(lambda: self.on_task_completed(name_task))
+            self.task_ref.taskTerminated.connect(lambda: self.on_task_failed(name_task))
+            self.task_ref.signal.model_completed.connect(self.display_message)
+            self.task_ref.signal.model_cancel.connect(lambda: self.user_cancel(name_task))
+            task_id = self.launch_task(self.task_ref, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage(
+                    f"{log_inf} task failed to launch, skipping...", "TaskMascaret", Qgis.Warning
+                )
+                self.process_next_task()
+
+    def launch_ctrl_BLUE(self, typ_ctrl):
+        """Launch the BLUE assimilation task for CtrlKS or CtrlLaw.
+
+        :param typ_ctrl: ``'ctrlKS'`` or ``'ctrlLaw'``.
+        :type typ_ctrl: str
+        """
+        CONFIG = {
+            "ctrlKS": (
+                "[ ASSIM ] Starting Control Ks (BLUE) *****************************************************",
+                "Control Ks (BLUE)",
+            ),
+            "ctrlLaw": (
+                "[ ASSIM  ] Starting Control Law (BLUE) *****************************************************",
+                "Control Law (BLUE)",
+            ),
+        }
+        description, label = CONFIG[typ_ctrl]
+
+        self.mgis.add_info(description)
+        scens = self.obj_model.get_list_name_scenario()
+        base_folder = self.obj_model.dmodel["general"]["path_runs"]
+        try:
+            self.task_blue = TaskBLUE(
+                description=description,
+                base_folder=base_folder,
+                ctrl_type=typ_ctrl,
+                scens=scens,
+                del_inter_assim=self.del_inter_assim,
+                max_workers=self.limit_core,
+                debug=self.dbg,
+            )
+        except Exception as err:
+            self.mgis.add_info(f"[ ERROR ] {err}")
+        if not self.use_task:
+            for scen in scens:
+                results = self.task_blue.run_blue(scen)
+            self.process_next_task()
+        else:
+            # Connecter les signaux
+            self.task_blue.taskCompleted.connect(lambda: self.on_task_completed(label))
+            self.task_blue.taskTerminated.connect(lambda: self.on_task_failed(label))
+            self.task_blue.signal.model_completed.connect(self.display_message)
+            self.task_blue.signal.model_cancel.connect(lambda: self.user_cancel(label))
+            task_id = self.launch_task(self.task_blue, description)
+
+            if not task_id:
+                QgsMessageLog.logMessage(
+                    "BLUE task failed to launch, skipping...", "TaskMascaret", Qgis.Warning
+                )
+                self.process_next_task()
+
+    def launch_task(self, task, description="Mascaret Models Execution"):
+        """Submit *task* to the QGIS task manager with automatic retries.
+
+        :param task: Task to submit.
+        :type task: QgsTask
+        :param description: Human-readable label used in logs.
+        :type description: str
+        :return: Task identifier on success, ``None`` otherwise.
+        :rtype: int or None
+        """
+        if self.dbg:
+            print("Launching task...")
+        task_manager = QgsApplication.taskManager()
+
+        for attempt in range(self.max_retries):
+            try:
+                task_id = task_manager.addTask(task)
+
+                if task_id == 0:
+                    QgsMessageLog.logMessage(
+                        f"Failed to add task (attempt {attempt + 1}/{self.max_retries})",
+                        "TaskMascaret",
+                        Qgis.Warning,
+                    )
+                    continue
+
+                sleep(0.1)
+                retrieved_task = task_manager.task(task_id)
+
+                if retrieved_task is None:
+                    QgsMessageLog.logMessage(
+                        f"Task not found in manager (attempt {attempt + 1}/{self.max_retries})",
+                        "TaskMascaret",
+                        Qgis.Warning,
+                    )
+                    continue
+
+                task_status = retrieved_task.status()
+                if task_status in (QgsTask.Queued, QgsTask.Running):
+                    QgsMessageLog.logMessage(
+                        f"Task '{description}' successfully launched (ID: {task_id})",
+                        "TaskMascaret",
+                        Qgis.Info,
+                    )
+                    if self.dbg:
+                        print(f"Task launched successfully: {task_id}, Status: {task_status}")
+                    return task_id  # Retourne l'ID au lieu de True
+                else:
+                    QgsMessageLog.logMessage(
+                        f"Task status unexpected: {task_status} (attempt {attempt + 1}/{self.max_retries})",
+                        "TaskMascaret",
+                        Qgis.Warning,
+                    )
+                    continue
+
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    f"Exception during task launch (attempt {attempt + 1}/{self.max_retries}): {str(e)}",
+                    "TaskMascaret",
+                    Qgis.Critical,
+                )
+                traceback.print_exc()
+                return None  # Retourne None en cas d'exception
+
+        # Toutes les tentatives ont échoué
+        QgsMessageLog.logMessage(
+            f"Failed to launch task after {self.max_retries} attempts",
+            "TaskMascaret",
+            Qgis.Critical,
+        )
+        return None  # Retourne None si toutes les tentatives échouent
+
+    def on_task_completed(self, completed_task_id, expected_task_id, task_type):
+        """Disconnect the handler and advance the queue if IDs match.
+
+        :param completed_task_id: ID of the finished task.
+        :type completed_task_id: int
+        :param expected_task_id: ID of the awaited task.
+        :type expected_task_id: int
+        :param task_type: Task label for log messages.
+        :type task_type: str
+        """
+        if completed_task_id == expected_task_id:
+            # Déconnecter le handler actuel
+            task_manager = QgsApplication.taskManager()
+            if hasattr(self, "_current_handler"):
+                try:
+                    task_manager.taskCompleted.disconnect(self._current_handler)
+                except:
+                    pass  # Déjà déconnecté
+
+            self.mgis.add_info(f"{task_type} task completed, processing next...")
+
+            # Passer à la task suivante dans la queue
+            self.process_next_task()
+
+    def process_next_task(self):
+        """Pop and dispatch the next task in the queue."""
+        if not self.task_queue:
+            self.on_all_tasks_completed()
+            return
+
+        next_task_type = self.task_queue.pop(0)
+        if next_task_type == "init":
+            self.launch_ref_task(type_="init")
+        elif next_task_type == "ref":
+            self.launch_ref_task(type_="ref")
+        elif next_task_type == "ctrl_ks_creat":
+            self.launch_ctrl_creat("ctrlKS_creat_folder")
+        elif next_task_type == "ctrl_ks_init":
+            self.launch_ctrl_task(type_ctrl="ctrlKS", type_init=True, if_analyse=False)
+        elif next_task_type == "ctrl_ks_perturb":
+            self.launch_ctrl_task(type_ctrl="ctrlKS", type_init=False, if_analyse=False)
+        elif next_task_type == "ctrl_ks_blue":
+            self.launch_ctrl_BLUE("ctrlKS")
+        elif next_task_type == "ctrl_ks_creat_ana":
+            self.launch_ctrl_creat("ctrlKS_creat_analyse")
+        elif next_task_type == "ctrl_ks_ana_init":
+            self.launch_ctrl_task(type_ctrl="ctrlKS", type_init=True, if_analyse=True)
+        elif next_task_type == "ctrl_ks_ana":
+            self.launch_ctrl_task(type_ctrl="ctrlKS", type_init=False, if_analyse=True)
+        elif next_task_type == "ctrl_law_creat":
+            self.launch_ctrl_creat("ctrlLaw_creat_folder")
+        elif next_task_type == "ctrl_law_init":
+            self.launch_ctrl_task(type_ctrl="ctrlLaw", type_init=True, if_analyse=False)
+        elif next_task_type == "ctrl_law_perturb":
+            self.launch_ctrl_task(type_ctrl="ctrlLaw", type_init=False, if_analyse=False)
+        elif next_task_type == "ctrl_law_blue":
+            self.launch_ctrl_BLUE("ctrlLaw")
+        elif next_task_type == "ctrl_law_creat_ana":
+            self.launch_ctrl_creat("ctrlLaw_creat_analyse")
+        elif next_task_type == "ctrl_law_ana_init":
+            self.launch_ctrl_task(type_ctrl="ctrlLaw", type_init=True, if_analyse=True)
+        elif next_task_type == "ctrl_law_ana":
+            self.launch_ctrl_task(type_ctrl="ctrlLaw", type_init=False, if_analyse=True)
+            # self.launch_ctrl_analyse()
+
+    def on_all_tasks_completed(self):
+        """Called when all tasks are done.
+
+        Checks that no task remains active in the QGIS task manager, then logs
+        a final success message.
+        """
+        # Vérification qu'il ne reste plus aucune tâche active
+        task_manager = QgsApplication.taskManager()
+        active_tasks = task_manager.tasks()
+
+        if not active_tasks:
+            if self.dbg:
+                print("=== All tasks completed successfully ===")
+            sep = "*************************************************************************************\n"
+            self.mgis.add_info(sep + "[ DONE  ] All tasks completed successfully \n" + sep)
+        QgsMessageLog.logMessage("All Mascaret tasks completed", "TaskMascaret", Qgis.Success)
+
+    def on_task_completed(self, task_type):
+        """Log success and advance the queue.
+
+        :param task_type: Completed task label.
+        :type task_type: str
+        """
+        self.mgis.add_info(
+            f"[ SUCCESS ] {task_type} task completed successfully, processing next..."
+        )
+        QgsMessageLog.logMessage(
+            f"Task '{task_type}' completed successfully", "TaskMascaret", Qgis.Info
+        )
+
+        # Passer à la task suivante dans la queue
+        self.process_next_task()
+
+    def on_task_failed(self, task_type):
+        """Log failure and advance the queue.
+
+        :param task_type: Failed task label.
+        :type task_type: str
+        """
+        nex_txt = ", processing next..."
+        if self.cond_cancel:
+            nex_txt = "."
+            self.cond_cancel = False
+
+        self.mgis.add_info(f"[ FAILED ]{task_type} task failed or was terminated{nex_txt} ")
+        QgsMessageLog.logMessage(
+            f"Task '{task_type}' failed or terminated", "TaskMascaret", Qgis.Warning
+        )
+
+        # Continuer avec la task suivante malgré l'échec
+        self.process_next_task()
+
+    def user_cancel(self, task_type):
+        """Clear the queue and flag cancellation.
+
+        :param task_type: Cancelled task label.
+        :type task_type: str
+        """
+        self.mgis.add_info(f"[ FAILED ]{task_type} task canceled.")
+        QgsMessageLog.logMessage(f"Task '{task_type}' canceled", "TaskMascaret", Qgis.Warning)
+        self.task_queue.clear()
+        self.cond_cancel = True
+
+    def display_message(self, success, dtxt):
+        """Print run output, errors and timing in the QGIS message panel.
+
+        :param success: ``True`` if the run succeeded.
+        :type success: bool
+        :param dtxt: Dict with keys ``'output'``, ``'error'``,
+            ``'execution_time'``, ``'id_run'``, ``'path_run'``.
+        :type dtxt: dict
+        """
+        self.mgis.add_info(dtxt.get("output", ""))
+
+        if dtxt.get("error", "") != "":
+            self.mgis.add_info(dtxt.get("error", ""))
+
+        msg = f"[ TIME  ] Execution:{dtxt.get('execution_time','')}"
+        self.mgis.add_info(msg)
+        if dtxt.get("id_run", ""):
+            self.mgis.add_info(f"[ DEBUG ] Success: {success}", dbg=True)
+            self.mgis.add_info(
+                f'[ DEBUG ] Run ID: {dtxt.get("id_run", "")}  │'
+                f'  Path: {dtxt.get("path_run", "")}',
+                dbg=True,
+            )

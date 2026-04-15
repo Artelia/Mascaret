@@ -17,15 +17,19 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QApplication, QAction
-from qgis.PyQt.uic import *
+from qgis.PyQt.QtCore import Qt, qVersion
 
 from .MascPlugDialog import MascPlugDialog
 
+QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 try:
-    from . import resourcesQT5
+    if QT_VERSION > 5:
+        from . import resourcesQT6
+    else:
+        from . import resourcesQT5
+
 except ImportError:
     pass
 
@@ -74,7 +78,10 @@ class MascPlug:
             # QObject.connect(self.dlg, SIGNAL('destroyed(QObject *)'), self.on_destroyed)
         self.dlg.show()
         self.dlg.raise_()
-        self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowMinimized)
+        if QT_VERSION > 5:
+            self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowState.WindowMinimized)
+        else:
+            self.dlg.setWindowState(self.dlg.windowState() & ~Qt.WindowMinimized)
         self.dlg.activateWindow()
 
     def on_destroyed(self, obj):
