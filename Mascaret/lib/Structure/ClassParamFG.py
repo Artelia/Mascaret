@@ -149,6 +149,9 @@ class ClassParamFG(object):
             dict_tmp["STATEOLD"] = 0
             dict_tmp["ZRESI"] = 0
             self.param_fg[id_config] = dict_tmp
+
+        dict_par = db.select("struct_config", where="active", list_var=["id"])
+        for id_config in dict_par.get("id",[]):
             self.profil[id_config] = self.get_db_profil(db, id_config)
             self.param_g[id_config] =self.get_db_param_g(db, id_config)
             #0: hole, 1:span
