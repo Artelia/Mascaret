@@ -596,6 +596,18 @@ class ClassStructureEditDialog(QDialog):
                 )
                 rows = self.mdb.run_query(sql, fetch=True)
                 profil_z_max = rows[0][0]
+                if profil_z_max is None:
+                    sql = (
+                        "SELECT z FROM {0}.profil_struct "
+                        "WHERE id_config = {1} "
+                        "ORDER BY CASE "
+                        "WHEN x < {2} THEN {2} - x "
+                        "WHEN x > {3} THEN x - {3} "
+                        "ELSE 0 END ASC, z DESC "
+                        "LIMIT 1"
+                    ).format(self.mdb.SCHEMA, id_struct, x_tmp, larg + x_tmp)
+                    rows = self.mdb.run_query(sql, fetch=True)
+                    profil_z_max = rows[0][0]
                 if profil_z_max >= z_top:
                     arche_err.append(r + 1)
             x_tmp += larg
