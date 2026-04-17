@@ -313,6 +313,14 @@ class ClassInitializeModel:
         # Step 10: If initial run creation, finalize creation
         self.creat_file_run_scen(scen, dico_loi_struct, init_folder, model_folder)
 
+        #step 11: Copy zone Ks file if applicable
+        if d_scen.get("has_ks_variable"):
+            src = Path(d_scen.get('ks_zone_file', ""))
+            path_folder = Path(model_folder)
+            if not src.is_file():
+                self.mgis.add_info(f"[ ERROR ] Zone Ks file not found: {src}", dbg=True)
+                return False
+            shutil.copyfile(src, path_folder / "Zone_Ks_var.json")
         return True
 
     def creat_file_run_scen(self, scen, dico_loi_struct, init_folder, model_folder):

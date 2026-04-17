@@ -97,6 +97,7 @@ class ClassAPIMascaret:
         self.assim = False
         self.filelig = None
         self.info = ""
+        self.has_ks_variable = None
 
         self.lst_node = {}
         self.results_api = {}
@@ -112,11 +113,13 @@ class ClassAPIMascaret:
             self.dossier_file_masc = main["RUN_REP"]
             os.chdir(main["RUN_REP"])
             self.base_name = main["BASE_NAME"]
+            self.has_ks_variable = main.get("has_ks_variable", None)
         else:
             self.clmas = main
             self.mgis = self.clmas.mgis
             self.dossier_file_masc = self.clmas.dossier_file_masc
             self.base_name = self.clmas.baseName
+            self.has_ks_variable = self.clmas.has_ks_variable
 
         self.num_mess = 0
 
@@ -191,6 +194,11 @@ class ClassAPIMascaret:
         if self.mobil_w:
             self.clfg_w.init_fg_weirs()
 
+        if  self.has_ks_variable:
+            print("has_ks_variable")
+            self.init_section_ks()
+
+        return 0
     def init_break_and_regul(self):
         """
         Initialise breach management for weirs.
@@ -559,6 +567,8 @@ class ClassAPIMascaret:
             # Incrément du temps courant assim (prochain temps à extraire)
             self.current_t_assim += self.pdt_assim
 
+        if  self.has_ks_variable:
+            self.update_ks_zones(t0)
         # Update time step from model if variable stepping is active
         if conum:
             dtp_tmp = masc.get("State.DT")
@@ -665,7 +675,106 @@ class ClassAPIMascaret:
         self.mess.add_mess(f"api_{self.num_mess}", "info", txt)
         self.num_mess += 1
 
+    # --- FRICTION COEFFICIENT ZONES MANAGEMENT ------------------------------------------
+    def init_section_ks(self, filename="zone_ks_var.json"):
+        """
+        Reads the JSON file containing Ks zones, constructs the zones dictionary
+        with corresponding model indices.
+        :param filename: Path to the JSON file (default: "zone_ks_var.json")
+        :return: None
+        """
+        # --- 1. Model reading: vectorized extraction via numpy ---
+        size_x = self.masc.get_var_size("Model.X")[0]
 
+        arr_x = np.array([self.masc.get("Model.X", i) for i in range(size_x)])
+        arr_ks_main = np.array([self.masc.get("Model.FricCoefMainCh", i) for i in range(size_x)])
+        arr_ks_fp = np.array([self.masc.get("Model.FricCoefFP", i) for i in range(size_x)])
+
+        # --- 2. JSON reading ---
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                zones_raw = json.load(f)
+        except Exception as e:
+            print(f"[ERROR] Error reading {filename}: {e}")
+        # --- 3. Construction of the zones dictionary ---
+        self.zones_ks = {}
+
+        for zone_id, zd in enumerate(zones_raw):
+            abs_deb = zd["absDebZone"]
+            abs_fin = zd["absFinZone"]
+
+            # Vectorized search: much faster than list-comprehension
+            indices = np.where((arr_x >= abs_deb) & (arr_x <= abs_fin))[0].tolist()
+
+            self.zones_ks[zone_id] = {
+                "absDebZone": abs_deb,
+                "absFinZone": abs_fin,
+                # Numpy conversion to accelerate interpolation in update_ks_zones
+                "val_control": np.asarray(zd["val_control"], dtype=float),
+                "coefLitMin": np.asarray(zd["coefLitMin"], dtype=float),
+                "coefLitMaj": np.asarray(zd["coefLitMaj"], dtype=float),
+                "var_control": zd["var_control"],
+                "indices": indices,
+                "ks_main_init": arr_ks_main[indices].copy(),
+                "ks_fp_init": arr_ks_fp[indices].copy(),
+            }
+
+        # --- 4. Synthetic log ---
+        lines = [f"[init_section_ks] {len(self.zones_ks)} zone(s) loaded."]
+        lines += [
+            f"  Zone {zid}: [{z['absDebZone']} - {z['absFinZone']}]"
+            f"  |  {len(z['indices'])} nodes  |  var_control={z['var_control']}"
+            for zid, z in self.zones_ks.items()
+        ]
+        print("\n".join(lines))
+
+    def interpolate_ks(self, val_control_list, coef_list, current_val):
+        """
+        Performs piecewise linear interpolation between val_control levels.
+        :param val_control_list: List of reference values [v0, v1, v2] (sorted ascending)
+        :param coef_list: List of Ks values [k0, k1, k2] associated with each level
+        :param current_val: Current value of the control variable
+        :return: Interpolated Ks value (or extrapolated by saturation at boundaries)
+        """
+        v = np.asarray(val_control_list, dtype=float)
+        k = np.asarray(coef_list, dtype=float)
+        return float(np.interp(current_val, v, k))  # np.interp saturates at boundaries
+
+        # ---------------------------------------------------------------------------
+
+    def update_ks_zones(self, t0):
+        """
+        Updates Ks zones at each time step, to be called BEFORE masc.compute().
+        For each zone defined in self.zones_ks:
+        1. Retrieves the current value of var_control on the first node of the zone
+            (assumption: value representative of the entire zone).
+        2. Interpolates coefLitMin and coefLitMaj.
+        3. Applies the new Ks to all nodes of the zone.
+        :return: None
+        """
+        for zone_id, zone in self.zones_ks.items():
+            indices = zone["indices"]
+            var_control = zone["var_control"]
+            val_ctrl_lst = zone["val_control"]
+            coef_min_lst = zone["coefLitMin"]
+            coef_maj_lst = zone["coefLitMaj"]
+
+            if not indices:
+                continue
+
+            # --- a. Current value of the control variable (first node) ---
+            ref_idx = indices[0]
+            current_val = self.masc.get(f"State.{var_control}", ref_idx)
+
+            # --- b. Interpolation ---
+            new_ks_main = self.interpolate_ks(val_ctrl_lst, coef_min_lst, current_val)
+            new_ks_fp = self.interpolate_ks(val_ctrl_lst, coef_maj_lst, current_val)
+            print(f"Zone {zone_id}: {current_val} - KsMain: {new_ks_main}, KsFP: {new_ks_fp}")
+
+            # --- c. Application to all nodes of the zone ---
+            for i in indices:
+                self.masc.set("Model.FricCoefMainCh", new_ks_main, i)
+                self.masc.set("Model.FricCoefFP", new_ks_fp, i)
 # ----------------------------------------------------------------------
 # Script entry point
 # ----------------------------------------------------------------------
@@ -688,7 +797,6 @@ if __name__ == "__main__":
         )
         with open(error_log, "a") as f:
             f.write(f"Gen lig {gen_lig}\n")
-
         api = ClassAPIMascaret(dico, generate_lig=gen_lig)
         api.fct_main(
             dico.get("name_xcas"),

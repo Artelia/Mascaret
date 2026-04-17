@@ -663,6 +663,9 @@ class ClassDictRun:
                 "comments": scenar["Comment"],
                 "BASE_NAME": "mascaret",
                 "path_instance": os.path.join(path_run, f"{scen_name}"),
+                "has_ks_variable": scenar.get("ks_variable", False),
+                # Add KS zone file if specified
+                "ks_zone_file": scenar.get("ks_zone_file") if scenar.get("ks_zone_file") else None,
                 "instances": [],
             }
             if scenar.get("Run init") or scenar.get("lig file"):
@@ -676,6 +679,7 @@ class ClassDictRun:
                         "lig_file": scenar["lig file"],
                     }
                 )
+
 
             # When events
             if drun["event"]:
@@ -699,6 +703,7 @@ class ClassDictRun:
                         "has_casier": False,
                         "has_tracer": False,
                         "has_assim": False,
+                        "has_ks_variable":False,
                         "starttime": None,
                         "order": order,
                     }
@@ -712,6 +717,7 @@ class ClassDictRun:
                     "has_casier": drun["has_casier"],
                     "has_tracer": drun["has_tracer"],
                     "has_assim": if_assim,
+                    "has_ks_variable": d_scen.get("has_ks_variable", False),
                     "starttime": d_scen.get("starttime") if drun["event"] else None,
                     "order": order,
                 }

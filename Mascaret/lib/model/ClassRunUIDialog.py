@@ -21,7 +21,7 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtWidgets import QLineEdit, QLabel
+from qgis.PyQt.QtWidgets import QLineEdit, QLabel, QCheckBox
 from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtWidgets import (
     QDialog,
@@ -153,9 +153,9 @@ class ClassRunUIDialog(QDialog):
         :return: None
         """
         if self.without_init_version:
-            headers = ["Scenario Name", "Comment"]
+            headers = ["Scenario Name", "ks variable", "ks zone file", "Comment"]
         else:
-            headers = ["Scenario Name", "Run init", "Scenario init", "lig file", "Comment"]
+            headers = ["Scenario Name", "Run init", "Scenario init", "lig file", "ks variable", "ks zone file", "Comment"]
 
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
@@ -182,9 +182,18 @@ class ClassRunUIDialog(QDialog):
             self.table.setCellWidget(row, 0, name_edit)
 
         if self.without_init_version:
-            # Column 1: Comment (QLineEdit)
+            # Column 1: ks variable (QCheckBox)
+            self.ks_variable_cb = QCheckBox()
+            self.ks_variable_cb.stateChanged.connect(self.ch_enable_ksvar)
+            self.table.setCellWidget(row, 1, self.ks_variable_cb)
+
+            # Column 2: ks zone file (custom widget)
+            self.ks_zone_file_widget = LigFileWidget(self, file_filter="JSON (*.json);; File (*)")
+            self.table.setCellWidget(row, 2, self.ks_zone_file_widget)
+
+            # Column 3: Comment (QLineEdit)
             comment_edit = QLineEdit()
-            self.table.setCellWidget(row, 1, comment_edit)
+            self.table.setCellWidget(row, 3, comment_edit)
         else:
             # Column 1: Run init (QComboBox)
             run_init_combo = QComboBox()
@@ -208,9 +217,25 @@ class ClassRunUIDialog(QDialog):
                 lig_widget.setEnabled(False)
             self.table.setCellWidget(row, 3, lig_widget)
 
-            # Column 4: Comment (QLineEdit)
+            # Column 4: ks variable (QCheckBox)
+            self.ks_variable_cb = QCheckBox()
+            self.ks_variable_cb.stateChanged.connect(self.ch_enable_ksvar)
+            self.table.setCellWidget(row, 4, self.ks_variable_cb)
+
+            # Column 5: ks zone file (custom widget)
+            self.ks_zone_file_widget = LigFileWidget(self, file_filter="File (*)")
+            self.table.setCellWidget(row, 5, self.ks_zone_file_widget)
+
+            # Column 6: Comment (QLineEdit)
             comment_edit = QLineEdit()
-            self.table.setCellWidget(row, 4, comment_edit)
+            self.table.setCellWidget(row, 6, comment_edit)
+        self.ch_enable_ksvar()  # Set initial state of ks zone file widget
+
+    def ch_enable_ksvar(self):
+        if self.ks_variable_cb.isChecked():
+            self.ks_zone_file_widget.setEnabled(True)
+        else:
+            self.ks_zone_file_widget.setEnabled(False)
 
     def fill_cb_init_scenar(self, ctrl, init_run):
         """Populate the 'Scenario init' combobox for a given initial run selection.
@@ -431,7 +456,10 @@ class ClassRunUIDialog(QDialog):
                 return
 
             if self.without_init_version:
-                row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 1).text())
+                row_data["ks_variable"] = self.table.cellWidget(row, 1).isChecked()
+                zone_ks_file = self.table.cellWidget(row, 2).get_file_info()
+                row_data["ks_zone_file"] =  zone_ks_file.get('file_path','')
+                row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 3).text())
             else:
                 lig_widget = self.table.cellWidget(row, 3)
                 if lig_widget.isEnabled():
@@ -449,8 +477,10 @@ class ClassRunUIDialog(QDialog):
                             title="Warning",
                         )
                         return
-
-                row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 4).text())
+                zone_ks_file = self.table.cellWidget(row, 5).get_file_info()
+                row_data["ks_variable"] = self.table.cellWidget(row, 4).isChecked()
+                row_data["ks_zone_file"] =  zone_ks_file.get('file_path','')
+                row_data["Comment"] = self._fmt_txt(self.table.cellWidget(row, 6).text())
 
             if self.check_scenar(name_run, name_scen):
                 self.box.info(
@@ -458,22 +488,23 @@ class ClassRunUIDialog(QDialog):
                 )
                 return
             data.append(row_data)
-
         self.obj_model.set_drun({"name_run": name_run})
         self.obj_model.fill_lscenario(data)
         self.accept()
 
 
 class LigFileWidget(QWidget):
-    """Widget used in the table to pick a .lig file and store its path."""
+    """Widget used in the table to pick a file and store its path."""
 
-    def __init__(self, parent):
+    def __init__(self, parent, file_filter="lig File (*.lig);; File (*)"):
         """Create widget with file label, select button and hidden full-path label.
 
         :param parent: Parent dialog instance providing mgis and other context.
+        :param file_filter: File filter passed to the file dialog.
         """
         super().__init__(parent)
         self.mgis = parent.mgis
+        self.file_filter = file_filter
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
@@ -489,15 +520,15 @@ class LigFileWidget(QWidget):
         self.layout.addWidget(self.hidden_path)
 
     def select_file(self):
-        """Open a file dialog to select a .lig file and update labels/parent project.
+        """Open a file dialog and update labels/parent project.
 
         :return: None
         """
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Select File", self.mgis.repProject, "lig File (*.lig);; File (*)"
+            self, "Select File", self.mgis.repProject, self.file_filter
         )
         if file_path:
-            self.file_label.setText(file_path.split("/")[-1])
+            self.file_label.setText(os.path.basename(file_path))
             self.hidden_path.setText(file_path)
             self.mgis.up_rep_project(file_path)
 
@@ -506,7 +537,7 @@ class LigFileWidget(QWidget):
             while parent_table and not isinstance(parent_table, QTableWidget):
                 parent_table = parent_table.parent()
             if parent_table:
-                parent_table.resizeColumnToContents(3)
+                parent_table.resizeColumnsToContents()
 
     def get_file_info(self):
         """Return the displayed file name and the full file path.

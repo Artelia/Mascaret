@@ -286,6 +286,7 @@ class TaskMascaret(QgsTask):
             "name_xcas",
             "RUN_REP",
             "BASE_NAME",
+            "has_ks_variable",
             "has_tracer",
             "has_casier",
             "has_assim",
