@@ -575,7 +575,7 @@ class ClassParamExportDialog(QDialog):
                 "ligInit": export_config.get('lig_eau_init', False),
                 "repriseCalcul": False,
                 "has_run_init": False,
-                "has_assimilation": False,
+                #"has_assimilation": False,
             })
 
             # Préparation du scénario
@@ -598,7 +598,6 @@ class ClassParamExportDialog(QDialog):
                 }
 
             obj_model.fill_lscenario([data])
-
             # Initialisation du modèle
             ClassInitializeModel(self.mgis, obj_model).main(up_param=export_config['par'])
 
