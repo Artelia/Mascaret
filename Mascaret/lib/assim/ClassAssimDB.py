@@ -293,6 +293,7 @@ class ClassAssimDB:
         cond = bool(self.data.get("ctrlKS"))
         if cond:
             return bool(self.data["ctrlKS"].get("lst_zone"))
+        return cond
 
     def check_assim_law(self):
         """Check if ctrlLaw assimilation is active.

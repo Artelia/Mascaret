@@ -173,6 +173,7 @@ class ModelAssimBase:
                 shutil.copy2(file_path, target / file_path.name)
             except Exception as exc:
                 self.add_info(f"[ ERROR ] Failed to copy '{file_path.name}': {exc}")
+                return False
 
         return True
 

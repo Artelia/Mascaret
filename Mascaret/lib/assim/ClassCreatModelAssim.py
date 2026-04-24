@@ -134,6 +134,8 @@ class CreatModelAssim(CtrlKs, CtrlLaw):
                 continue
 
             clone_source = path_init if name.endswith("_init") and path_init else path_ref
+            target_folder = Path(folder)
+            target_folder.mkdir(parents=True, exist_ok=True)
             self.clone_model(clone_source, folder)
 
             if "ctrlKS" == type_ctrl:
