@@ -195,7 +195,6 @@ class ClassAPIMascaret:
             self.clfg_w.init_fg_weirs()
 
         if  self.has_ks_variable:
-            print("has_ks_variable")
             self.init_section_ks()
 
         return 0
@@ -769,7 +768,7 @@ class ClassAPIMascaret:
             # --- b. Interpolation ---
             new_ks_main = self.interpolate_ks(val_ctrl_lst, coef_min_lst, current_val)
             new_ks_fp = self.interpolate_ks(val_ctrl_lst, coef_maj_lst, current_val)
-            print(f"Zone {zone_id}: {current_val} - KsMain: {new_ks_main}, KsFP: {new_ks_fp}")
+            # print(f"Zone {zone_id}: {current_val} - KsMain: {new_ks_main}, KsFP: {new_ks_fp}")
 
             # --- c. Application to all nodes of the zone ---
             for i in indices:
