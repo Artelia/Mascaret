@@ -8,7 +8,7 @@ bin
 .idea/workspace.xml
 settings.json
 .idea/*
-
+Mascaret/.idea/*
 
 Class_readResult.py
 icones/Thumbs.db
