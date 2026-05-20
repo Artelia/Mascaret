@@ -6,7 +6,7 @@
   "label_ks_seuil": "Misfit rejection threshold (%) for Ks assimilation.\nObservations whose relative misfit (%) from the reference model exceeds this threshold are excluded from BLUE analysis.",
   "label_ks_pert_min": "Initial perturbation applied to minor-bed Ks values. Used to build the background covariance matrix B.",
   "label_ks_pert_maj": "Initial perturbation applied to major-bed Ks values. Used to build the background covariance structure for major-bed corrections.",
-  "label_ks_sigma": "Standard deviation scaling applied at each iteration. Controls the magnitude of Ks corrections.",
+  "label_ks_sigma": "Number of loop cycles for repeating the BLUE operation with updates to matrices B and R.",
 
   "label_ctrl_zone": "Define spatial control zones used.",
   "bt_sel_zone": "Select spatial control zones for Ks assimilation directly on the map.",
