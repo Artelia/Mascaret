@@ -59,48 +59,36 @@ class ClassUpdate515:
                 for ligne in file:
                     liste_value.append(ligne.replace("\n", "").split(";"))
             liste_col = self.mdb.list_columns("parametres")
-            var = ",".join(liste_col)
-            valeurs = "("
-            for k in liste_col:
-                valeurs += "%s,"
-            valeurs = valeurs[:-1] + ")"
 
             self.mdb.delete("parametres")
-
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                self.mdb.SCHEMA, "parametres", var, valeurs
-            )
-
-            self.mdb.run_query(sql, many=True, list_many=liste_value)
+            self.mdb.insert_res("parametres", liste_value, liste_col)
         # fix error
         try:
-            qry = "DROP TRIGGER IF EXISTS all_up_abs_branchs ON {0}.branchs;".format(
-                self.mdb.SCHEMA
-            )
-            self.mdb.run_query(qry)
+            qry = "DROP TRIGGER IF EXISTS all_up_abs_branchs ON {schema}.branchs;"
+            self.mdb.run_query(qry, schema=True)
 
             lst_fct = [
-                "{0}.update_{1}(regclass, regclass)".format(self.mdb.SCHEMA, info)
+                "{{schema}}.update_{0}(regclass, regclass)".format(info)
                 for info in ["abscisse_profil", "abscisse_point"]
             ]
-            lst_fct.append("{0}.up_abs_branch()".format(self.mdb.SCHEMA))
+            lst_fct.append("{schema}.up_abs_branch()")
 
             qry = ""
             for fct in lst_fct:
                 qry += "DROP FUNCTION IF EXISTS {};\n".format(fct)
-            self.mdb.run_query(qry)
+            self.mdb.run_query(qry, schema=True)
 
             cl = Maso.class_fct_psql()
             lfct = [cl.pg_all_profil, cl.pg_all_point, cl.pg_up_abs_branch]
 
             qry = ""
-            for sql in lfct:
-                qry += sql(self.mdb.SCHEMA)
+            for mk_sql_fn in lfct:
+                qry += mk_sql_fn(local="{schema}")
                 qry += "\n"
             clb = Maso.branchs()
-            clb.schema = self.mdb.SCHEMA
+            clb.schema = "{schema}"
             qry += clb.pg_all_up_abs_branchs()
-            self.mdb.run_query(qry)
+            self.mdb.run_query(qry, schema=True)
         except Exception as e:
             self.mgis.add_info("Error update_fct_calc_abs: {}".format(str(e)))
             return False

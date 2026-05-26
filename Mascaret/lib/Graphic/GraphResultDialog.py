@@ -23,19 +23,25 @@ import os
 from datetime import timedelta, datetime
 
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QSize, Qt, qVersion
+from qgis.PyQt.QtWidgets import (
+    QAction,
+    QFileDialog,
+    QListWidgetItem,
+    QMessageBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QWidget,
+)
+from qgis.PyQt.uic import loadUi
+from qgis.utils import QApplication
 
 from .CurveSelector import SlideCurveSelectorWidget, CompareCurveSelectorWidget
 from .GraphResult import GraphResult
 from ..Function import tw_to_txt, interpole, fill_zminbed
 from ..scores.ClassScoresResDialog import ClassScoresResDialog
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 def list_sql(liste, typ="str"):
@@ -259,10 +265,10 @@ class GraphResultDialog(QWidget):
         for g, graph in enumerate(self.lst_comp_graph):
             if graph:
                 rows = self.mdb.run_query(
-                    "SELECT init_date FROM {0}.runs WHERE id = {1}".format(
-                        self.mdb.SCHEMA, graph["scen"]
-                    ),
+                    "SELECT init_date FROM {schema}.runs WHERE id = %s",
                     fetch=True,
+                    params=[graph["scen"]],
+                    schema=True,
                 )
                 if rows[0][0]:
                     graph_with_date.append((g, rows[0][0]))
@@ -295,7 +301,7 @@ class GraphResultDialog(QWidget):
         up_lim = True
         if self.mode == "slider":
             lst_graph = self.lst_slid_graph
-            up_lim = self.lst_slid_graph[0]['up_lim']
+            up_lim = self.lst_slid_graph[0]["up_lim"]
         else:
             lst_graph = self.lst_comp_graph
         self.lst_graph = [graph for graph in lst_graph if "graph" in graph.keys()]
@@ -360,10 +366,11 @@ class GraphResultDialog(QWidget):
         :return:
         """
         rows = self.mdb.run_query(
-            "SELECT id, run, scenario FROM {0}.runs "
-            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY run, scenario ".format(self.mdb.SCHEMA),
+            "SELECT id, run, scenario FROM {schema}.runs "
+            "WHERE id IN (SELECT DISTINCT id_runs FROM {schema}.runs_graph) "
+            "ORDER BY run, scenario ",
             fetch=True,
+            schema=True,
         )
 
         if rows:
@@ -379,10 +386,11 @@ class GraphResultDialog(QWidget):
         """
         dict_run = dict()
         rows = self.mdb.run_query(
-            "SELECT id, run, scenario FROM {0}.runs "
-            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY date DESC, run ASC, id DESC;".format(self.mdb.SCHEMA),
+            "SELECT id, run, scenario FROM {schema}.runs "
+            "WHERE id IN (SELECT DISTINCT id_runs FROM {schema}.runs_graph) "
+            "ORDER BY date DESC, run ASC, id DESC;",
             fetch=True,
+            schema=True,
         )
         for row in rows:
             if row[1] not in dict_run.keys():
@@ -418,24 +426,14 @@ class GraphResultDialog(QWidget):
                 tmp_data["y_var"] = param["graph"]["vars"]
                 tmp_data["y_unit"] = param["graph"]["unit"]
 
-                sql_hyd_pk = ""
-                if self.typ_graph == "hydro_pk":
-                    sql_hyd_pk = (
-                        "AND pknum IN (SELECT UNNEST((SELECT pk FROM {0}.results_sect "
-                        "WHERE id_runs = {1} AND branch = {2}))) ".format(
-                            self.mgis.mdb.SCHEMA, param["scen"], param["branch"]
-                        )
-                    )
-                sqlw = self.sql_where.format(param["branch"], param["pknum"], param["t"])
-
                 if self.x_var == "time":
-                    if self.typ_graph in ["struct", "weirs", 'link_fg']:
+                    if self.typ_graph in ["struct", "weirs", "link_fg"]:
                         x_val = None
                         if self.typ_res in param["info_graph"].keys():
                             for id_config in param["info_graph"][self.typ_res]["pknum"].keys():
                                 if (
-                                        param["info_graph"][self.typ_res]["pknum"][id_config]
-                                        == param["pknum"]
+                                    param["info_graph"][self.typ_res]["pknum"][id_config]
+                                    == param["pknum"]
                                 ):
                                     x_val = param["info_graph"][self.typ_res]["time"][id_config]
                         if not x_val:
@@ -448,10 +446,12 @@ class GraphResultDialog(QWidget):
                         x_val = param["info_graph"][self.typ_res]["time"]
 
                         date = param["init_date"]
-                    sql = "SELECT init_date FROM {0}.runs WHERE id = {1} ".format(
-                        self.mgis.mdb.SCHEMA, param["scen"]
+                    info = self.mdb.run_query(
+                        "SELECT init_date FROM {schema}.runs WHERE id = %s",
+                        fetch=True,
+                        params=[param["scen"]],
+                        schema=True,
                     )
-                    info = self.mdb.run_query(sql, fetch=True)
                     if info:
                         if info[0][0]:
                             date = info[0][0]
@@ -463,13 +463,16 @@ class GraphResultDialog(QWidget):
                 elif self.x_var == "pknum":
                     if self.typ_graph == "hydro_pk":
                         sql = (
-                            "SELECT  UNNEST((SELECT pk FROM {0}.results_sect "
-                            "WHERE id_runs = {1} AND branch = {2})) as pknum "
-                            "ORDER BY pknum".format(
-                                self.mgis.mdb.SCHEMA, param["scen"], param["branch"]
-                            )
+                            "SELECT UNNEST((SELECT pk FROM {schema}.results_sect "
+                            "WHERE id_runs = %s AND branch = %s)) AS pknum "
+                            "ORDER BY pknum"
                         )
-                        rows = self.mdb.run_query(sql, fetch=True)
+                        rows = self.mdb.run_query(
+                            sql,
+                            fetch=True,
+                            params=[param["scen"], param["branch"]],
+                            schema=True,
+                        )
 
                         x_val = [row[0] for row in rows]
 
@@ -477,29 +480,71 @@ class GraphResultDialog(QWidget):
                         x_val = param["info_graph"][self.typ_res]["pknum"]
 
                 else:
-                    sqlv = "('{}')".format("', '".join(param["vars"]))
-                    sql = (
-                        "SELECT DISTINCT {1} FROM {0}.results WHERE id_runs = {2} AND {4} AND var IN "
-                        "(SELECT id FROM {0}.results_var WHERE var in {3}) {5} "
-                        "ORDER BY {1}".format(
-                            self.mgis.mdb.SCHEMA, self.x_var, param["scen"], sqlv, sqlw, sql_hyd_pk
-                        )
-                    )
-
-                    rows = self.mdb.run_query(sql, fetch=True)
+                    rows = []
                     x_val = [row[0] for row in rows]
                 tmp_data[self.x_var] = x_val
 
                 for var in param["graph"]["vars"]:
-                    sql = (
-                        "SELECT {1}, val FROM {0}.results WHERE id_runs = {2} AND "
-                        "var IN (SELECT id FROM {0}.results_var WHERE results_var.var = '{3}') AND {4} {5} "
-                        "ORDER BY {1}".format(
-                            self.mgis.mdb.SCHEMA, self.x_var, param["scen"], var, sqlw, sql_hyd_pk
-                        )
-                    )
+                    if self.x_var == "time":
+                        if self.typ_graph == "hydro_pk":
+                            sql = (
+                                "SELECT time, val FROM {schema}.results WHERE id_runs = %s AND "
+                                "var IN (SELECT id FROM {schema}.results_var "
+                                "WHERE results_var.var = %s) "
+                                "AND results.pknum = %s "
+                                "AND pknum IN (SELECT UNNEST((SELECT pk FROM {schema}.results_sect "
+                                "WHERE id_runs = %s AND branch = %s))) "
+                                "ORDER BY time"
+                            )
+                            params = [
+                                param["scen"],
+                                var,
+                                param["pknum"],
+                                param["scen"],
+                                param["branch"],
+                            ]
+                        else:
+                            sql = (
+                                "SELECT time, val FROM {schema}.results WHERE id_runs = %s AND "
+                                "var IN (SELECT id FROM {schema}.results_var "
+                                "WHERE results_var.var = %s) "
+                                "AND results.pknum = %s ORDER BY time"
+                            )
+                            params = [param["scen"], var, param["pknum"]]
+                    else:
+                        if self.typ_graph == "hydro_pk":
+                            sql = (
+                                "SELECT pknum, val FROM {schema}.results WHERE id_runs = %s AND "
+                                "var IN (SELECT id FROM {schema}.results_var "
+                                "WHERE results_var.var = %s) "
+                                "AND results.time = %s "
+                                "AND pknum IN (SELECT UNNEST((SELECT pk FROM {schema}.results_sect "
+                                "WHERE id_runs = %s AND branch = %s))) "
+                                "ORDER BY pknum"
+                            )
+                            params = [
+                                param["scen"],
+                                var,
+                                param["t"],
+                                param["scen"],
+                                param["branch"],
+                            ]
+                        else:
+                            sql = (
+                                "SELECT pknum, val FROM {schema}.results "
+                                "WHERE id_runs = %s AND "
+                                "var IN (SELECT id FROM {schema}.results_var "
+                                "WHERE results_var.var = %s) "
+                                "AND results.time = %s ORDER BY pknum"
+                            )
+                            params = [param["scen"], var, param["t"]]
 
-                    rows = self.mdb.run_query(sql, fetch=True)
+                    rows = self.mdb.run_query(
+                        sql,
+                        fetch=True,
+                        params=params,
+                        schema=True,
+                    )
                     tmp_data[var] = [row[1] for row in rows]
 
                 self.cur_data.append(tmp_data)
@@ -531,8 +576,8 @@ class GraphResultDialog(QWidget):
                 if self.lst_debord:
                     self.graph_obj.insert_debord_curves(self.lst_debord)
                 self.graph_obj.clear_weirs()
-                self.get_weirs('pknum')
-                if len(self.lst_weirs['name']) > 0:
+                self.get_weirs("pknum")
+                if len(self.lst_weirs["name"]) > 0:
                     weir_g = True
             self.update_title()
             self.fill_tab()
@@ -558,8 +603,7 @@ class GraphResultDialog(QWidget):
             txt_title = lst_title[0]
             if self.typ_graph in ["struct", "weirs", "hydro", "link_fg"]:
                 if self.typ_graph == "link_fg":
-                    self.graph_obj.main_axe.title.set_text(
-                        r'Link - {0} '.format(txt_title))
+                    self.graph_obj.main_axe.title.set_text(r"Link - {0} ".format(txt_title))
                 else:
                     try:
                         self.graph_obj.main_axe.title.set_text(
@@ -609,8 +653,8 @@ class GraphResultDialog(QWidget):
             dict_data = self.mdb.select(
                 "profiles",
                 where="zleftminbed IS NOT NULL "
-                      "AND zrightminbed IS NOT NULL AND active AND "
-                      "branchnum = {}".format(id_branch),
+                "AND zrightminbed IS NOT NULL AND active AND "
+                "branchnum = {}".format(id_branch),
                 order="abscissa",
                 list_var=["gid", "name", "abscissa", "zleftminbed", "zrightminbed"],
             )
@@ -676,16 +720,15 @@ class GraphResultDialog(QWidget):
                 var = "Q"
 
             if var:
-                sql = "SELECT name FROM {0}.profiles WHERE abscissa={1} ".format(
-                    self.mdb.SCHEMA, pk
-                )
-                rows = self.mdb.run_query(sql, fetch=True)
+                sql = "SELECT name FROM {schema}.profiles WHERE abscissa = %s"
+                rows = self.mdb.run_query(sql, fetch=True, params=[pk], schema=True)
                 if rows:
                     val = rows[0][0]
                     d_obs = self.mgis.mdb.select(
                         "outputs",
-                        where="active AND (abscissa = {0} OR name = '{1}')".format(pk, val),
+                        where="active AND (abscissa = %s OR name = %s)",
                         order="abscissa",
+                        params=[pk, val],
                         list_var=["code", "zero", "abscissa", "name"],
                     )
                     for o, obs in enumerate(d_obs["code"]):
@@ -710,15 +753,17 @@ class GraphResultDialog(QWidget):
         if x_var_ == "date":
             for (id_obs, var), param_obs in dict_obs.items():
                 sql_query = (
-                    "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
-                    "UNNEST(valeur) as valeur FROM {4}.observations "
-                    "WHERE code = '{0}' AND type='{3}') t "
-                    " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                    "ORDER BY date".format(
-                        id_obs, param_obs["date_min"], param_obs["date_max"], var, self.mdb.SCHEMA
-                    )
+                    "SELECT date, valeur FROM (SELECT code, type, UNNEST(date) AS date, "
+                    "UNNEST(valeur) AS valeur FROM {schema}.observations "
+                    "WHERE code = %s AND type = %s) t "
+                    "WHERE date >= %s AND date <= %s AND valeur > -999.9 "
+                    "ORDER BY date"
                 )
-                obs_graph = self.mdb.query_todico(sql_query)
+                obs_graph = self.mdb.query_todico(
+                    sql_query,
+                    params=[id_obs, var, param_obs["date_min"], param_obs["date_max"]],
+                    schema=True,
+                )
 
                 if len(obs_graph["valeur"]) != 0:
                     if_val = True
@@ -766,7 +811,11 @@ class GraphResultDialog(QWidget):
 
     def _get_item_flags_qt(self):
         if QT_VERSION > 5:
-            return Qt.ItemFlag.ItemIsEnabled, Qt.ItemFlag.ItemIsSelectable, Qt.AlignmentFlag.AlignCenter
+            return (
+                Qt.ItemFlag.ItemIsEnabled,
+                Qt.ItemFlag.ItemIsSelectable,
+                Qt.AlignmentFlag.AlignCenter,
+            )
         return Qt.ItemIsEnabled, Qt.ItemIsSelectable, Qt.AlignCenter
 
     def fill_tab(self):
@@ -783,7 +832,9 @@ class GraphResultDialog(QWidget):
             if len(self.lst_graph) == 1:
                 self.clas_data.addTab(tw, param["name"])
             else:
-                label = param["name"] if param["is_obs"] else "[{}] {}".format(idx + 1, param["name"])
+                label = (
+                    param["name"] if param["is_obs"] else "[{}] {}".format(idx + 1, param["name"])
+                )
                 self.clas_data.addTab(tw, label)
 
             lst_vars = [param["x_var"]] + param["y_var"]
@@ -815,7 +866,9 @@ class GraphResultDialog(QWidget):
         self.fill_assim_law()
         self.clas_data.setCurrentIndex(0)
 
-    def _build_table_widget(self, col_headers, lst_tab, qt_itm_ena, qt_itm_sel, qt_al_cent, col_color=[]):
+    def _build_table_widget(
+        self, col_headers, lst_tab, qt_itm_ena, qt_itm_sel, qt_al_cent, col_color=[]
+    ):
         col_color = col_color
         color_head = QColor(255, 193, 7)
         color_col = QColor(255, 243, 205)
@@ -854,15 +907,15 @@ class GraphResultDialog(QWidget):
         return tw
 
     def _get_ks_query(self, id_run):
-        return f"""
-            SELECT
-                ar.id, ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var, ar.val,
-                cm.zone_num, cm.branchnum, cm.abs_min, cm.abs_max, cm.ks_min, cm.ks_maj
-            FROM {self.mdb.SCHEMA}.assim_res ar
-            LEFT JOIN {self.mdb.SCHEMA}.assim_res_ks cm ON ar.id_ctrl = cm.id_ctrl
-            WHERE ar.id_runs IN ({id_run})
-            ORDER BY ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var;
-        """
+        return (
+            "SELECT "
+            "ar.id, ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var, ar.val, "
+            "cm.zone_num, cm.branchnum, cm.abs_min, cm.abs_max, cm.ks_min, cm.ks_maj "
+            "FROM {schema}.assim_res ar "
+            "LEFT JOIN {schema}.assim_res_ks cm ON ar.id_ctrl = cm.id_ctrl "
+            "WHERE ar.id_runs = %s "
+            "ORDER BY ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var;"
+        ), [id_run]
 
     def _build_res_assim_ks(self, rows):
         result = {}
@@ -887,14 +940,32 @@ class GraphResultDialog(QWidget):
                 result[id_ctrl]["val_ks_maj"] = row["val"]
         result = dict(sorted(result.items(), key=lambda item: item[1]["zone_num"]))
 
-        keys = ["zone_num", "branchnum", "abs_min", "abs_max",
-                "ks_min_ref", "ks_maj_ref", "val_ks_min", "val_ks_maj", "r_diff_min", "r_diff_maj"]
+        keys = [
+            "zone_num",
+            "branchnum",
+            "abs_min",
+            "abs_max",
+            "ks_min_ref",
+            "ks_maj_ref",
+            "val_ks_min",
+            "val_ks_maj",
+            "r_diff_min",
+            "r_diff_maj",
+        ]
         rows = []
         for item in result.values():
-            item["val_ks_min"] = item["val_ks_min"] if item["val_ks_min"] is not None else item["ks_min_ref"]
-            item["val_ks_maj"] = item["val_ks_maj"] if item["val_ks_maj"] is not None else item["ks_maj_ref"]
-            item["r_diff_min"] = round((item["val_ks_min"] - item["ks_min_ref"]) / item["ks_min_ref"] * 100,2)
-            item["r_diff_maj"] = round((item["val_ks_maj"] - item["ks_maj_ref"]) / item["ks_maj_ref"] * 100 ,2)
+            item["val_ks_min"] = (
+                item["val_ks_min"] if item["val_ks_min"] is not None else item["ks_min_ref"]
+            )
+            item["val_ks_maj"] = (
+                item["val_ks_maj"] if item["val_ks_maj"] is not None else item["ks_maj_ref"]
+            )
+            item["r_diff_min"] = round(
+                (item["val_ks_min"] - item["ks_min_ref"]) / item["ks_min_ref"] * 100, 2
+            )
+            item["r_diff_maj"] = round(
+                (item["val_ks_maj"] - item["ks_maj_ref"]) / item["ks_maj_ref"] * 100, 2
+            )
             rows.append([item[k] for k in keys])
 
         return rows
@@ -905,25 +976,31 @@ class GraphResultDialog(QWidget):
             query_fn=self._get_ks_query,
             build_fn=self._build_res_assim_ks,
             col_headers=[
-                "Zone", "Branch", "Min Abscissa \n (Pk)", "Max Abscissa \n (Pk)",
-                "Initial Ks\n (minor bed)", "Initial Ks \n (major bed)",
-                "Final Ks \n (minor bed)", "Final Ks \n (major bed)",
-                "Relative diff. % \n (minor bed)", "Relative diff. % \n (major bed)"
+                "Zone",
+                "Branch",
+                "Min Abscissa \n (Pk)",
+                "Max Abscissa \n (Pk)",
+                "Initial Ks\n (minor bed)",
+                "Initial Ks \n (major bed)",
+                "Final Ks \n (minor bed)",
+                "Final Ks \n (major bed)",
+                "Relative diff. % \n (minor bed)",
+                "Relative diff. % \n (major bed)",
             ],
             col_color=[6, 7],
             tab_label_base="Assim – Ctrl Ks",
         )
 
     def _get_law_query(self, id_run):
-        return f"""
-            SELECT
-                ar.id, ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var, ar.val,
-                cm.id_law, cm.source_law, cm.name_law
-            FROM {self.mdb.SCHEMA}.assim_res ar
-            LEFT JOIN {self.mdb.SCHEMA}.assim_res_law cm ON ar.id_ctrl = cm.id_ctrl
-            WHERE ar.id_runs IN ({id_run})
-            ORDER BY ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var;
-        """
+        return (
+            "SELECT "
+            "ar.id, ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var, ar.val, "
+            "cm.id_law, cm.source_law, cm.name_law "
+            "FROM {schema}.assim_res ar "
+            "LEFT JOIN {schema}.assim_res_law cm ON ar.id_ctrl = cm.id_ctrl "
+            "WHERE ar.id_runs = %s "
+            "ORDER BY ar.id_runs, ar.type_ctrl, ar.id_ctrl, ar.var;"
+        ), [id_run]
 
     def _build_res_assim_law(self, rows):
         result = {}
@@ -945,10 +1022,7 @@ class GraphResultDialog(QWidget):
                 result[id_ctrl]["val_coef_b"] = row["val"]
 
         result = dict(
-            sorted(
-                result.items(),
-                key=lambda item: (item[1]["source_law"], item[1]["id_law"])
-            )
+            sorted(result.items(), key=lambda item: (item[1]["source_law"], item[1]["id_law"]))
         )
 
         keys = ["id_law", "source_law", "name_law", "val_coef_a", "val_coef_b"]
@@ -960,20 +1034,34 @@ class GraphResultDialog(QWidget):
 
         return rows
 
-    def _fill_assim_tab(self, table_name, query_fn, build_fn, col_headers, col_color, tab_label_base):
+    def _fill_assim_tab(
+        self, table_name, query_fn, build_fn, col_headers, col_color, tab_label_base
+    ):
         qt_itm_ena, qt_itm_sel, qt_al_cent = self._get_item_flags_qt()
         lst_run_ids = [param["scen"] for param in self.lst_graph if "scen" in param]
-        sql_lst_run = ",".join(str(v) for v in lst_run_ids)
-        d_id_run = self.mdb.select_distinct("id_runs", table_name, where=f"id_runs in ({sql_lst_run})")
-        if not d_id_run:
+        if not lst_run_ids:
             return
+        unique_ids = sorted(set(lst_run_ids))
+        if table_name == "assim_res_ks":
+            query_ids = "SELECT DISTINCT id_runs FROM {schema}.assim_res_ks WHERE id_runs = ANY(%s)"
+        else:
+            query_ids = (
+                "SELECT DISTINCT id_runs FROM {schema}.assim_res_law WHERE id_runs = ANY(%s)"
+            )
+        d_rows = self.mdb.run_query(query_ids, fetch=True, params=[unique_ids], schema=True)
+        if not d_rows:
+            return
+        valid_ids = {r[0] for r in d_rows}
         multiple_runs = len(lst_run_ids) > 1
         for id_graph, id_run in enumerate(lst_run_ids):
-            if id_run not in d_id_run["id_runs"]:
+            if id_run not in valid_ids:
                 continue
-            rows = self.mdb.run_query(query_fn(id_run), fetch=True)
+            query, params = query_fn(id_run)
+            rows = self.mdb.run_query(query, fetch=True, params=params, schema=True)
             lst_tab = build_fn(rows)
-            tw = self._build_table_widget(col_headers, lst_tab, qt_itm_ena, qt_itm_sel, qt_al_cent, col_color=col_color)
+            tw = self._build_table_widget(
+                col_headers, lst_tab, qt_itm_ena, qt_itm_sel, qt_al_cent, col_color=col_color
+            )
             tab_label = f"[{id_graph + 1}] {tab_label_base}" if multiple_runs else tab_label_base
             self.clas_data.addTab(tw, tab_label)
 
@@ -999,7 +1087,7 @@ class GraphResultDialog(QWidget):
         courbe_weirs = []
         self.lst_weirs = self.mdb.select("weirs", condition, "abscissa")
         if self.lst_weirs:
-            self.lst_weirs['pknum'] = self.lst_weirs['abscissa']
+            self.lst_weirs["pknum"] = self.lst_weirs["abscissa"]
             self.graph_obj.clear_weirs()
             courbe_weirs = {}
 
@@ -1009,7 +1097,12 @@ class GraphResultDialog(QWidget):
             courbe_weirs["cote"] = []
             del_w = []
             for idx, item in enumerate(
-                    zip(self.lst_weirs["type"], self.lst_weirs['z_average_crest'], self.lst_weirs['z_crest'])):
+                zip(
+                    self.lst_weirs["type"],
+                    self.lst_weirs["z_average_crest"],
+                    self.lst_weirs["z_crest"],
+                )
+            ):
                 a, c, d = item
                 if a == 3:
                     if c is None:
@@ -1024,7 +1117,9 @@ class GraphResultDialog(QWidget):
                 else:
                     del_w.append(idx)
             courbe_weirs["x"] = [elem for i, elem in enumerate(courbe_weirs["x"]) if i not in del_w]
-            courbe_weirs["name"] = [elem for i, elem in enumerate(courbe_weirs["name"]) if i not in del_w]
+            courbe_weirs["name"] = [
+                elem for i, elem in enumerate(courbe_weirs["name"]) if i not in del_w
+            ]
             self.graph_obj.init_graph_weirs(courbe_weirs)
 
     def get_laisses(self, param):
@@ -1153,7 +1248,7 @@ class GraphResultDialog(QWidget):
             texte = texte[:-1] + "\n"  # le [:-1] élimine le '\t' en trop
 
         # enregistrement dans le clipboard
-        QtGui.QApplication.clipboard().setText(texte)
+        QApplication.clipboard().setText(texte)
 
 
 class CopySelectedCellsAction(QAction):

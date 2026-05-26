@@ -23,12 +23,16 @@ import json
 import os
 from datetime import timedelta
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtWidgets import (
+    QAction,
+    QFileDialog,
+    QTableWidget,
+    QTableWidgetItem,
+    QWidget,
+)
+from qgis.PyQt.uic import loadUi
+from qgis.utils import QApplication
 from shapely.geometry import GeometryCollection
 from shapely.geometry import shape
 from shapely.ops import unary_union
@@ -38,7 +42,7 @@ from .GraphResult import GraphResult
 from .WidgetProfResultDialog import WidgetProfResultDialog
 from ..Function import tw_to_txt, fill_zminbed
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 def list_sql(liste, typ="str"):
@@ -99,11 +103,10 @@ class GraphProfilResultDialog(QWidget):
             self.sql_where = "results.pknum = {1}"
 
             self.cur_pknum = id
-            sql = "SELECT id FROM {0}.results_var WHERE var = 'Z'".format(self.mdb.SCHEMA)
-            rows = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT id FROM {schema}.results_var WHERE var = %s"
+            rows = self.mdb.run_query(sql, fetch=True, params=["Z"], schema=True)
             self.id_z = rows[0][0]
-            sql = "SELECT id FROM {0}.results_var WHERE var = 'QMAJ'".format(self.mdb.SCHEMA)
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, params=["QMAJ"], schema=True)
             self.id_qmaj = rows[0][0]
             self.cur_t = "Zmax"
             self.get_profil_data()
@@ -140,10 +143,11 @@ class GraphProfilResultDialog(QWidget):
 
     def checkrun(self):
         rows = self.mdb.run_query(
-            "SELECT id, run, scenario FROM {0}.runs "
-            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY run, scenario ".format(self.mdb.SCHEMA),
+            "SELECT id, run, scenario FROM {schema}.runs "
+            "WHERE id IN (SELECT DISTINCT id_runs FROM {schema}.runs_graph) "
+            "ORDER BY run, scenario ",
             fetch=True,
+            schema=True,
         )
 
         if rows:
@@ -199,7 +203,7 @@ class GraphProfilResultDialog(QWidget):
                         self.val_prof_ref[pk]["zrightminbed"] = prof["zrightminbed"][id]
                         self.val_prof_ref[pk]["branch"] = prof["branchnum"][id]
 
-                    except:
+                    except Exception:
                         pass
 
     def get_profil_plani(self):
@@ -305,7 +309,9 @@ class GraphProfilResultDialog(QWidget):
                 # creation Complete table si information n'existat pour le run
                 cl_geo = ClassResProfil()
                 self.cas_prt = cl_geo.cas_prt
-                txterr = cl_geo.plani_stock(self.info_graph[self.typ_res]["zmax"], self.cur_run, self.mdb)
+                # txterr = cl_geo.plani_stock(
+                #     self.info_graph[self.typ_res]["zmax"], self.cur_run, self.mdb
+                # )
                 # if self.mgis.DEBUG and txterr:
                 #     print(txterr)
                 del cl_geo
@@ -329,12 +335,9 @@ class GraphProfilResultDialog(QWidget):
         return True, dico_plani
 
     def get_runs_graph(self):
-        sql = (
-            "SELECT type_res,var,val FROM {0}.runs_graph WHERE "
-            "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA, self.cur_run)
-        )
+        sql = "SELECT type_res, var, val FROM {schema}.runs_graph " "WHERE id_runs = %s ORDER BY id"
 
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_run], schema=True)
 
         self.info_graph = {}
         for i, row in enumerate(rows):
@@ -346,10 +349,11 @@ class GraphProfilResultDialog(QWidget):
     def init_dico_run(self):
         self.dict_run = dict()
         rows = self.mdb.run_query(
-            "SELECT id, run, scenario FROM {0}.runs "
-            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY date DESC, run ASC, id DESC;".format(self.mdb.SCHEMA),
+            "SELECT id, run, scenario FROM {schema}.runs "
+            "WHERE id IN (SELECT DISTINCT id_runs FROM {schema}.runs_graph) "
+            "ORDER BY date DESC, run ASC, id DESC;",
             fetch=True,
+            schema=True,
         )
         for row in rows:
             if row[1] not in self.dict_run.keys():
@@ -402,10 +406,8 @@ class GraphProfilResultDialog(QWidget):
         self.cb_det.blockSignals(True)
         self.cb_det.clear()
 
-        sql = "SELECT init_date FROM {0}.runs " "WHERE id = {1} ".format(
-            self.mgis.mdb.SCHEMA, self.cur_run
-        )
-        info = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT init_date FROM {schema}.runs WHERE id = %s"
+        info = self.mdb.run_query(sql, fetch=True, params=[self.cur_run], schema=True)
         if info:
             self.date = info[0][0]
         else:
@@ -693,9 +695,10 @@ class GraphProfilResultDialog(QWidget):
         tmp = []
         for var in self.cur_vars:
             rows = self.mdb.run_query(
-                "SELECT name FROM {0}.results_var "
-                "WHERE var = '{1}'".format(self.mgis.mdb.SCHEMA, var),
+                "SELECT name FROM {schema}.results_var WHERE var = %s",
                 fetch=True,
+                params=[var],
+                schema=True,
             )
             tmp.append(rows[0][0])
         return tmp

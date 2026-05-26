@@ -31,11 +31,20 @@ import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import patches
 from matplotlib.widgets import RectangleSelector, SpanSelector, Cursor
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtWidgets import (
+    QAbstractItemView,
+    QAction,
+    QApplication,
+    QFileDialog,
+    QInputDialog,
+    QMessageBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTableWidgetSelectionRange,
+)
+from qgis.PyQt.uic import loadUi
+from qgis.gui import QgsMapToolIdentify
 
 from .ClassMassGraph import MassGraph
 from .ClassProfInterpDialog import ClassProfInterpDialog
@@ -61,24 +70,13 @@ try:
     from packaging.version import parse
     import matplotlib
 
-    MPLT_NEW = (parse(matplotlib.__version__) >= parse("3.6.3"))
-except:
+    MPLT_NEW = parse(matplotlib.__version__) >= parse("3.6.3")
+except ImportError:
     MPLT_NEW = False
-
-try:
-    pass
-except:
-    pass
-# ***************************
-try:
-    pass
-except:
-    pass
 
 # **************************************************
 try:
     _encoding = QApplication.UnicodeUTF8
-
 
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
@@ -88,7 +86,8 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig)
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 class IdentifyFeatureTool(QgsMapToolIdentify):
@@ -108,13 +107,9 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
             mousey = mouse_event.y()
 
         if self.mgis.assim_select:
-            results = self.identify(
-                mousex, mousey, self.TopDownAll, self.VectorLayer
-            )
+            results = self.identify(mousex, mousey, self.TopDownAll, self.VectorLayer)
         else:
-            results = self.identify(
-                mousex, mousey, self.TopDownStopAtFirst, self.VectorLayer
-            )
+            results = self.identify(mousex, mousey, self.TopDownStopAtFirst, self.VectorLayer)
 
         if len(results) > 0:
             couche = results[0].mLayer.name()
@@ -145,11 +140,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                         self.mgis.dockwidgetAssim.wgt_ks.zone_selected_from_map(abscissa)
 
             if (couche == "profiles" or couche == "weirs" or couche == "links") and flag_profil_z:
-                type_res_map = {
-                    "profiles": "struct",
-                    "weirs": "weirs",
-                    "links": "link_fg"
-                }
+                type_res_map = {"profiles": "struct", "weirs": "weirs", "links": "link_fg"}
                 type_res = type_res_map[couche]
                 self.mgis.coucheProfils = results[0].mLayer
                 gid = results[0].mFeature["abscissa"]
@@ -214,10 +205,10 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                     self.mgis.add_info("no active branch")
 
             if flag_hydro and couche in (
-                    "weirs",
-                    "extremities",
-                    "lateral_inflows",
-                    "lateral_weirs",
+                "weirs",
+                "extremities",
+                "lateral_inflows",
+                "lateral_weirs",
             ):
                 feature = results[0].mFeature
                 param = {
@@ -294,7 +285,7 @@ class IdentifyFeatureTool(QgsMapToolIdentify):
                 self.mgis.mass_graph = False
                 feature = results[0].mFeature
                 cls = MassGraph(self.mgis)
-                cls.export_result_vs_obs(feature['gid'])
+                cls.export_result_vs_obs(feature["gid"])
 
         return
 
@@ -335,10 +326,8 @@ class GraphProfil(GraphCommon):
         self.ui.bt_profil_filter.clicked.connect(self.filtre)
         self.ui.bt_profil_del.clicked.connect(self.efface_profil)
         self.ui.bt_minor_bed.clicked.connect(self.select_lit_mineur)
-        self.ui.bt_r_stok.clicked.connect(
-            lambda: self.select_stock("rightstock"))
-        self.ui.bt_l_stok.clicked.connect(
-            lambda: self.select_stock("leftstock"))
+        self.ui.bt_r_stok.clicked.connect(lambda: self.select_stock("rightstock"))
+        self.ui.bt_l_stok.clicked.connect(lambda: self.select_stock("leftstock"))
         self.bt_clear_zone_minor.clicked.connect(self.clear_zones_minor)
         self.bt_clear_zone_stock.clicked.connect(self.clear_zones_stock)
         self.ui.bt_ouvrage.clicked.connect(self.create_struct)
@@ -775,20 +764,34 @@ class GraphProfil(GraphCommon):
                                 )
 
                 if gid:
-                    sql = """UPDATE {0}.topo SET x={1}, geom={2}, order_={3}
-                          WHERE gid={4}""".format(
-                        self.mdb.SCHEMA, x, geom, ordre, gid
-                    )
-                    self.mdb.run_query(sql)
+                    if geom == "NULL":
+                        sql = "UPDATE {schema}.topo SET x=%s, geom=NULL, order_=%s WHERE gid=%s"
+                        self.mdb.run_query(sql, params=[x, ordre, gid], schema=True)
+                    else:
+                        sql = (
+                            "UPDATE {schema}.topo SET x = %s, "
+                            "geom = ST_SetSRID(ST_MakePoint(%s, %s), %s), order_=%s WHERE gid = %s"
+                        )
+                        self.mdb.run_query(
+                            sql, params=[x, p.x(), p.y(), self.mdb.SRID, ordre, gid], schema=True
+                        )
                 else:
-                    sql = """INSERT INTO {0}.topo
-                          (name, profile, order_, x, z, geom)
-                          VALUES
-                          ('{1}','{2}',{3},{4},{5},{6})""".format(
-                        self.mdb.SCHEMA, nom, self.nom, ordre, x, z, geom
-                    )
-
-                    self.mdb.run_query(sql)
+                    if geom == "NULL":
+                        sql = (
+                            "INSERT INTO {schema}.topo (name, profile, order_, x, z, geom) "
+                            "VALUES (%s, %s, %s, %s, %s, NULL)"
+                        )
+                        self.mdb.run_query(sql, params=[nom, self.nom, ordre, x, z], schema=True)
+                    else:
+                        sql = (
+                            "INSERT INTO {schema}.topo (name, profile, order_, x, z, geom) "
+                            "VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), %s))"
+                        )
+                        self.mdb.run_query(
+                            sql,
+                            params=[nom, self.nom, ordre, x, z, p.x(), p.y(), self.mdb.SRID],
+                            schema=True,
+                        )
 
         self.extrait_topo()
 
@@ -804,7 +807,6 @@ class GraphProfil(GraphCommon):
             "rightminbed_g": None,
             "leftstock_g": None,
             "rightstock_g": None,
-
         }
 
         self.mdb.update("profiles", {self.nom: self.tab}, var="name")
@@ -925,7 +927,7 @@ class GraphProfil(GraphCommon):
             fich.close()
         try:
             img = mpimg.imread(fichier)
-        except:
+        except Exception:
             self.mgis.add_info('File "{}" cannot open.'.format(fichier))
         else:
             self.image = self.axes.imshow(
@@ -974,17 +976,17 @@ class GraphProfil(GraphCommon):
         legline = event.artist
         deplaceh = self.bt_translah.isChecked()
         deplacev = self.bt_translav.isChecked()
-        selector = self.bt_select.isChecked()
+        # selector = self.bt_select.isChecked()
         zone_selector = self.bt_select_z.isChecked()
         bouton = event.mouseevent.button
 
         if (deplaceh and legline in self.courbeTopo and bouton == 1) or (
-                deplaceh and legline in [self.courbedown, self.courbeup] and bouton == 1
+            deplaceh and legline in [self.courbedown, self.courbeup] and bouton == 1
         ):
             self.x0 = round(event.mouseevent.xdata, 2)
             self.courbeSelected = legline
         elif (deplacev and legline in self.courbeTopo and bouton == 1) or (
-                deplacev and legline in [self.courbedown, self.courbeup] and bouton == 1
+            deplacev and legline in [self.courbedown, self.courbeup] and bouton == 1
         ):
             self.y0 = round(event.mouseevent.ydata, 2)
             self.courbeSelected = legline
@@ -1158,7 +1160,7 @@ class GraphProfil(GraphCommon):
                     self.topo[f]["x"] = tab_x
                 self.courbeSelected.set_xdata(tab_x)
                 self.x0 = round(float(event.xdata), 2)
-            except:
+            except Exception:
                 self.mgis.add_info("Warning:Out of graph", dbg=True)
 
         elif self.bt_translav.isChecked() and self.y0:
@@ -1175,7 +1177,7 @@ class GraphProfil(GraphCommon):
                 self.courbeSelected.set_ydata(tab_z)
 
                 self.y0 = round(float(event.ydata), 2)
-            except:
+            except Exception:
                 self.mgis.add_info("Warning:Out of graph", dbg=True)
         self.fig.canvas.draw()
 
@@ -1491,7 +1493,7 @@ class GraphProfil(GraphCommon):
 
     def clear_zones_minor(self):
         """
-             Clear minorbed zone
+        Clear minorbed zone
         """
         self.tab["leftminbed"] = None
         self.tab["rightminbed"] = None
@@ -1580,10 +1582,10 @@ class GraphProfil(GraphCommon):
                     mess_both = mess_left
 
                 if (
-                        QMessageBox.question(
-                            self, "Warning", mess_both, QMessageBox.Cancel | QMessageBox.Ok
-                        )
-                        != QMessageBox.Ok
+                    QMessageBox.question(
+                        self, "Warning", mess_both, QMessageBox.Cancel | QMessageBox.Ok
+                    )
+                    != QMessageBox.Ok
                 ):
                     return
 
@@ -1614,8 +1616,8 @@ class GraphProfil(GraphCommon):
 
             if status == "w":
                 if (
-                        QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
-                        != QMessageBox.Ok
+                    QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
+                    != QMessageBox.Ok
                 ):
                     return
                 else:
@@ -1644,8 +1646,8 @@ class GraphProfil(GraphCommon):
 
             if status == "w":
                 if (
-                        QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
-                        != QMessageBox.Ok
+                    QMessageBox.question(self, "Warning", mess, QMessageBox.Cancel | QMessageBox.Ok)
+                    != QMessageBox.Ok
                 ):
                     return
                 else:
@@ -1732,7 +1734,7 @@ class GraphProfil(GraphCommon):
                 [ydata - cur_yrange * scale_factor, ydata + cur_yrange * scale_factor]
             )
             self.fig.canvas.draw()  # force re-draw
-        except:
+        except Exception:
             pass
 
     def reverse_prof(self):
@@ -2075,7 +2077,6 @@ class GraphProfil(GraphCommon):
             qt_alig_hcentre = Qt.AlignHCenter
             qt_alig_vcentre = Qt.AlignVCenter
 
-
         for idc, col in enumerate(cols):
             for idl, line in enumerate(lines):
                 val = self.ch_prof_inter[col][line]
@@ -2138,7 +2139,8 @@ class GraphProfil(GraphCommon):
 
     # •	La section de plein bord du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
     # •	Le point bas du lit mineur (profil en cours, aval et amont, soit 3 valeurs)
-    # •	Des cotes de débordement de la rive droite et gauche (profil en cours, aval et amont, soit 6 valeurs)
+    # •	Des cotes de débordement de la rive droite et gauche
+    #   (profil en cours, aval et amont, soit 6 valeurs)
     #
     def maj_tab_check(self):
         self.ch_prof = {}

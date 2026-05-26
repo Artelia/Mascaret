@@ -15,7 +15,7 @@
 
   "lbl_typ_law": "Select the Law to be configured.",
   "bt_reload_laws": "Reload the hydraulic Laws and associated control law.",
-  "bt_edit_law": "Toggle editing mode for Law parameters and observation selection.",
+  "bt_clr_warn_law": "Clear the warnings",
 
   "label_law_obs": "Observation settings: standard deviations and physical bounds (minimum/maximum).",
   "label_law_min": "Minimum allowed value for flow rate or level law.",
@@ -27,8 +27,7 @@
   "gb_b_ctrl": "Assimilation control parameters for coefficient B.",
   "label_b_std": "Standard deviation applied to corrections of coefficient B.",
 
-  "bt_cancel_law": "Cancel changes and close the window.",
   "bt_zoom_law": "Zoom to the spatial extent of the Law on the map.",
-  "bt_disp_law": "Display the geometric object associated with the Law on the map.",
-  "bt_valid_law": "Validate the changes and close the window."
+  "bt_disp_law": "Display the geometric object associated with the Law on the map."
+
 }

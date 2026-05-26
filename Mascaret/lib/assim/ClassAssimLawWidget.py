@@ -24,7 +24,16 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QSize, qVersion
 from qgis.PyQt.QtGui import QIcon, QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QMessageBox, QButtonGroup
 
-from qgis.core import QgsApplication, QgsGeometry, QgsCoordinateReferenceSystem
+from qgis.core import (
+    QgsApplication,
+    QgsGeometry,
+    QgsCoordinateReferenceSystem,
+    QgsRectangle,
+    QgsWkbTypes,
+    QgsDistanceArea,
+    QgsProject,
+    QgsUnitTypes,
+)
 from .FunctionAssimDialog import reproject_geom_to_project
 from .tooltips.tooltips import apply_tooltips_from_json
 
@@ -58,6 +67,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.mdb = self.mgis.mdb
         self.iface = iface
         self.ui_loaded = False
+        self._updating_law_ui = False
 
         if QT_VERSION > 5:
             self.qt_itm_ena = Qt.ItemFlag.ItemIsEnabled
@@ -80,8 +90,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.bt_zoom_law.setIcon(QIcon(QgsApplication.iconPath("mActionZoomToSelected.svg")))
         self.bt_disp_law.setIcon(QIcon(QgsApplication.iconPath("mActionShowSelectedLayers.svg")))
 
-        self.bt_cancel_law.setIcon(QIcon(QgsApplication.iconPath("mActionCancelAllEdits.svg")))
-        self.bt_valid_law.setIcon(QIcon(QgsApplication.iconPath("mActionSaveAllEdits.svg")))
+        self.bt_clr_warn_law.setIcon(QIcon(QgsApplication.iconPath("mIconWarning.svg")))
 
         laws_updated = self.verif_laws()
         if laws_updated:
@@ -92,7 +101,10 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.cur_perturb_var = str()
         self.cur_source = str()
         self.cur_law = None
+        self.cur_obs_law = None
+        self.last_selection_kind = None
         self.d_laws = dict()
+        self.d_obs_law = dict()
 
         self.bg_perturb_var.idClicked.connect(self.cur_perturb_var_changed)
         self.cc_law_act.toggled.connect(self.change_law_config)
@@ -109,15 +121,56 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         self.bt_reload_laws.clicked.connect(self.reload_laws)
         self.bt_disp_law.clicked.connect(self.display_map_rb)
         self.bt_zoom_law.clicked.connect(self.zoom_on_law)
-        self.bt_edit_law.clicked.connect(self.enable_input)
-        self.bt_cancel_law.clicked.connect(self.cancel_input)
-        self.bt_valid_law.clicked.connect(self.save_input)
+        self.bt_clr_warn_law.clicked.connect(self.clear_warning_law)
+
+        self.connect_law_auto_save()
+        self.set_direct_edit_mode()
 
         self.load_laws()
         self.load_obs()
         self.load_config()
 
         self.ui_loaded = True
+
+    def set_direct_edit_mode(self):
+        """Configure direct editing mode with automatic save."""
+        self.gb_law.setEnabled(True)
+        self.gb_param_law.setEnabled(True)
+        self.fra_law_sel.setEnabled(True)
+        self.update_law_edit_state()
+
+    def is_current_law_editable(self):
+        """Return True only if current law is selected and checked."""
+        if self.cur_law is None or not self.lv_law.selectionModel().hasSelection():
+            return False
+
+        idxs = self.lv_law.selectionModel().selectedIndexes()
+        if not idxs:
+            return False
+
+        item = self.lv_law.model().itemFromIndex(idxs[0])
+        return item is not None and item.checkState() == self.qt_check_stat.Checked
+
+    def update_law_edit_state(self):
+        """Enable or disable law edit frame depending on current selection state."""
+
+        editable = self.is_current_law_editable()
+        self.fra_law_edit.setEnabled(editable)
+
+    def connect_law_auto_save(self):
+        """Connect editable law widgets to automatic save."""
+        self.sb_law_min.valueChanged.connect(self.on_law_field_changed)
+        self.sb_law_max.valueChanged.connect(self.on_law_field_changed)
+        self.gb_a_ctrl.toggled.connect(self.on_law_field_changed)
+        self.sb_a_std.valueChanged.connect(self.on_law_field_changed)
+        self.gb_b_ctrl.toggled.connect(self.on_law_field_changed)
+        self.sb_b_std.valueChanged.connect(self.on_law_field_changed)
+
+    def on_law_field_changed(self, *_):
+        """Save the current law after any user change."""
+        if self._updating_law_ui or not self.is_current_law_editable():
+            return
+        self.save_input()
 
     def load_config(self):
         """Load law assimilation configuration from database.
@@ -181,36 +234,69 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 self.bg_perturb_var.button(id_btn).click()
 
     def load_obs(self):
-        """Load available observations for the current observation variable.
+        """Load available observations for the current observation variable."""
 
-        Populates the observation list view with active observations matching
-        the current control variable (H or Q).
-        :return: None. Updates observation list.
-        """
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
+        self.d_obs_law.clear()
+
+        sql_srid = (
+            "SELECT f_table_name, srid "
+            "FROM geometry_columns "
+            "WHERE f_table_schema = %s "
+            "AND f_table_name IN ('outputs')"
+        )
+        srid_rows = self.mdb.run_query(sql_srid, fetch=True, params=[self.mdb.SCHEMA])
+        d_srid = {
+            row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}") for row in srid_rows if row[1]
+        }
 
         sql = (
-            "SELECT id, code FROM {0}.observations "
-            "WHERE type = '{1}' AND code IN (SELECT code FROM {0}.outputs WHERE active IS True)"
-            "ORDER BY code"
+            "SELECT obs.id, obs.code, ST_AsText(out.geom) "
+            "FROM {0}.observations obs "
+            "JOIN {0}.outputs out ON out.code = obs.code "
+            "WHERE obs.type = '{1}' "
+            "AND out.active IS True "
+            "ORDER BY obs.code"
         )
         rows = self.mdb.run_query(
             sql.format(self.mdb.SCHEMA, self.cb_law_fld.currentText()), fetch=True
         )
+
         for row in rows:
+            obs_geom = QgsGeometry.fromWkt(row[2]) if row[2] else None
+            self.d_obs_law[row[0]] = {
+                "code": row[1],
+                "geom": obs_geom,
+                "crs": d_srid.get("outputs", QgsCoordinateReferenceSystem()),
+            }
+
             itm = QStandardItem()
             itm.setData(row[1], 0)
             itm.setData(row[0], 32)
-            itm.setFlags(self.qt_itm_ena | self.qt_item_check)
+            itm.setFlags(self.qt_itm_ena | self.qt_itm_sel | self.qt_item_check)
             itm.setCheckState(self.qt_check_stat.Unchecked)
             mdl.appendRow(itm)
 
         self.lv_law_obs.setModel(mdl)
         self.lv_law_obs.setSpacing(2)
+        self.lv_law_obs.model().itemChanged.connect(self.on_law_field_changed)
+        self.lv_law_obs.clicked.connect(self.on_lv_clicked)
+
+        self.cur_obs_law = None
+        if self.last_selection_kind == "obs":
+            self.last_selection_kind = None
+
         if self.ui_loaded:
             self.display_law_info()
             self.change_law_config()
+
+    def on_lv_clicked(self):
+        sender = self.sender()
+        if sender == self.lv_law:
+            self.current_law_changed()
+        elif sender == self.lv_law_obs:
+            self.current_obs_changed()
 
     def cur_perturb_var_changed(self, id_var):
         """Handle change in perturbation variable type (limnigraphy, hydrography, etc.).
@@ -237,12 +323,22 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         if self.cur_perturb_var == "perturbationsCote":
 
             self.lbl_typ_law.setText("Limnigraphs")
-            for sb in [self.sb_debit_a, self.sb_debit_b, self.sb_debit_lin_a, self.sb_debit_lin_b]:
+            for sb in [
+                self.sb_debit_a,
+                self.sb_debit_b,
+                self.sb_debit_lin_a,
+                self.sb_debit_lin_b,
+            ]:
                 sb.setEnabled(False)
 
         if self.cur_perturb_var == "perturbationsDebit":
             self.lbl_typ_law.setText("Hydrographs")
-            for sb in [self.sb_cote_a, self.sb_cote_b, self.sb_debit_lin_a, self.sb_debit_lin_b]:
+            for sb in [
+                self.sb_cote_a,
+                self.sb_cote_b,
+                self.sb_debit_lin_a,
+                self.sb_debit_lin_b,
+            ]:
                 sb.setEnabled(False)
 
         if self.cur_perturb_var == "perturbationsDebitLineique":
@@ -261,14 +357,14 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         """
         if self.ui_loaded:
             sql = (
-                "UPDATE {0}.assim_config SET "
+                "UPDATE {schema}.assim_config SET "
                 "active = %s, "
                 "control_var = %s, "
                 "seuil_rejet_misfit = %s, "
                 "iterations_sigma = %s, "
                 "perturbation_val = %s, "
                 "perturbation_act = %s "
-                "WHERE control_type = 'ctrlLaw'".format(self.mdb.SCHEMA)
+                "WHERE control_type = 'ctrlLaw'"
             )
             recs = [
                 [
@@ -284,7 +380,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                     self.cur_perturb_var,
                 ]
             ]
-            self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
+            self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
 
     def verif_laws(self):
         """Verify and update law definitions against current model geometry.
@@ -340,8 +436,9 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 for p_law in d_calc_law.keys()
             ]
             sql = (
-                "INSERT INTO {0}.assim_law (id_law, source_law, id_type, active, auto_del, lst_obs_h, "
-                "lst_obs_q, val_min, val_max, active_a, std_a, active_b, std_b) VALUES ({1})"
+                "INSERT INTO {0}.assim_law (id_law, source_law, id_type, "
+                "active, auto_del, lst_obs_h, lst_obs_q, val_min, val_max, "
+                "active_a, std_a, active_b, std_b) VALUES ({1})"
             )
             self.mdb.run_query(
                 sql.format(self.mdb.SCHEMA, ", ".join(["%s"] * len(recs[0]))),
@@ -432,10 +529,10 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         sql_srid = (
             "SELECT f_table_name, srid "
             "FROM geometry_columns "
-            "WHERE f_table_schema = '{schema}' "
+            "WHERE f_table_schema = %s "
             "AND f_table_name IN ('extremities', 'lateral_inflows')"
-        ).format(schema=self.mdb.SCHEMA)
-        srid_rows = self.mdb.run_query(sql_srid, fetch=True)
+        )
+        srid_rows = self.mdb.run_query(sql_srid, fetch=True, params=[self.mdb.SCHEMA])
         d_srid = {
             row[0]: QgsCoordinateReferenceSystem(f"EPSG:{row[1]}") for row in srid_rows if row[1]
         }
@@ -472,6 +569,7 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
             type_law = row[2]
             self.d_laws[type_law][id_law] = {
                 "law_name": d_calc_law[(row[0], row[1], row[2])]["name"],
+                "source_law": source_law,
                 "geom": QgsGeometry.fromWkt(d_calc_law[(row[0], row[1], row[2])]["geom"]),
                 "crs": d_srid.get(source_law, QgsCoordinateReferenceSystem()),
                 "active": row[3],
@@ -488,192 +586,150 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 },
             }
 
-    def display_laws(self):
-        """Display and populate law list view for current perturbation variable type.
+    def law_status_changed(self, item):
+        """Handle law checkbox state change and persist active flag."""
+        if item is None:
+            return
 
-        Shows all laws of the current type with check state and auto-delete indicators.
-        :return: None. Updates law list view and sets up signal connections.
-        """
-        mdl = QStandardItemModel()
-        mdl.setColumnCount(1)
-        for id_law, p_law in self.d_laws[self.cur_perturb_var].items():
-            itm = QStandardItem()
-            itm.setData(p_law["law_name"], 0)
-            itm.setData(id_law, 32)
-            itm.setFlags(self.qt_itm_ena | self.qt_itm_sel | self.qt_item_check)
-            if p_law["auto_del"]:
-                itm.setIcon(QIcon(QgsApplication.iconPath("mIconWarning.svg")))
-            if p_law["active"]:
-                itm.setCheckState(self.qt_check_stat.Checked)
-            else:
-                itm.setCheckState(self.qt_check_stat.Unchecked)
-            mdl.appendRow(itm)
+        id_law = item.data(32)
+        if id_law is None:
+            return
 
-        self.lv_law.setIconSize(QSize(14, 14))
-        self.lv_law.setModel(mdl)
-        self.lv_law.setSpacing(2)
-        self.lv_law.model().itemChanged.connect(self.law_status_changed)
-        self.lv_law.selectionModel().selectionChanged.connect(self.current_law_changed)
+        is_active = item.checkState() == self.qt_check_stat.Checked
+        law_data = self.d_laws.get(self.cur_perturb_var, {}).get(id_law, {})
+        source_law = law_data.get("source_law", self.cur_source)
 
-        if self.lv_law.model().rowCount():
-            self.lv_law.setCurrentIndex(self.lv_law.model().item(0, 0).index())
-
-    def refresh_law(self, id_var, id_law):
-        """Refresh parameter data for a specific law from database.
-
-        :param id_var: Perturbation variable type identifier.
-        :param id_law: Law identifier to refresh.
-        :return: None. Updates *self.d_laws* for the given law.
-        """
         sql = (
-            "SELECT lst_obs_h, lst_obs_q, val_min, val_max, "
-            "active_a, std_a, active_b, std_b, auto_del FROM {0}.assim_law "
-            "WHERE id_law = {1} AND id_type = '{2}'"
+            "UPDATE {schema}.assim_law SET active = %s "
+            "WHERE id_law = %s AND source_law = %s AND id_type = %s"
         )
-        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_law, id_var), fetch=True)
-        row = rows[0]
-        self.d_laws[id_var][id_law]["auto_del"] = row[8]
-        self.d_laws[id_var][id_law]["prm"] = {
-            "lst_obs_h": row[0],
-            "lst_obs_q": row[1],
-            "val_min": row[2],
-            "val_max": row[3],
-            "active_a": row[4],
-            "std_a": row[5],
-            "active_b": row[6],
-            "std_b": row[7],
-        }
+        recs = [[is_active, id_law, source_law, self.cur_perturb_var]]
+        self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
 
-    def current_law_changed(self):
-        """Handle law selection change in the law list view.
+        if id_law in self.d_laws.get(self.cur_perturb_var, {}):
+            self.d_laws[self.cur_perturb_var][id_law]["active"] = is_active
 
-        :return: None. Updates current law, displays law info, and draws representation.
-        """
-        if self.lv_law.selectionModel().hasSelection():
-            idxs = self.lv_law.selectionModel().selectedIndexes()
-            if idxs:
-                idx = idxs[0]
-                itm = self.lv_law.model().itemFromIndex(idx)
-                self.cur_law = itm.data(32)
-            else:
-                self.cur_law = None
-        else:
-            self.cur_law = None
-
-        self.display_law_info()
+        self.display_laws()
         self.draw_law_rb()
+        self.update_law_edit_state()
 
     def display_law_info(self):
-        """Display information and parameters for the currently selected law.
+        """Display current law parameters and associated observations."""
+        self._updating_law_ui = True
+        try:
+            if self.cur_law is None:
+                return
 
-        Updates spinboxes and checkboxes with law parameters and observation selections.
-        :return: None. Updates UI with law data or clears if no law selected.
-        """
-        self.gb_law.setTitle("Aucune loi sélectionné")
+            law = self.d_laws.get(self.cur_perturb_var, {}).get(self.cur_law)
+            if not law:
+                return
 
-        if self.cur_law is not None:
-            d_law = self.d_laws[self.cur_perturb_var][self.cur_law]
-            self.gb_law.setTitle(d_law["law_name"])
-            self.sb_law_min.setValue(d_law["prm"]["val_min"])
-            self.sb_law_max.setValue(d_law["prm"]["val_max"])
-            self.gb_a_ctrl.setChecked(d_law["prm"]["active_a"])
-            self.sb_a_std.setValue(d_law["prm"]["std_a"])
-            self.gb_b_ctrl.setChecked(d_law["prm"]["active_b"])
-            self.sb_b_std.setValue(d_law["prm"]["std_b"])
+            prm = law["prm"]
+            self.sb_law_min.setValue(float(prm["val_min"]))
+            self.sb_law_max.setValue(float(prm["val_max"]))
+            self.gb_a_ctrl.setChecked(bool(prm["active_a"]))
+            self.sb_a_std.setValue(float(prm["std_a"]))
+            self.gb_b_ctrl.setChecked(bool(prm["active_b"]))
+            self.sb_b_std.setValue(float(prm["std_b"]))
 
-            l_obs = d_law["prm"]["lst_obs_{}".format(str(self.cb_law_fld.currentText()).lower())]
-            for r in range(self.lv_law_obs.model().rowCount()):
-                itm = self.lv_law_obs.model().item(r, 0)
-                if itm.data(32) in l_obs:
-                    itm.setCheckState(self.qt_check_stat.Checked)
-                else:
-                    itm.setCheckState(self.qt_check_stat.Unchecked)
+            obs_key = "lst_obs_h" if self.cb_law_fld.currentText().lower() == "h" else "lst_obs_q"
+            selected_obs = set(prm.get(obs_key, []))
 
-    def law_status_changed(self, itm):
-        """Handle law active/inactive status change in list view.
-
-        :param itm: List item whose check state changed.
-        :return: None. Updates law active status in database.
-        """
-        sql = "UPDATE {0}.assim_law SET active = {1} WHERE id_law = {2} and id_type = '{3}'"
-        self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, itm.checkState() == 2, itm.data(32), self.cur_perturb_var)
-        )
-
-    def display_map_rb(self):
-        self.draw_law_rb()
+            model = self.lv_law_obs.model()
+            if model is not None:
+                for row in range(model.rowCount()):
+                    itm = model.item(row, 0)
+                    if itm is None:
+                        continue
+                    obs_id = itm.data(32)
+                    itm.setCheckState(
+                        self.qt_check_stat.Checked
+                        if obs_id in selected_obs
+                        else self.qt_check_stat.Unchecked
+                    )
+        finally:
+            self._updating_law_ui = False
 
     def draw_law_rb(self):
-        """Trigger display of law rubber band on map.
-
-        :return: None. Emits display_rb signal to update map visualization.
-        """
+        """Trigger map rubber band refresh."""
         self.display_rb.emit()
 
+    def display_map_rb(self):
+        """Refresh map rubber band display from current law selection context."""
+        self.draw_law_rb()
+
+    def get_current_rb_data(self):
+        """Return current rubber band context for map display."""
+        if not self.bt_disp_law.isChecked() or not self.last_selection_kind:
+            return None
+
+        if self.last_selection_kind == "law" and self.cur_law is not None:
+            d_law = self.d_laws.get(self.cur_perturb_var, {}).get(self.cur_law, {})
+            return {
+                "geom": d_law.get("geom"),
+                "crs": d_law.get("crs"),
+                "is_observation": False,
+            }
+
+        if self.last_selection_kind == "obs" and self.cur_obs_law is not None:
+            d_obs = self.d_obs_law.get(self.cur_obs_law, {})
+            return {
+                "geom": d_obs.get("geom"),
+                "crs": d_obs.get("crs"),
+                "is_observation": True,
+            }
+
+        return None
+
+    def _get_last_selected_geom(self):
+        """Return geometry and CRS for current zoom context."""
+        rb_data = self.get_current_rb_data()
+        if not rb_data:
+            return None, None
+        return rb_data.get("geom"), rb_data.get("crs")
+
     def zoom_on_law(self):
-        """Zoom map to the extent of the currently selected law.
+        """Zoom map to last selected element (law or observation)."""
+        geom, geom_crs = self._get_last_selected_geom()
+        if geom is None:
+            return
 
-        :return: None. Updates map canvas extent and refreshes display.
-        """
-        if self.cur_law is not None:
-            ks_geom = self.d_laws[self.cur_perturb_var][self.cur_law]["geom"]
-            ks_geom_crs = self.d_laws[self.cur_perturb_var][self.cur_law].get("crs", None)
-            geom_to_display = reproject_geom_to_project(ks_geom, ks_geom_crs)
-            ks_bb = geom_to_display.boundingBox()
-            # ks_bb = ks_bb.buffered(2500.)
-            canvas = self.iface.mapCanvas()
-            canvas.setExtent(ks_bb)
-            canvas.refresh()
-            canvas.waitWhileRendering()
+        geom_to_display = reproject_geom_to_project(geom, geom_crs)
+        if geom_to_display.isEmpty():
+            return
 
-    def enable_input(self):
-        """Enable law parameter editing mode.
+        canvas = self.iface.mapCanvas()
+        crs = canvas.mapSettings().destinationCrs()
+        da = QgsDistanceArea()
+        da.setSourceCrs(crs, QgsProject.instance().transformContext())
+        is_degree = da.lengthUnits() == QgsUnitTypes.DistanceDegrees
 
-        Disables law selection and enables law parameter controls.
-        :return: None. Updates UI state for editing.
-        """
-        self.gb_law.setEnabled(True)
-        self.gb_param_law.setEnabled(False)
-        self.fra_law_sel.setEnabled(False)
+        if geom_to_display.type() == QgsWkbTypes.PointGeometry:
+            point = geom_to_display.asPoint()
+            pad = 0.0005 if is_degree else 20.0
 
-    def disable_input(self):
-        """Disable law parameter editing mode.
+            rect = QgsRectangle(point.x() - pad, point.y() - pad, point.x() + pad, point.y() + pad)
+        else:
+            rect = geom_to_display.boundingBox()
+            pad = max(rect.width(), rect.height()) * 0.05
+            if pad <= 0:
+                pad = 0.0005 if is_degree else 20.0
+            rect = rect.buffered(pad)
 
-        Enables law selection and disables law parameter controls.
-        :return: None. Updates UI state for browsing.
-        """
-        self.gb_param_law.setEnabled(True)
-        self.fra_law_sel.setEnabled(True)
-        self.gb_law.setEnabled(False)
-
-    def cancel_input(self):
-        """Cancel law editing and revert to displayed state.
-
-        :return: None. Disables input and refreshes displayed law info.
-        """
-        self.disable_input()
-        self.display_law_info()
+        canvas.setExtent(rect)
+        canvas.refresh()
 
     def save_input(self):
-        """Save edited law parameters to database.
+        """Save edited law parameters to database."""
+        if self.cur_law is None or self._updating_law_ui or not self.is_current_law_editable():
+            return
 
-        Validates that observations are selected (if controls are active), then
-        persists all law parameter changes including observation selections.
-        :return: None. Updates database and refreshes UI on success.
-        """
         l_obs = []
         for r in range(self.lv_law_obs.model().rowCount()):
             itm = self.lv_law_obs.model().item(r, 0)
             if itm.checkState() == 2:
                 l_obs.append(itm.data(32))
-        if not l_obs and (self.gb_a_ctrl.isChecked() or self.gb_b_ctrl.isChecked()):
-            QMessageBox.warning(
-                None,
-                "Warning",
-                "Note that no observations have been checked.\n"
-                "Please check at least one observation.",
-            )
-            return
+
         recs = [
             [
                 self.sb_law_min.value(),
@@ -687,26 +743,25 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         ]
 
         sql = (
-            "UPDATE {0}.assim_law SET "
+            "UPDATE {schema}.assim_law SET "
             "val_min = %s, "
             "val_max = %s, "
             "active_a = %s, "
             "std_a = %s, "
             "active_b = %s, "
             "std_b = %s, "
-            "lst_obs_{1} = %s, "
             "auto_del = False "
-            "WHERE id_law = {2} "
-            "AND source_law = '{3}'".format(
-                self.mdb.SCHEMA,
-                str(self.cb_law_fld.currentText()).lower(),
-                self.cur_law,
-                self.cur_source,
-            )
+            "WHERE id_law = %s "
+            "AND source_law = %s"
         )
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA), many=True, list_many=recs)
+        if str(self.cb_law_fld.currentText()).lower() == "h":
+            sql = sql.replace("auto_del = False ", "lst_obs_h = %s, auto_del = False ")
+        else:
+            sql = sql.replace("auto_del = False ", "lst_obs_q = %s, auto_del = False ")
 
-        self.disable_input()
+        recs = [vals + [self.cur_law, self.cur_source] for vals in recs]
+        self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
+
         self.refresh_law(self.cur_perturb_var, self.cur_law)
         self.display_law_info()
 
@@ -716,3 +771,111 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
                 idx = idxs[0]
                 itm = self.lv_law.model().itemFromIndex(idx)
                 itm.setIcon(QIcon())
+
+    def clear_warning_law(self):
+        """Clear auto-delete warning flags for all laws."""
+        sql = "UPDATE {schema}.assim_law SET auto_del = False"
+        self.mdb.run_query(sql, schema=True)
+        self.load_laws()
+        self.display_laws()
+
+    def display_laws(self):
+        """Display laws for current perturbation variable in the list view."""
+        model = QStandardItemModel()
+        model.setColumnCount(1)
+
+        laws = self.d_laws.get(self.cur_perturb_var, {})
+        sorted_laws = sorted(laws.items(), key=lambda x: str(x[1].get("law_name", "")).lower())
+
+        for law_id, law_data in sorted_laws:
+            item = QStandardItem()
+            item.setData(law_data["law_name"], 0)
+            item.setData(law_id, 32)
+            item.setFlags(self.qt_itm_ena | self.qt_itm_sel | self.qt_item_check)
+            item.setCheckState(
+                self.qt_check_stat.Checked
+                if law_data.get("active")
+                else self.qt_check_stat.Unchecked
+            )
+            if law_data.get("auto_del"):
+                item.setIcon(QIcon(QgsApplication.iconPath("mIconWarning.svg")))
+            model.appendRow(item)
+
+        self.lv_law.setIconSize(QSize(14, 14))
+        self.lv_law.setModel(model)
+        self.lv_law.setSpacing(2)
+        self.lv_law.model().itemChanged.connect(self.law_status_changed)
+        self.lv_law.clicked.connect(self.on_lv_clicked)
+
+        if self.lv_law.model().rowCount():
+            self.lv_law.setCurrentIndex(self.lv_law.model().item(0, 0).index())
+        else:
+            self.cur_law = None
+
+        self.last_selection_kind = None
+        self.draw_law_rb()
+        self.update_law_edit_state()
+
+    def current_law_changed(self):
+        """Handle law selection change in the law list view."""
+        self.cur_law = None
+        if self.lv_law.selectionModel().hasSelection():
+            indexes = self.lv_law.selectionModel().selectedIndexes()
+            if indexes:
+                item = self.lv_law.model().itemFromIndex(indexes[0])
+                self.cur_law = item.data(32)
+
+        if self.cur_law is not None:
+            self.last_selection_kind = "law"
+            self.cur_obs_law = None
+            self.lv_law_obs.clearSelection()
+        elif self.last_selection_kind == "law":
+            self.last_selection_kind = None
+
+        self.display_law_info()
+        self.update_law_edit_state()
+        self.draw_law_rb()
+
+    def current_obs_changed(self):
+        """Handle observation selection change in lv_law_obs."""
+        self.cur_obs_law = None
+        if self.lv_law_obs.selectionModel().hasSelection():
+            indexes = self.lv_law_obs.selectionModel().selectedIndexes()
+            if indexes:
+                item = self.lv_law_obs.model().itemFromIndex(indexes[0])
+                self.cur_obs_law = item.data(32)
+
+        if self.cur_obs_law is not None:
+            self.last_selection_kind = "obs"
+        elif self.last_selection_kind == "obs":
+            self.last_selection_kind = None
+
+        self.draw_law_rb()
+
+    def refresh_law(self, id_type, id_law):
+        """Refresh one law parameter block from database."""
+        sql = (
+            "SELECT source_law, lst_obs_h, lst_obs_q, val_min, val_max, "
+            "active_a, std_a, active_b, std_b "
+            "FROM {schema}.assim_law "
+            "WHERE id_law = %s AND id_type = %s"
+        )
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_law, id_type], schema=True)
+        if not rows:
+            return
+
+        row = rows[0]
+        if id_law not in self.d_laws.get(id_type, {}):
+            return
+
+        self.d_laws[id_type][id_law]["source_law"] = row[0]
+        self.d_laws[id_type][id_law]["prm"] = {
+            "lst_obs_h": row[1],
+            "lst_obs_q": row[2],
+            "val_min": row[3],
+            "val_max": row[4],
+            "active_a": row[5],
+            "std_a": row[6],
+            "active_b": row[7],
+            "std_b": row[8],
+        }

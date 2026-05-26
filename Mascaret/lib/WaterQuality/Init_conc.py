@@ -19,13 +19,18 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QT_VERSION, QVariant, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QDialog,
+    QDoubleSpinBox,
+    QFileDialog,
+    QItemEditorFactory,
+    QShortcut,
+    QSpinBox,
+    QStyledItemDelegate,
+)
+from qgis.PyQt.uic import loadUi
 
 from ..Function import data_to_float, data_to_int
 from .ClassTableWQ import ClassTableWQ
@@ -33,7 +38,7 @@ from .Graph_WQ import GraphInitConc
 
 
 class InitConcDialog(QDialog):
-    def __init__(self, obj, id, name):
+    def __init__(self, obj, id_, name):
         QDialog.__init__(self)
         self.paramTr = obj
         self.mgis = obj.mgis
@@ -42,7 +47,7 @@ class InitConcDialog(QDialog):
         self.tbwq = ClassTableWQ(self.mgis, self.mdb)
         self.cur_wq_mod = self.tbwq.dico_mod_wq[obj.type]
         self.list_trac = []
-        self.cur_wq_law = id
+        self.cur_wq_law = id_
         self.cur_wq_law_name = name
         self.filling_tab = False
         self.action = None
@@ -70,6 +75,9 @@ class InitConcDialog(QDialog):
         self.ui.LawWQ.setText(self.cur_wq_law_name)
         self.graph_edit = GraphInitConc(self.mgis, self.ui.lay_graph_edit)
         self.graph_edit.init_mdl(self.tbwq.dico_wq_mod[self.cur_wq_mod])
+        # Save the new traceurs TRANSPORT_PUR in DB if need
+        if hasattr(self.paramTr, "save_tracers_to_db"):
+            self.paramTr.save_tracers_to_db()
         self.fill_tab_laws()
 
     def create_tab_model(self):
@@ -87,11 +95,14 @@ class InitConcDialog(QDialog):
         for idcol, ncol in enumerate(["Bief", "Abscissa"]):
             model.setHeaderData(idcol, qt_hori, ncol, qt_disr)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod]
+        sql = "SELECT id, sigle FROM {schema}.tracer_name WHERE type = %s ORDER BY id"
+        rows = self.mdb.run_query(
+            sql,
+            fetch=True,
+            params=[self.tbwq.dico_wq_mod[self.cur_wq_mod]],
+            schema=True,
         )
 
-        rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(2, len(rows))
         for r, row in enumerate(rows):
             model.setHeaderData(r + 2, qt_hori, row[1], qt_disr)
@@ -120,10 +131,13 @@ class InitConcDialog(QDialog):
             model = self.ui.tab_laws.model()
 
             if self.cur_wq_law != -1:
-                sql = "SELECT distinct bief FROM {0}.init_conc_wq WHERE id_config = {1} ORDER BY bief".format(
-                    self.mdb.SCHEMA, self.cur_wq_law
+                lst_bief = self.mdb.run_query(
+                    "SELECT DISTINCT bief FROM {schema}.init_conc_wq "
+                    "WHERE id_config = %s ORDER BY bief",
+                    fetch=True,
+                    params=[self.cur_wq_law],
+                    schema=True,
                 )
-                lst_bief = self.mdb.run_query(sql, fetch=True)
                 if len(lst_bief) > 0:
                     self.ui.cb_bief.blockSignals(True)
                     for bief in lst_bief:
@@ -135,12 +149,13 @@ class InitConcDialog(QDialog):
 
                 c = 0
                 for trac in self.list_trac:
-                    sql = (
-                        "SELECT bief, abscissa, value FROM {0}.init_conc_wq "
-                        "WHERE id_config = {1} AND id_trac = {2} "
-                        "ORDER BY  bief, abscissa".format(self.mdb.SCHEMA, self.cur_wq_law, trac[0])
+                    rows = self.mdb.run_query(
+                        "SELECT bief, abscissa, value FROM {schema}.init_conc_wq "
+                        "WHERE id_config = %s AND id_trac = %s ORDER BY bief, abscissa",
+                        fetch=True,
+                        params=[self.cur_wq_law, trac[0]],
+                        schema=True,
                     )
-                    rows = self.mdb.run_query(sql, fetch=True)
                     if c == 0:
                         model.insertRows(0, len(rows))
                         for r, row in enumerate(rows):
@@ -332,28 +347,26 @@ class InitConcDialog(QDialog):
                     "Addition of {} Tracer initial condition".format(name_law), dbg=True
                 )
                 self.mdb.execute(
-                    "INSERT INTO {0}.init_conc_config (name, type) VALUES ('{1}', {2})".format(
-                        self.mdb.SCHEMA, name_law, self.cur_wq_mod
-                    )
+                    "INSERT INTO {schema}.init_conc_config (name, type) VALUES (%s, %s)",
+                    params=[name_law, self.cur_wq_mod],
+                    schema=True,
                 )
                 res = self.mdb.run_query(
-                    "SELECT Max(id) FROM {0}.init_conc_config".format(self.mdb.SCHEMA), fetch=True
+                    "SELECT MAX(id) FROM {schema}.init_conc_config",
+                    fetch=True,
+                    schema=True,
                 )
                 self.cur_wq_law = res[0][0]
             else:
                 self.mgis.add_info(
                     "Editing of {} Tracer Initial Concentration".format(name_law), dbg=True
                 )
-                self.mdb.execute(
-                    "UPDATE {0}.init_conc_config SET name = '{1}' WHERE id = {2}".format(
-                        self.mdb.SCHEMA, name_law, self.cur_wq_law
-                    )
+                self.mdb.run_query(
+                    "UPDATE {schema}.init_conc_config SET name = %s WHERE id = %s",
+                    params=[name_law, self.cur_wq_law],
+                    schema=True,
                 )
-                self.mdb.execute(
-                    "DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(
-                        self.mdb.SCHEMA, self.cur_wq_law
-                    )
-                )
+                self.mdb.delete("init_conc_wq", where="id_config = %s", params=[self.cur_wq_law])
 
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
@@ -368,10 +381,11 @@ class InitConcDialog(QDialog):
                         ]
                     )
             self.mdb.run_query(
-                "INSERT INTO {0}.init_conc_wq (id_config, id_trac, bief, abscissa, value)"
-                " VALUES (%s, %s, %s, %s, %s)".format(self.mdb.SCHEMA),
+                "INSERT INTO {schema}.init_conc_wq (id_config, id_trac, bief, abscissa, value) "
+                "VALUES (%s, %s, %s, %s, %s)",
                 many=True,
                 list_many=recs,
+                schema=True,
             )
         else:
             self.reject_page2()
@@ -384,7 +398,8 @@ class InitConcDialog(QDialog):
 
 class ItemEditorFactory(QItemEditorFactory):
     # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
-    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
+    # It is possible for a custom delegate to provide editors
+    # without the use of an editor item factory.
     # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)

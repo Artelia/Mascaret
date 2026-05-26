@@ -20,13 +20,18 @@ email                :
 import os
 import traceback
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QT_VERSION, QVariant, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QButtonGroup,
+    QDoubleSpinBox,
+    QFileDialog,
+    QItemEditorFactory,
+    QShortcut,
+    QStyledItemDelegate,
+    QWidget,
+)
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ...Function import data_to_float
@@ -50,41 +55,54 @@ class ClassMobilObjectMet1Widget(QWidget):
         self.filling_tab = False
         self.graph = None
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      "ui/structures/ui_mobil_object_met1.ui"),
-                         self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_mobil_object_met1.ui"), self
+        )
         self.ui.cc_control.hide()
         self.ui.cb_basin.hide()
 
-        if self.typ_obj == 'weir':
-            self.obj_table = 'weirs'
-            self.mob_table = 'weirs_mob_val'
-            self.mob_table_id = 'id_weirs'
+        if self.typ_obj == "weir":
+            self.obj_table = "weirs"
+            self.mob_table = "weirs_mob_val"
+            self.mob_table_id = "id_weirs"
             self.ui.tit_break.hide()
             self.ui.line_break.hide()
             self.ui.grp_break.hide()
-        elif self.typ_obj == 'link':
-            self.obj_table = 'links'
-            self.mob_table = 'links_mob_val'
-            self.mob_table_id = 'id_links'
+        elif self.typ_obj == "link":
+            self.obj_table = "links"
+            self.mob_table = "links_mob_val"
+            self.mob_table_id = "id_links"
             self.ui.grp_clapet.hide()
             self.ui.cc_temp_break.hide()
 
         self.d_var = {
-            "VBREAKT": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
-                        "vdef": 9999., "typ": float},
-            "BPERMT": {"ctrl": self.ui.cc_temp_break, "cc": None,
-                       "vdef": False, "typ": to_bool},
-            "ZFINALT": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                        "vdef": 0., "typ": float},
-            "CLAPETT": {"ctrl": self.ui.cc_clapet, "cc": None,
-                        "vdef": False, "typ": to_bool},
-            "WRITET": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
-                       "vdef": 1, "typ": int},
-            "USEBASINT": {"ctrl": None, "cc": None,
-                          "vdef": False, "typ": to_bool},
-            "NUMBASINT": {"ctrl": self.ui.cb_basin, "cc": self.ui.cc_control,
-                          "vdef": 0, "typ": int},
+            "VBREAKT": {
+                "ctrl": self.ui.sb_break_val,
+                "cc": self.ui.cc_break_val,
+                "vdef": 9999.0,
+                "typ": float,
+            },
+            "BPERMT": {"ctrl": self.ui.cc_temp_break, "cc": None, "vdef": False, "typ": to_bool},
+            "ZFINALT": {
+                "ctrl": self.ui.sb_break_lvl,
+                "cc": self.ui.cc_break_lvl,
+                "vdef": 0.0,
+                "typ": float,
+            },
+            "CLAPETT": {"ctrl": self.ui.cc_clapet, "cc": None, "vdef": False, "typ": to_bool},
+            "WRITET": {
+                "ctrl": self.ui.sb_step_write,
+                "cc": self.ui.cc_write,
+                "vdef": 1,
+                "typ": int,
+            },
+            "USEBASINT": {"ctrl": None, "cc": None, "vdef": False, "typ": to_bool},
+            "NUMBASINT": {
+                "ctrl": self.ui.cb_basin,
+                "cc": self.ui.cc_control,
+                "vdef": 0,
+                "typ": int,
+            },
         }
 
         self.bg_time = QButtonGroup()
@@ -179,7 +197,7 @@ class ClassMobilObjectMet1Widget(QWidget):
             qt_hori = Qt.Horizontal
             qt_disr = Qt.DisplayRole
         for c in range(4):
-            model.setHeaderData(c, qt_hori, "time",  qt_disr)
+            model.setHeaderData(c, qt_hori, "time", qt_disr)
 
         model.setHeaderData(4, qt_hori, "Z", qt_disr)
 
@@ -197,23 +215,30 @@ class ClassMobilObjectMet1Widget(QWidget):
         self.d_var["NUMBASINT"]["vdef"] = 0
 
         if self.typ_obj == "weir":
-            sql = "SELECT COALESCE(z_crest, 0.) FROM {0}.{1} " \
-                  "WHERE gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
-            rows = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT COALESCE(z_crest, 0.) FROM {schema}.weirs WHERE gid = %s"
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj], schema=True)
             self.d_var["ZFINALT"]["vdef"] = rows[0][0]
-        elif self.typ_obj == 'link':
-            sql = "SELECT  nature, COALESCE(links.level, 0.) as lvl, " \
-                  "basinstart, bas_sta.name, basinend , bas_end.name " \
-                  "FROM ({0}.{1} " \
-                  "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.basinnum) " \
-                  "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.basinnum " \
-                  "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
-            rows = self.mdb.run_query(sql, fetch=True)
+        elif self.typ_obj == "link":
+            sql = (
+                "SELECT nature, COALESCE(links.level, 0.) as lvl, "
+                "basinstart, bas_sta.name, basinend, bas_end.name "
+                "FROM ({schema}.links "
+                "LEFT JOIN {schema}.basins as bas_sta on basinstart = bas_sta.basinnum) "
+                "LEFT JOIN {schema}.basins as bas_end on basinend = bas_end.basinnum "
+                "WHERE links.gid = %s"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj], schema=True)
             nat_link, cur_z, b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]
             self.d_var["ZFINALT"]["vdef"] = cur_z
-            if str(nat_link) == '2':
-                fill_qcombobox(self.ui.cb_basin, [[b_sta_id, "Start basin ({})".format(b_sta_name)],
-                                                  [b_end_id, "End basin ({})".format(b_end_name)]], val_def=b_sta_id)
+            if str(nat_link) == "2":
+                fill_qcombobox(
+                    self.ui.cb_basin,
+                    [
+                        [b_sta_id, "Start basin ({})".format(b_sta_name)],
+                        [b_end_id, "End basin ({})".format(b_end_name)],
+                    ],
+                    val_def=b_sta_id,
+                )
                 self.d_var["USEBASINT"]["vdef"] = True
                 self.d_var["NUMBASINT"]["vdef"] = b_sta_id
                 self.ui.cc_control.show()
@@ -254,13 +279,18 @@ class ClassMobilObjectMet1Widget(QWidget):
 
         if self.cur_obj:
             l_var = list(self.d_var.keys())
-            txt_var = "('{}')".format("', '".join(l_var))
-
-            sql = "SELECT name_var, id_order, value FROM {0}.{1} WHERE {2} = {3} " \
-                  "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
-                                               self.mob_table_id, self.cur_obj, txt_var)
-            rows = self.mdb.run_query(sql, fetch=True)
-            for (nm_var, rang_var, value) in rows:
+            if self.typ_obj == "weir":
+                sql = (
+                    "SELECT name_var, id_order, value FROM {schema}.weirs_mob_val "
+                    "WHERE id_weirs = %s AND name_var = ANY(%s)"
+                )
+            else:
+                sql = (
+                    "SELECT name_var, id_order, value FROM {schema}.links_mob_val "
+                    "WHERE id_links = %s AND name_var = ANY(%s)"
+                )
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj, l_var], schema=True)
+            for nm_var, rang_var, value in rows:
                 prm = self.d_var[nm_var]
                 if prm["ctrl"]:
                     conv_value = prm["typ"](value)
@@ -312,15 +342,17 @@ class ClassMobilObjectMet1Widget(QWidget):
             mdl = self.ui.tab_sets.model()
             c = 0
             for var in ["TIMEZ", "VALUEZ"]:
-                sql = "SELECT cast(value as float) FROM {0}.{1} " \
-                      "WHERE {2} = {3} AND name_var = '{4}' " \
-                      "ORDER BY id_order".format(self.mdb.SCHEMA,
-                                                 self.mob_table,
-                                                 self.mob_table_id,
-                                                 self.cur_obj,
-                                                 var)
-
-                rows = self.mdb.run_query(sql, fetch=True)
+                if self.typ_obj == "weir":
+                    sql = (
+                        "SELECT cast(value as float) FROM {schema}.weirs_mob_val "
+                        "WHERE id_weirs = %s AND name_var = %s ORDER BY id_order"
+                    )
+                else:
+                    sql = (
+                        "SELECT cast(value as float) FROM {schema}.links_mob_val "
+                        "WHERE id_links = %s AND name_var = %s ORDER BY id_order"
+                    )
+                rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj, var], schema=True)
 
                 if var == "TIMEZ":
                     mdl.insertRows(0, len(rows))
@@ -346,19 +378,28 @@ class ClassMobilObjectMet1Widget(QWidget):
         """
         try:
             l_var = list(self.d_var.keys())
-            l_var.extend(['VALUEZ', 'TIMEZ'])
-            txt_var = "('{}')".format("', '".join(l_var))
-
-            sql = "DELETE FROM {0}.{1} WHERE {2} = {3} " \
-                  "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
-                                               self.mob_table_id, self.cur_obj, txt_var)
-
-            self.mdb.execute(sql)
+            l_var.extend(["VALUEZ", "TIMEZ"])
+            if self.typ_obj == "weir":
+                self.mdb.delete(
+                    "weirs_mob_val",
+                    where="id_weirs = %s AND name_var = ANY(%s)",
+                    params=[self.cur_obj, l_var],
+                )
+            else:
+                self.mdb.delete(
+                    "links_mob_val",
+                    where="id_links = %s AND name_var = ANY(%s)",
+                    params=[self.cur_obj, l_var],
+                )
 
             recs = []
             for row in range(self.ui.tab_sets.model().rowCount()):
-                recs.append([self.cur_obj, row, "TIMEZ", self.ui.tab_sets.model().item(row, 0).data(0)])
-                recs.append([self.cur_obj, row, "VALUEZ", self.ui.tab_sets.model().item(row, 4).data(0)])
+                recs.append(
+                    [self.cur_obj, row, "TIMEZ", self.ui.tab_sets.model().item(row, 0).data(0)]
+                )
+                recs.append(
+                    [self.cur_obj, row, "VALUEZ", self.ui.tab_sets.model().item(row, 4).data(0)]
+                )
 
             for nm_var, prm in self.d_var.items():
                 idx_time = 0
@@ -370,21 +411,26 @@ class ClassMobilObjectMet1Widget(QWidget):
                 else:
                     conv_value = ctrl_get_value(prm["ctrl"], cc_is_checked=True)
 
-                recs.append([self.cur_obj, idx_time, nm_var,
-                             conv_value])
-            sql = "INSERT INTO {0}.{1} ({2}, id_order, name_var, value) " \
-                  "VALUES (%s, %s, %s, cast(%s as text))".format(self.mdb.SCHEMA,
-                                                                 self.mob_table,
-                                                                 self.mob_table_id)
+                recs.append([self.cur_obj, idx_time, nm_var, conv_value])
+            if self.typ_obj == "weir":
+                sql = (
+                    "INSERT INTO {schema}.weirs_mob_val (id_weirs, id_order, name_var, value) "
+                    "VALUES (%s, %s, %s, cast(%s as text))"
+                )
+            else:
+                sql = (
+                    "INSERT INTO {schema}.links_mob_val (id_links, id_order, name_var, value) "
+                    "VALUES (%s, %s, %s, cast(%s as text))"
+                )
 
-            self.mdb.run_query(sql, many=True, list_many=recs)
+            self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
             self.clear_table()
             self.widget_closed.emit()
         except Exception:
             self.cancel_input()
-            error_info = ''
+            error_info = ""
             if self.mgis.DEBUG:
-                error_info = '\n' + traceback.format_exc()
+                error_info = "\n" + traceback.format_exc()
             self.mgis.add_info("Cancel of {0} information {1}".format(self.obj_table, error_info))
 
     def cancel_input(self):
@@ -662,7 +708,7 @@ class GraphMobSing(GraphCommon):
         self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
-        self.courbe, = self.axes.plot([], [], zorder=100, label="Z")
+        (self.courbe,) = self.axes.plot([], [], zorder=100, label="Z")
         self.courbes.append(self.courbe)
 
         self.fig.canvas.mpl_connect("pick_event", self.onpick)

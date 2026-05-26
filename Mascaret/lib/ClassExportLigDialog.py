@@ -20,11 +20,8 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
+from qgis.PyQt.uic import loadUi
 
 from .Function import del_accent, del_symbolv2
 from .model.ClassBCWriter import ClassBCWriter
@@ -74,8 +71,8 @@ class ClassExportLigDialog(QDialog):
         """
         self.cb_init_scen.clear()
         init_run = self.cb_init_run.currentText()
-        condition = "run LIKE '{0}'".format(init_run)
-        dico_scen = self.mdb.select_distinct("scenario", "runs", condition)
+
+        dico_scen = self.mdb.select_distinct("scenario", "runs", "run LIKE %s ", params=[init_run])
         if dico_scen:
             liste_scen = ["{}".format(v) for v in dico_scen["scenario"]]
         else:
@@ -88,7 +85,7 @@ class ClassExportLigDialog(QDialog):
         if path:
             self.txt_rep.setText(path)
         else:
-            self.txt_rep.setText('')
+            self.txt_rep.setText("")
 
     @staticmethod
     def str2bool(s):
@@ -99,7 +96,7 @@ class ClassExportLigDialog(QDialog):
             return False
 
     def check_str(self):
-        """ check name :
+        """check name :
         - delete accent and symbol"""
         self.lname_export.blockSignals(True)
         name = self.lname_export.text().strip()
@@ -116,31 +113,25 @@ class ClassExportLigDialog(QDialog):
         case = self.cb_init_run.currentText()
         scen = self.cb_init_scen.currentText()
         id_run = self.mdb.run_query(
-            "SELECT id FROM {0}.runs "
-            "WHERE run = '{1}' "
-            "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen),
+            "SELECT id FROM {schema}.runs " "WHERE run = %s " "AND scenario = %s",
             fetch=True,
+            schema=True,
+            params=(case, scen),
         )
         if not id_run:
-            QMessageBox.warning(
-                self, "WARNING", "The (Run,Scenario) couple does not exist."
-            )
+            QMessageBox.warning(self, "WARNING", "The (Run,Scenario) couple does not exist.")
             return
         id_run = id_run[0][0]
         path_file = self.txt_rep.text()
         if not os.path.isdir(path_file):
-            QMessageBox.warning(
-                self, "WARNING", "The save folder does not exist."
-            )
+            QMessageBox.warning(self, "WARNING", "The save folder does not exist.")
             return
         basename = self.lname_export.text().strip()
         if basename == "":
-            QMessageBox.warning(
-                self, "WARNING", "Specify the name file."
-            )
+            QMessageBox.warning(self, "WARNING", "Specify the name file.")
             return
         self.clfile.set_folder(path_file)
-        self.clfile.opt_to_lig(id_run, lig_filename=f'{basename}.lig')
+        self.clfile.opt_to_lig(id_run, lig_filename=f"{basename}.lig")
         # self.clfile.opt_to_lig(id_run, basename, path_file=path_file)
-        self.mgis.add_info('The exportation of the .lig file is done')
+        self.mgis.add_info("The exportation of the .lig file is done")
         self.close()

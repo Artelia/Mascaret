@@ -16,22 +16,19 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 
 import os
 from datetime import datetime
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QDateTime, Qt, qVersion
+from qgis.PyQt.QtWidgets import QLabel, QTreeWidgetItem, QWidget
+from qgis.PyQt.uic import loadUi
 
-from ...ui.custom_control import _qt_is_checked
+from ...ui.custom_control import _qt_is_checked, get_qt_unchecked
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class SelectWidget(QWidget):
     """
@@ -74,8 +71,11 @@ class SelectWidget(QWidget):
             qt_item_check = Qt.ItemIsUserCheckable
             qt_ucheck = Qt.Unchecked
         dico = self.mdb.select("runs", "", "date")
+        if not dico:
+            self.windmain.add_info("No run in database", box=True)
+            return
         for run, scen, date, comments in zip(
-                dico["run"], dico["scenario"], dico["date"], dico["comments"]
+            dico["run"], dico["scenario"], dico["date"], dico["comments"]
         ):
             # filter initialisation
             # if len(scen) >5 :
@@ -103,8 +103,8 @@ class SelectWidget(QWidget):
 
                 for scen, date, comments in self.listeScen[run]:
                     self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                    item_flag =  self.child[run][scen]
-                    item_flag.setFlags(item_flag.flags()  | qt_item_check)
+                    item_flag = self.child[run][scen]
+                    item_flag.setFlags(item_flag.flags() | qt_item_check)
                     item_flag.setText(0, scen)
                     item_flag.setCheckState(0, qt_ucheck)  # qt6
                     lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
@@ -130,11 +130,8 @@ class SelectWidget(QWidget):
         """clean selection"""
         for run in self.listeRuns:
 
-            is_checked = _qt_is_checked(self.parent[run],  check_level="any")
-            if QT_VERSION > 5:
-                qt_ucheck = Qt.CheckState.Unchecked
-            else:
-                qt_ucheck = Qt.Unchecked
+            is_checked = _qt_is_checked(self.parent[run], check_level="any")
+            qt_ucheck = get_qt_unchecked()
             if is_checked:
                 for scen, date, comments in self.listeScen[run]:
                     self.child[run][scen].setCheckState(0, qt_ucheck)
@@ -146,7 +143,8 @@ class SelectWidget(QWidget):
             if _qt_is_checked(self.parent[run], check_level="any"):
                 selection[run] = []
                 for scen, date, comments in self.listeScen[run]:
-                    if _qt_is_checked(self.child[run][scen],  check_level="partial_or_full"):
-                        selection[run].append("'{}'".format(scen))
+                    if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
+                        selection[run].append("{}".format(scen))
         list_id_select = self.mdb.get_id_run(selection)
+
         return list_id_select

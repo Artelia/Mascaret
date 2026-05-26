@@ -74,12 +74,11 @@ class ClassMascaret:
         if QT_VERSION > 5:
             result = dlg.exec()
             if result == QDialog.DialogCode.Accepted:
-                self.launch_run()            # PyQt6
+                self.launch_run()  # PyQt6
         else:
             result = dlg.exec_()  # PyQt5
             if result == QDialog.Accepted:
                 self.launch_run()
-
 
     def launch_run(self):
         """Build the task queue and start the execution sequence."""
@@ -136,7 +135,10 @@ class ClassMascaret:
         :type type_: str
         """
         self.mgis.add_info(
-            f"[ RUN   ] Executing task: {type_} *****************************************************"
+            (
+                f"[ RUN   ] Executing task: {type_} "
+                "*****************************************************"
+            )
         )
         task_params_ref = self.obj_model.get_list_type_instance(type_)
 
@@ -158,6 +160,7 @@ class ClassMascaret:
         if not self.use_task:
             for idx, param in enumerate(task_params_ref):
                 results = self.task_ref.run_model(param, idx)
+            self.mgis.add_info(f"[INFO] Results : {results}", dbg=True)
             self.process_next_task()
         else:
 
@@ -339,11 +342,13 @@ class ClassMascaret:
         """
         CONFIG = {
             "ctrlKS": (
-                "[ ASSIM ] Starting Control Ks (BLUE) *****************************************************",
+                "[ ASSIM ] Starting Control Ks (BLUE) "
+                "*****************************************************",
                 "Control Ks (BLUE)",
             ),
             "ctrlLaw": (
-                "[ ASSIM  ] Starting Control Law (BLUE) *****************************************************",
+                "[ ASSIM  ] Starting Control Law (BLUE) "
+                "*****************************************************",
                 "Control Law (BLUE)",
             ),
         }
@@ -367,6 +372,8 @@ class ClassMascaret:
         if not self.use_task:
             for scen in scens:
                 results = self.task_blue.run_blue(scen)
+            if self.dbg:
+                self.mgis.add_info(f"[INFO] Results : {results}", dbg=True)
             self.process_next_task()
         else:
             # Connecter les signaux
@@ -428,10 +435,11 @@ class ClassMascaret:
                     )
                     if self.dbg:
                         print(f"Task launched successfully: {task_id}, Status: {task_status}")
-                    return task_id  # Retourne l'ID au lieu de True
+                    return task_id
                 else:
                     QgsMessageLog.logMessage(
-                        f"Task status unexpected: {task_status} (attempt {attempt + 1}/{self.max_retries})",
+                        f"Task status unexpected: {task_status} "
+                        "(attempt {attempt + 1}/{self.max_retries})",
                         "TaskMascaret",
                         Qgis.Warning,
                     )
@@ -439,12 +447,13 @@ class ClassMascaret:
 
             except Exception as e:
                 QgsMessageLog.logMessage(
-                    f"Exception during task launch (attempt {attempt + 1}/{self.max_retries}): {str(e)}",
+                    f"Exception during task launch (attempt {attempt + 1}/{self.max_retries}): "
+                    f"{str(e)}",
                     "TaskMascaret",
                     Qgis.Critical,
                 )
                 traceback.print_exc()
-                return None  # Retourne None en cas d'exception
+                return None
 
         # Toutes les tentatives ont échoué
         QgsMessageLog.logMessage(
@@ -452,31 +461,7 @@ class ClassMascaret:
             "TaskMascaret",
             Qgis.Critical,
         )
-        return None  # Retourne None si toutes les tentatives échouent
-
-    def on_task_completed(self, completed_task_id, expected_task_id, task_type):
-        """Disconnect the handler and advance the queue if IDs match.
-
-        :param completed_task_id: ID of the finished task.
-        :type completed_task_id: int
-        :param expected_task_id: ID of the awaited task.
-        :type expected_task_id: int
-        :param task_type: Task label for log messages.
-        :type task_type: str
-        """
-        if completed_task_id == expected_task_id:
-            # Déconnecter le handler actuel
-            task_manager = QgsApplication.taskManager()
-            if hasattr(self, "_current_handler"):
-                try:
-                    task_manager.taskCompleted.disconnect(self._current_handler)
-                except:
-                    pass  # Déjà déconnecté
-
-            self.mgis.add_info(f"{task_type} task completed, processing next...")
-
-            # Passer à la task suivante dans la queue
-            self.process_next_task()
+        return None
 
     def process_next_task(self):
         """Pop and dispatch the next task in the queue."""
@@ -532,7 +517,10 @@ class ClassMascaret:
         if not active_tasks:
             if self.dbg:
                 print("=== All tasks completed successfully ===")
-            sep = "*************************************************************************************\n"
+            sep = (
+                "*****************************************"
+                "********************************************\n"
+            )
             self.mgis.add_info(sep + "[ DONE  ] All tasks completed successfully \n" + sep)
         QgsMessageLog.logMessage("All Mascaret tasks completed", "TaskMascaret", Qgis.Success)
 
@@ -596,7 +584,7 @@ class ClassMascaret:
         if dtxt.get("error", "") != "":
             self.mgis.add_info(dtxt.get("error", ""))
 
-        msg = f"[ TIME  ] Execution:{dtxt.get('execution_time','')}"
+        msg = f"[ TIME  ] Execution:{dtxt.get('execution_time', '')}"
         self.mgis.add_info(msg)
         if dtxt.get("id_run", ""):
             self.mgis.add_info(f"[ DEBUG ] Success: {success}", dbg=True)

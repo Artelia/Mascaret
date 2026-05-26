@@ -19,14 +19,10 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QButtonGroup, QComboBox, QTableWidgetItem, QWidget
+
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_get_value, fill_qcombobox
 from ..ClassTableStructure import ClassTableStructure
@@ -55,15 +51,27 @@ class MetBradleyPcWidget(QWidget):
         self.gb_form_cul = QButtonGroup()
         self.gb_form_cul.addButton(self.rb_form_cul0, 0)
         self.rb_form_cul0.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/culees/culee1.png"))
+            QIcon(
+                os.path.join(
+                    self.mgis.masplugPath, "lib", "Structure", "images", "culees", "culee1.png"
+                )
+            )
         )
         self.gb_form_cul.addButton(self.rb_form_cul1, 1)
         self.rb_form_cul1.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/culees/culee2.png"))
+            QIcon(
+                os.path.join(
+                    self.mgis.masplugPath, "lib", "Structure", "images", "culees", "culee2.png"
+                )
+            )
         )
         self.gb_form_cul.addButton(self.rb_form_cul2, 2)
         self.rb_form_cul2.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/culees/culee3.png"))
+            QIcon(
+                os.path.join(
+                    self.mgis.masplugPath, "lib", "Structure", "images", "culees", "culee3.png"
+                )
+            )
         )
 
         self.sb_nb_trav.valueChanged.connect(self.change_ntrav)
@@ -82,7 +90,9 @@ class MetBradleyPcWidget(QWidget):
         fill_qcombobox(
             self.cb_form_pil,
             [[f, "Forme {}".format(f[0])] for f in self.dico_pile],
-            icn=os.path.join(self.mgis.masplugPath, "Structure/images/piles/pile{}.png"),
+            icn=os.path.join(
+                self.mgis.masplugPath, "lib", "Structure", "images", "piles", "pile{}.png"
+            ),
         )
         fill_qcombobox(self.cb_orient_mur, [[30, "30°"], [45, "45°"], [60, "60°"]])
         fill_qcombobox(self.cb_pente_tal, [[0, "1/1"], [1, "1.5/1"], [2, "2/1"]])

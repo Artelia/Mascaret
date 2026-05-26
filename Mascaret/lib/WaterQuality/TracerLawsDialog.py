@@ -19,13 +19,19 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QT_VERSION, QVariant, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QButtonGroup,
+    QDialog,
+    QDoubleSpinBox,
+    QFileDialog,
+    QItemEditorFactory,
+    QMessageBox,
+    QShortcut,
+    QStyledItemDelegate,
+)
+from qgis.PyQt.uic import loadUi
 
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphWaterQ
@@ -98,17 +104,17 @@ class ClassTracerLawsDialog(QDialog):
         self.ui.lst_laws.setModelColumn(1)
         self.ui.lst_laws.selectionModel().selectionChanged.connect(self.display_graph_home)
 
-        sql = "SELECT * FROM {0}.tracer_config WHERE type = {1} ORDER BY name".format(
-            self.mdb.SCHEMA, self.cur_wq_mod
+        rows = self.mdb.run_query(
+            "SELECT * FROM {schema}.tracer_config WHERE type = %s ORDER BY name",
+            fetch=True,
+            params=[self.cur_wq_mod],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
                 new_itm = QStandardItem(str(row[j]))
                 new_itm.setEditable(False)
-                # new_itm.setCheckable(True)
-                # new_itm.setCheckState(0)
                 self.ui.lst_laws.model().setItem(i, j, new_itm)
 
         if id:
@@ -132,10 +138,12 @@ class ClassTracerLawsDialog(QDialog):
         for c in range(4):
             model.setHeaderData(c, qt_hori, "time", qt_disr)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, self.tbwq.dico_wq_mod[self.cur_wq_mod]
+        rows = self.mdb.run_query(
+            "SELECT id, sigle FROM {schema}.tracer_name WHERE type = %s ORDER BY id",
+            fetch=True,
+            params=[self.tbwq.dico_wq_mod[self.cur_wq_mod]],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
         model.insertColumns(4, len(rows))
         for r, row in enumerate(rows):
             model.setHeaderData(r + 4, qt_hori, row[1], qt_disr)
@@ -164,11 +172,13 @@ class ClassTracerLawsDialog(QDialog):
         if self.cur_wq_law != -1:
             c = 0
             for trac in self.list_trac:
-                sql = (
-                    "SELECT time, value FROM {0}.laws_wq WHERE id_config = {1} AND id_trac = {2} "
-                    "ORDER BY time".format(self.mdb.SCHEMA, self.cur_wq_law, trac[0])
+                rows = self.mdb.run_query(
+                    "SELECT time, value FROM {schema}.laws_wq "
+                    "WHERE id_config = %s AND id_trac = %s ORDER BY time",
+                    fetch=True,
+                    params=[self.cur_wq_law, trac[0]],
+                    schema=True,
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
 
                 if c == 0:
                     model.insertRows(0, len(rows))
@@ -343,20 +353,16 @@ class ClassTracerLawsDialog(QDialog):
                 ok_button = QMessageBox.Ok
                 cancel_button = QMessageBox.Cancel
             if (
-                    QMessageBox.question(
-                        self,
-                        "Tracer Laws",
-                        "Delete {} ?".format(name_law),
-                        cancel_button | ok_button,
-                    )
+                QMessageBox.question(
+                    self,
+                    "Tracer Laws",
+                    "Delete {} ?".format(name_law),
+                    cancel_button | ok_button,
+                )
             ) == ok_button:
                 self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
-                self.mdb.execute(
-                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(self.mdb.SCHEMA, id_law)
-                )
-                self.mdb.execute(
-                    "DELETE FROM {0}.tracer_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law)
-                )
+                self.mdb.delete("laws_wq", where="id_config = %s", params=[int(id_law)])
+                self.mdb.delete("tracer_config", where="id = %s", params=[int(id_law)])
                 self.fill_lst_conf()
 
     def new_time(self):
@@ -392,10 +398,10 @@ class ClassTracerLawsDialog(QDialog):
     def chg_time(self, vbt):
         """
         Change the time unit for the table columns.
-        :param v (int): Index of the selected time unit
+        :param vbt (int): Index of the selected time unit
         :return: None
         """
-        v =  self.bg_time.id(vbt)
+        v = self.bg_time.id(vbt)
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
@@ -415,26 +421,19 @@ class ClassTracerLawsDialog(QDialog):
             if self.cur_wq_law == -1:
                 self.mgis.add_info("Addition of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
-                    "INSERT INTO {0}.tracer_config (name, type) VALUES ('{1}', {2})".format(
-                        self.mdb.SCHEMA, name_law, self.cur_wq_mod
-                    )
+                    "INSERT INTO {schema}.tracer_config (name, type) VALUES (%s, %s)",
+                    params=[name_law, self.cur_wq_mod],
+                    schema=True,
                 )
-                res = self.mdb.run_query(
-                    "SELECT Max(id) FROM {0}.tracer_config".format(self.mdb.SCHEMA), fetch=True
-                )
-                self.cur_wq_law = res[0][0]
+                self.cur_wq_law = self.mdb.select_max("id", "tracer_config")
             else:
                 self.mgis.add_info("Editing of {} Tracer Laws".format(name_law), dbg=True)
                 self.mdb.execute(
-                    "UPDATE {0}.tracer_config SET name = '{1}' WHERE id = {2}".format(
-                        self.mdb.SCHEMA, name_law, self.cur_wq_law
-                    )
+                    "UPDATE {schema}.tracer_config SET name = %s WHERE id = %s",
+                    params=[name_law, self.cur_wq_law],
+                    schema=True,
                 )
-                self.mdb.execute(
-                    "DELETE FROM {0}.laws_wq WHERE id_config = {1}".format(
-                        self.mdb.SCHEMA, self.cur_wq_law
-                    )
-                )
+                self.mdb.delete("laws_wq", where="id_config = %s", params=[self.cur_wq_law])
 
             recs = []
             for r in range(self.ui.tab_laws.model().rowCount()):
@@ -448,11 +447,11 @@ class ClassTracerLawsDialog(QDialog):
                         ]
                     )
             self.mdb.run_query(
-                "INSERT INTO {0}.laws_wq (id_config, id_trac, time, value) VALUES (%s, %s, %s, %s)".format(
-                    self.mdb.SCHEMA
-                ),
+                "INSERT INTO {schema}.laws_wq (id_config, id_trac, time, value) "
+                "VALUES (%s, %s, %s, %s)",
                 many=True,
                 list_many=recs,
+                schema=True,
             )
 
             self.fill_lst_conf(self.cur_wq_law)
@@ -469,7 +468,8 @@ class ClassTracerLawsDialog(QDialog):
 
 class ItemEditorFactory(QItemEditorFactory):
     # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
-    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
+    # It is possible for a custom delegate to provide editors
+    # without the use of an editor item factory.
     # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)

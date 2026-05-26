@@ -439,6 +439,8 @@ class ClassAPIMascaret:
         """
         t0 = self.tini
         if self.assim:
+            if self.pdt_assim == 0:
+                self.pdt_assim = self.dt
             while self.current_t_assim < t0:
                 self.current_t_assim += self.pdt_assim
         dtp = self.dt
@@ -585,13 +587,6 @@ class ClassAPIMascaret:
         # Flush and store the Mascaret internal log
         self.add_info(self.masc.log_stream.getvalue())
         if self.assim:
-            # Storing additionally KS values for later use in BLUE
-            # valKSmin = [self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs]
-            # valKSmaj = [self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs]
-            # valKSmin = {i: self.masc.get('Model.FricCoefMainCh', i) for i in self.res_assim.dict_obs}
-            # valKSmaj = {i: self.masc.get('Model.FricCoefFP', i) for i in self.res_assim.dict_obs}
-            #
-            # self.res_assim.store_KS_values(valKSmin, valKSmaj)
             self.res_assim.write_results(self.dossier_file_masc, "Z_Q_assim.json")
 
         self.masc.delete_mascaret()

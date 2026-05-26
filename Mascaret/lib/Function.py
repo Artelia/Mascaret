@@ -21,13 +21,18 @@ import math
 import os
 import re
 import string as st
-import subprocess
-import sys
 import bisect
+import operator
+import ast
 from shutil import copy2
 
 import dateutil
 import numpy as np
+
+try:
+    from qgis.core import QgsGeometryAnalyzer, QgsVectorLayer, QgsField, QgsFeature, QVariant
+except ImportError:
+    pass
 
 
 def del_2space(txt):
@@ -96,18 +101,6 @@ def get_couche(nom, iface):
             return couche
 
     return None
-
-
-def open_file_editor(filename):
-    """
-     Open file with default Editor
-    :param filename: file_path
-    """
-    if sys.platform == "win32":
-        os.startfile(filename)
-    else:
-        opener = "open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call([opener, filename])
 
 
 def calcul_abscisses(liste_couches, riviere, iface, dossier):
@@ -284,11 +277,11 @@ def del_symbol(ligne):
 
 def del_symbolv2(txt, exclud=[]):
     """
-     Remove symbol in the text
-     Args:
-        :param txt: (string) text to change
-     Return :
-        :return: (string)text without symbol
+    Remove symbol in the text
+    Args:
+       :param txt: (string) text to change
+    Return :
+       :return: (string)text without symbol
     """
     special_char = [pct for pct in st.punctuation if pct not in exclud]
     newtxt = "".join(filter(lambda char: char not in special_char, txt))
@@ -313,6 +306,7 @@ def read_version(masplug_path):
     read version of plugin
     :return: (str) version
     """
+    val = None
     file = open(os.path.join(masplug_path, "metadata.txt"), "r")
     for ligne in file:
         if ligne.find("version=") > -1:
@@ -472,7 +466,7 @@ def find_perpendicular_distance(p, p1, p2):
     :param p: tuple of point P
     :return: distance
     """
-    ## if start and end point are on the same x the distance is the difference in X.
+    # if start and end point are on the same x the distance is the difference in X.
     result = 0.0
     slope = 0.0
     if abs(p1[0] - p2[0]):
@@ -503,12 +497,12 @@ def proper_rdp(points, epsilon):
             dist = cDist
             index = i
     if dist > epsilon:
-        ##iterate
-        l1 = points[0: index + 1]
+        # iterate
+        l1 = points[0 : index + 1]
         l2 = points[index:]
         r1 = proper_rdp(l1, epsilon)
         r2 = proper_rdp(l2, epsilon)
-        ## Concat r2 to r1 minus the end/startpoint that will be the same
+        # Concat r2 to r1 minus the end/startpoint that will be the same
         rs = r1[0:-1] + r2
         return rs
     else:
@@ -737,13 +731,13 @@ class TypeErrorModel:
 
 def find_latest_lis_file(root_dir):
     """
-   Find the file .lis the most recently modified in the tree.
+    Find the file .lis the most recently modified in the tree.
 
-    Args:
-        root_dir (str): Path to the root directory (e.g., 'macaret')
+     Args:
+         root_dir (str): Path to the root directory (e.g., 'macaret')
 
-    Returns:
-        str: Full path to the most recent .lis file, or None if none found
+     Returns:
+         str: Full path to the most recent .lis file, or None if none found
     """
     latest_file = None
     latest_time = 0
@@ -751,7 +745,7 @@ def find_latest_lis_file(root_dir):
     # Parcourir récursivement tous les fichiers
     for root, dirs, files in os.walk(root_dir):
         for file in files:
-            if file.endswith('.lis'):
+            if file.endswith(".lis"):
                 file_path = os.path.join(root, file)
                 # Récupérer le temps de modification
                 mod_time = os.path.getmtime(file_path)
@@ -761,8 +755,6 @@ def find_latest_lis_file(root_dir):
                     latest_file = file_path
 
     return latest_file
-
-
 
 
 def interpolate_at(x, y, t):
@@ -843,8 +835,8 @@ def filter_xy_by_time_ensur(x, y, start, end):
     tuple of (list of datetime, list of float)
         Filtered and boundary-interpolated copies of x and y.
     """
-    i = bisect.bisect_left(x, start)   # first index >= start
-    j = bisect.bisect_right(x, end)    # first index > end
+    i = bisect.bisect_left(x, start)  # first index >= start
+    j = bisect.bisect_right(x, end)  # first index > end
 
     xf = list(x[i:j])
     yf = list(y[i:j])
@@ -858,3 +850,35 @@ def filter_xy_by_time_ensur(x, y, start, end):
                 _insert_sorted(xf, yf, *point)
 
     return xf, yf
+
+
+ALLOWED_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.Mod: operator.mod,
+    ast.USub: operator.neg,
+    ast.UAdd: operator.pos,
+}
+
+
+def eval_node(node, allowed_ops):
+    if isinstance(node, ast.Constant):
+        return node.value
+
+    if isinstance(node, ast.UnaryOp) and type(node.op) in allowed_ops:
+        return allowed_ops[type(node.op)](eval_node(node.operand, allowed_ops))
+
+    if isinstance(node, ast.BinOp) and type(node.op) in allowed_ops:
+        return allowed_ops[type(node.op)](
+            eval_node(node.left, allowed_ops), eval_node(node.right, allowed_ops)
+        )
+
+    raise ValueError("Unsafe expression")
+
+
+def safe_eval_numeric(expression):
+    parsed = ast.parse(expression, mode="eval")
+    return eval_node(parsed.body, ALLOWED_OPS)

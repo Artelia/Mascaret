@@ -130,19 +130,33 @@ class ClassAssimDB:
         lst_obs = data_ks[f"lst_obs_{obs_var.lower()}"][idx]
 
         # Définir les colonnes selon obs_var
-        stderr_col = "obsz_stderr" if obs_var == "H" else "obsq_stderr"
-        reject_col = "obsz_rejectlimit" if obs_var == "H" else "obsq_rejectlimit"
         if not lst_obs:
             return d_obs_f
 
-        sql = f"""
-            SELECT o.id, o.code, out.{stderr_col}, out.{reject_col}, out.abscissa, out.zero
-            FROM {self.mdb.SCHEMA}.observations AS o
-            JOIN {self.mdb.SCHEMA}.outputs AS out ON out.code = o.code
-            WHERE o.id IN ({','.join(map(str, lst_obs))}) AND out.active
-        """
+        if obs_var == "H":
+            sql = (
+                "SELECT o.id, o.code, out.obsz_stderr, "
+                "out.obsz_rejectlimit, out.abscissa, out.zero "
+                "FROM {schema}.observations AS o "
+                "JOIN {schema}.outputs AS out ON out.code = o.code "
+                "WHERE o.id = ANY(%s) AND out.active"
+            )
+        else:
+            sql = (
+                "SELECT o.id, o.code, out.obsq_stderr, out.obsq_rejectlimit, "
+                "out.abscissa, out.zero FROM {schema}.observations AS o "
+                "JOIN {schema}.outputs AS out ON out.code = o.code "
+                "WHERE o.id = ANY(%s) AND out.active"
+            )
 
-        results, nam_col = self.mdb.run_query(sql, fetch=True, arraysize=1, namvar=True)
+        results, nam_col = self.mdb.run_query(
+            sql,
+            fetch=True,
+            arraysize=1,
+            namvar=True,
+            params=[lst_obs],
+            schema=True,
+        )
 
         if results:
             for row_ in results:
@@ -241,12 +255,12 @@ class ClassAssimDB:
                  the law type code or -1 if not found.
         """
         if source_law == "extremities":
-            sql = f"SELECT name, type FROM {self.mdb.SCHEMA}.extremities WHERE active and gid={id_law}"
+            sql = "SELECT name, type FROM {schema}.extremities WHERE active AND gid = %s"
         elif source_law == "lateral_inflows":
-            sql = (
-                f"SELECT name FROM {self.mdb.SCHEMA}.lateral_inflows WHERE active and gid={id_law}"
-            )
-        info = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT name FROM {schema}.lateral_inflows WHERE active AND gid = %s"
+        else:
+            return None, -1
+        info = self.mdb.run_query(sql, fetch=True, params=[id_law], schema=True)
         if not info:
             return None, -1
         type_loi = -1

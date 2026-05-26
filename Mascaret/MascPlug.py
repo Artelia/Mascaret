@@ -17,18 +17,20 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import importlib
+
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QApplication, QAction
 from qgis.PyQt.QtCore import Qt, qVersion
 
 from .MascPlugDialog import MascPlugDialog
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 try:
     if QT_VERSION > 5:
-        from . import resourcesQT6
+        importlib.import_module(".resourcesQT6", __package__)
     else:
-        from . import resourcesQT5
+        importlib.import_module(".resourcesQT5", __package__)
 
 except ImportError:
     pass

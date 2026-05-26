@@ -21,7 +21,7 @@ email                :
 import os
 import shutil
 from pathlib import Path
-from xml.etree.ElementTree import parse as et_parse
+from defusedxml.ElementTree import parse as et_parse
 
 try:
     from .ClassAssimData import AssimData

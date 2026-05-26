@@ -23,16 +23,18 @@ import os
 from shapely import wkt
 from shapely.geometry import shape
 
-try :
+try:
     from ..ClassMessage import ClassMessage
-except:
+except ImportError:
     from ClassMessage import ClassMessage
+
 
 class ClassParamFG(object):
     """
     Class to manage floodgate link parameters for Mascaret.
     Handles import/export, validation, and database interaction.
     """
+
     def __init__(self):
         """
         Constructor for ClassLinkFGParam.
@@ -48,8 +50,6 @@ class ClassParamFG(object):
         self.abac = {}
         self.list_actif = []
         self.mess = ClassMessage()
-
-
 
     def get_param(self, parent=None, file_name="cli_fg.obj"):
         """
@@ -71,10 +71,10 @@ class ClassParamFG(object):
 
         if complet:
             txt = "Import configuration Mobile Hydraulic Structure"
-            self.mess.add_mess('import_fg', 'info', txt)
+            self.mess.add_mess("import_fg", "info", txt)
         else:
             txt = "Error when the Mobile Hydraulic Structure import"
-            self.mess.add_mess('import_fg', 'warning', txt)
+            self.mess.add_mess("import_fg", "warning", txt)
 
     def import_cl(self, name="cli_fg.obj"):
         if os.path.isfile(name):
@@ -89,9 +89,9 @@ class ClassParamFG(object):
 
                 setattr(self, key, val)
 
-            #raise Exception(self.list_poly_trav ,obj["list_poly_trav"])
+            # raise Exception(self.list_poly_trav ,obj["list_poly_trav"])
             return True
-        return  False
+        return False
 
     def fill_param_to_db(self, db):
         """
@@ -106,10 +106,21 @@ class ClassParamFG(object):
         """
         self.list_actif = self.fg_actif(db)
         self.abac = self.get_db_abac(db)
-        where = f"active AND id_config in (SELECT id FROM {db.SCHEMA}.struct_config  WHERE active)"
-        dict_par = db.select(
-            "struct_fg", where=where, list_var=["id_config", "type_fg", "var_reg", "xpos"]
+        rows = db.run_query(
+            "SELECT sf.id_config, sf.type_fg, sf.var_reg, sf.xpos "
+            "FROM {schema}.struct_fg sf "
+            "JOIN {schema}.struct_config sc ON sc.id = sf.id_config "
+            "WHERE sf.active AND sc.active",
+            fetch=True,
+            schema=True,
         )
+
+        dict_par = {"id_config": [], "type_fg": [], "var_reg": [], "xpos": []}
+        for id_config, type_fg, var_reg, xpos in rows:
+            dict_par["id_config"].append(id_config)
+            dict_par["type_fg"].append(type_fg)
+            dict_par["var_reg"].append(var_reg)
+            dict_par["xpos"].append(xpos)
 
         lid_config = dict_par["id_config"]
         for i, id_config in enumerate(lid_config):
@@ -131,42 +142,51 @@ class ClassParamFG(object):
             ]
 
             for info in list_recup:
-                where = f"id_config = {id_config} AND name_var = '{info}' "
-                rows = db.select(
-                    "struct_fg_val", where=where, order="id_order", list_var=["value"]
+                rows = db.run_query(
+                    "SELECT value FROM {schema}.struct_fg_val "
+                    "WHERE id_config = %s AND name_var = %s ORDER BY id_order",
+                    fetch=True,
+                    params=[id_config, info],
+                    schema=True,
                 )
-                if rows["value"]:
-                    dict_tmp[info] = rows["value"][0]
+                if rows:
+                    dict_tmp[info] = rows[0][0]
                 else:
                     dict_tmp[info] = None
 
-            where = "id = {}".format(id_config)
-            rows = db.select("struct_config", where=where, list_var=["method", "name"])
-            dict_tmp["NAME"] = rows["name"][0]
-            dict_tmp["METH"] = rows["method"][0]
-            self.link_name_id[rows["name"][0]] = id_config
+            rows = db.run_query(
+                "SELECT method, name FROM {schema}.struct_config WHERE id = %s",
+                fetch=True,
+                params=[id_config],
+                schema=True,
+            )
+            dict_tmp["NAME"] = rows[0][1]
+            dict_tmp["METH"] = rows[0][0]
+            self.link_name_id[rows[0][1]] = id_config
             # init dict
             dict_tmp["STATEOLD"] = 0
             dict_tmp["ZRESI"] = 0
             self.param_fg[id_config] = dict_tmp
 
         dict_par = db.select("struct_config", where="active", list_var=["id"])
-        for id_config in dict_par.get("id",[]):
+        for id_config in dict_par.get("id", []):
             self.profil[id_config] = self.get_db_profil(db, id_config)
-            self.param_g[id_config] =self.get_db_param_g(db, id_config)
-            #0: hole, 1:span
-            self.list_poly_trav[id_config] = self.select_db_poly_elem(db, id_config,0)
-            self.list_poly_pil[id_config] = self.select_db_poly_elem(db, id_config,1)
-        return  True
+            self.param_g[id_config] = self.get_db_param_g(db, id_config)
+            # 0: hole, 1:span
+            self.list_poly_trav[id_config] = self.select_db_poly_elem(db, id_config, 0)
+            self.list_poly_pil[id_config] = self.select_db_poly_elem(db, id_config, 1)
+        return True
 
     def get_db_profil(self, db, id_config):
         """
         Get profil coordonnee
         :param id_config: index of hydraulic structure
         """
-        where = "id_config = {0}".format(id_config)
+        where = "id_config = %s"
         order = "id_order"
-        profil = db.select("profil_struct", where=where, order=order, list_var=["x,z"])
+        profil = db.select(
+            "profil_struct", where=where, order=order, list_var=["x,z"], params=[id_config]
+        )
         return profil
 
     def export_cl(self, obj, name="object.js"):
@@ -187,13 +207,13 @@ class ClassParamFG(object):
         """
         if not parent:
             txt = "Error database no access"
-            self.mess.add_mess('export_fg', 'critic', txt)
+            self.mess.add_mess("export_fg", "critic", txt)
             return False
 
         complet = self.fill_param_to_db(parent.mdb)
         if not complet:
             txt = "Get data"
-            self.mess.add_mess('export_fg', 'critic', txt)
+            self.mess.add_mess("export_fg", "critic", txt)
             return False
 
         tmp_list_poly_trav = {}
@@ -203,9 +223,7 @@ class ClassParamFG(object):
                 tmp_list_poly_trav[id_config] = [
                     poly.wkt for poly in self.list_poly_trav[id_config]
                 ]
-                tmp_list_poly_pil[id_config] = [
-                    poly.wkt for poly in  self.list_poly_pil[id_config]
-                ]
+                tmp_list_poly_pil[id_config] = [poly.wkt for poly in self.list_poly_pil[id_config]]
         dico = {
             "list_actif": self.fg_actif(),
             "param_fg": self.param_fg,
@@ -214,10 +232,9 @@ class ClassParamFG(object):
             "list_poly_pil": tmp_list_poly_pil,
             "profil": self.profil,
             "param_g": self.param_g,
-            "abac": self.abac
+            "abac": self.abac,
         }
         self.export_cl(dico, name)
-
 
     def get_profil(self, id_config):
         """
@@ -232,11 +249,16 @@ class ClassParamFG(object):
 
     def fg_actif(self, db=None):
         """list of  active flood gate"""
-        if db :
-            where = f"active AND id IN (SELECT id_config FROM {db.SCHEMA}.struct_fg  WHERE active) "
-            rows = db.select("struct_config", where=where, list_var=["id"])
-            if rows["id"]:
-                return rows["id"]
+        if db:
+            rows = db.run_query(
+                "SELECT sc.id FROM {schema}.struct_config sc "
+                "WHERE sc.active AND sc.id IN "
+                "(SELECT id_config FROM {schema}.struct_fg WHERE active)",
+                fetch=True,
+                schema=True,
+            )
+            if rows:
+                return [row[0] for row in rows]
             return []
         else:
             return self.list_actif
@@ -255,7 +277,7 @@ class ClassParamFG(object):
                 new_dico[info] = dico[info]
         return new_dico
 
-    def get_db_param_g(self, db, id_config , list_recup='all'):
+    def get_db_param_g(self, db, id_config, list_recup="all"):
         """
         Get general parameters
         :param list_recup: list of  value to get
@@ -265,8 +287,10 @@ class ClassParamFG(object):
 
         param_g = {}
         if list_recup == "all":
-            sql = f"SELECT DISTINCT var FROM {db.SCHEMA}.struct_param WHERE id_config = {id_config};"
-            list_recup = db.run_query(sql, fetch=True, namvar=False)
+            sql = "SELECT DISTINCT var FROM {schema}.struct_param WHERE id_config = %s;"
+            list_recup = db.run_query(
+                sql, fetch=True, namvar=False, params=[id_config], schema=True
+            )
             list_recup = [var[0] for var in list_recup]
 
         if list_recup:
@@ -277,7 +301,7 @@ class ClassParamFG(object):
                     param_g[info] = rows["value"][0]
                 else:
                     txt = f"{info} not specified in struct_param table"
-                    self.mess.add_mess('get_param_g', 'warning', txt)
+                    self.mess.add_mess("get_param_g", "warning", txt)
 
         return param_g
 
@@ -292,7 +316,7 @@ class ClassParamFG(object):
             dico[key] = self.abac[key]
         return dico
 
-    def get_db_abac(self,db, list_recup='all'):
+    def get_db_abac(self, db, list_recup="all"):
         """
         Get abacus
         :param list_recup: list of abacus
@@ -302,8 +326,8 @@ class ClassParamFG(object):
         dico_abc = {}
         table = "struct_abac"
         if list_recup == "all":
-            sql = f"SELECT DISTINCT nam_method FROM {db.SCHEMA}.{table};"
-            list_recup = db.run_query(sql, fetch=True, namvar=False)
+            sql = "SELECT DISTINCT nam_method FROM {schema}.struct_abac;"
+            list_recup = db.run_query(sql, fetch=True, namvar=False, schema=True)
             list_recup = [var[0] for var in list_recup]
 
         for metho in list_recup:
@@ -312,18 +336,25 @@ class ClassParamFG(object):
 
             name_abac += list_nam
             for nam_abc in list_nam:
-                sql = f"SELECT DISTINCT var FROM {db.SCHEMA}.{table} WHERE nam_method='{metho}' and nam_abac='{nam_abc}';"
-                list_var = db.run_query(sql, fetch=True, namvar=False)
+                sql = (
+                    "SELECT DISTINCT var FROM {schema}.struct_abac "
+                    "WHERE nam_method = %s and nam_abac = %s;"
+                )
+                list_var = db.run_query(
+                    sql, fetch=True, namvar=False, params=[metho, nam_abc], schema=True
+                )
                 dico_abc[nam_abc] = {}
                 for var in list_var:
                     dico_abc[nam_abc][var[0]] = []
                     dico_abc[nam_abc]["order_{}".format(var[0])] = []
 
                 sql = (
-                    f"SELECT  var,value,id_order FROM {db.SCHEMA}.{table} WHERE nam_method='{metho}' "
-                    f"and nam_abac='{nam_abc}' ORDER by id_order ;"
+                    "SELECT var, value, id_order FROM {schema}.struct_abac WHERE nam_method = %s "
+                    "and nam_abac = %s ORDER by id_order;"
                 )
-                rows = db.run_query(sql, fetch=True, namvar=False)
+                rows = db.run_query(
+                    sql, fetch=True, namvar=False, params=[metho, nam_abc], schema=True
+                )
 
                 for row in rows:
                     dico_abc[nam_abc][row[0]].append(row[1])
@@ -364,7 +395,7 @@ class ClassParamFG(object):
                         dico[cols[i]].append(shape(json.loads(val)))
         return dico
 
-    def select_db_poly_elem(self,db, id_config, type_conf):
+    def select_db_poly_elem(self, db, id_config, type_conf):
         """
         Get polygone list of hole
         :param id_config: index of hydraulic structure
@@ -373,7 +404,7 @@ class ClassParamFG(object):
         """
         where = " id_config={} and type={} ".format(id_config, type_conf)
         order = "id_elem"
-        return self.select_db_poly(db,"struct_elem", where, order)["polygon"]
+        return self.select_db_poly(db, "struct_elem", where, order)["polygon"]
 
     def select_poly_elem(self, id_config, type_conf):
         if type_conf == 0:

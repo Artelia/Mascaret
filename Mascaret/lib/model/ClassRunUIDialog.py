@@ -220,8 +220,8 @@ class ClassRunUIDialog(QDialog):
         :return: None
         """
         ctrl.clear()
-        condition = "run LIKE '{0}'".format(init_run)
-        dico_scen = self.mdb.select_distinct("scenario", "runs", condition)
+        condition = "run LIKE %s"
+        dico_scen = self.mdb.select_distinct("scenario", "runs", condition, params=[init_run])
         if dico_scen:
             liste_scen = ["{}".format(v) for v in dico_scen["scenario"]]
         else:
@@ -279,8 +279,8 @@ class ClassRunUIDialog(QDialog):
             "_ana_ctrl_law_init",
         )
 
-        condition = f"run LIKE '{run}'"
-        allscen = self.mdb.select_distinct("scenario", "runs", condition)
+        condition = "run LIKE %s"
+        allscen = self.mdb.select_distinct("scenario", "runs", condition, params=[run])
 
         # if no data
         if not allscen or "scenario" not in allscen:
@@ -316,25 +316,28 @@ class ClassRunUIDialog(QDialog):
             return True
 
         # delete case initalization
-        condition = (
-            f"(scenario LIKE '{nom_scen}' "
-            f"OR  scenario  LIKE '{nom_scen}_init' "
-            f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
-            f"AND run LIKE '{run}' "
-        )
-
         id_runs = self.mdb.run_query(
-            f"SELECT id FROM {self.mdb.SCHEMA}.runs " f"WHERE {condition} ",
+            "SELECT id FROM {schema}.runs "
+            "WHERE (scenario LIKE %s OR scenario LIKE %s OR scenario LIKE %s) "
+            "AND run LIKE %s",
             fetch=True,
+            schema=True,
+            params=[nom_scen, f"{nom_scen}_init", f"{nom_scen}_ana_ctrl%", run],
         )
-        self.mdb.delete("runs", condition)
+        self.mdb.delete(
+            "runs",
+            "(scenario LIKE %s OR scenario LIKE %s OR scenario LIKE %s) AND run LIKE %s",
+            params=[nom_scen, f"{nom_scen}_init", f"{nom_scen}_ana_ctrl%", run],
+        )
         # new results
 
         if len(id_runs) > 0:
-            id_run = [str(val[0]) for val in id_runs]
-            condition = f"id_runs IN ({','.join(id_run)})"
+            id_run = [val[0] for val in id_runs]
             var = self.mdb.run_query(
-                f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results WHERE {condition} ", fetch=True
+                "SELECT DISTINCT var FROM {schema}.results WHERE id_runs = ANY(%s)",
+                fetch=True,
+                schema=True,
+                params=[id_run],
             )
             del_lst = [
                 "results_sect",
@@ -346,15 +349,14 @@ class ClassRunUIDialog(QDialog):
                 "assim_res_law",
             ]
             for table in del_lst:
-                self.mdb.delete(table, condition)
+                self.mdb.delete(table, "id_runs = ANY(%s)", params=[id_run])
 
-            list_var = [str(v[0]) for v in var]
+            list_var = [v[0] for v in var]
             if len(list_var) > 0:
-                self.mdb.run_query(
-                    f"DELETE  FROM {self.mdb.SCHEMA}.results_var "
-                    f'where id in ({",".join(list_var)}) and '
-                    f"type_res = '"
-                    f"tracer_TRANSPORT_PUR'"
+                self.mdb.delete(
+                    "results_var",
+                    where="id = ANY(%s) and type_res = %s",
+                    params=[list_var, "tracer_TRANSPORT_PUR"],
                 )
 
         self.mgis.add_info(
@@ -444,7 +446,8 @@ class ClassRunUIDialog(QDialog):
                     row_data["lig file"] = None
                     if self.check_scenar_init(name_run, name_scen, row_data):
                         self.box.info(
-                            f"The initial scenario matches the current one ('{name_scen}') for row {row + 1}."
+                            f"The initial scenario matches the current one ('{name_scen}') "
+                            f"for row {row + 1}."
                             f" It will be removed before starting the process.",
                             title="Warning",
                         )

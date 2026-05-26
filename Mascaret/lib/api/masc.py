@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-    Python wrapper to the Fortran APIs of Telemac-Mascaret
+Python wrapper to the Fortran APIs of Telemac-Mascaret
 
-    Author(s): Fabrice Zaoui, Yoann Audouin, Cedric Goeury, Renaud Barate
+Author(s): Fabrice Zaoui, Yoann Audouin, Cedric Goeury, Renaud Barate
 
-    Copyright EDF 2017
+Copyright EDF 2017
 """
 import logging
 import ctypes
@@ -12,9 +12,11 @@ import os
 import sys
 
 import numpy as np
-#Artelia
+
+# Artelia
 from io import StringIO
 from datetime import datetime
+
 # end
 # from execution.mascaret_cas import MascaretCas
 # from utils.exceptions import TelemacException
@@ -126,7 +128,7 @@ class Mascaret:
         @param log_level (str) Logger level
         """
         self.log_stream = StringIO()
-        #Artelia
+        # Artelia
         if log_level == "INFO":
             i_log = logging.INFO
         elif log_level == "DEBUG":
@@ -137,9 +139,9 @@ class Mascaret:
         self.logger.setLevel(getattr(logging, log_level.upper(), i_log))
         # Ajouter un gestionnaire pour écrire les logs dans log_stream
         handler = logging.StreamHandler(self.log_stream)
-        handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         self.logger.addHandler(handler)
-        #end
+        # end
         self.logger.info("Using MascaretApi")
         # Load the library libmascaret.(so|dll)
         # MDU modif
@@ -454,7 +456,7 @@ class Mascaret:
         )
         self.logger.debug("Value: val={}.".format(val_c.value))
         return bool(val_c.value)
-        #MDU return val_c.value == val_c.value
+        # MDU return val_c.value == val_c.value
 
     def get_string(self, var_name, i=0, j=0, k=0):
         """Get the string value of a Mascaret variable

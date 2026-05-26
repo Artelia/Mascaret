@@ -182,3 +182,20 @@ def _qt_is_checked( item, check_level="any"):
             return int(state) > 1
 
     return False
+
+
+def get_qt_checked():
+    """Return the Checked value for both PyQt5 and PyQt6."""
+    return Qt.CheckState.Checked if hasattr(Qt, "CheckState") else Qt.Checked
+
+
+def get_qt_unchecked():
+    """Return the Unchecked value for both PyQt5 and PyQt6."""
+    return Qt.CheckState.Unchecked if hasattr(Qt, "CheckState") else Qt.Unchecked
+
+def exec_dialog(dialog):
+    """Execute dialog in a PyQt5/PyQt6 compatible way."""
+    exec_method = getattr(dialog, "exec", None)
+    if callable(exec_method):
+        return exec_method()
+    return dialog.exec_()

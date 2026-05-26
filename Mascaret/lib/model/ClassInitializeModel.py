@@ -238,7 +238,8 @@ class ClassInitializeModel:
         """
         # Get scenario configuration
         self.mgis.add_info(
-            f"[ INIT  ] Creation of the model files for scenario {scen} *****************************"
+            f"[ INIT  ] Creation of the model files for scenario {scen} "
+            "*****************************"
         )
         d_scen = self.obj_model.get_scenario(scen)
         d_folder = self.obj_model.get_folder(scen)
@@ -468,7 +469,7 @@ class ClassInitializeModel:
         :rtype: bool
         """
         init_scen = scen["scenar_init"]
-        run_ids = self.mdb.get_id_run({init_scen[0]: [f"'{init_scen[1]}'"]})
+        run_ids = self.mdb.get_id_run({init_scen[0]: [f"{init_scen[1]}"]})
 
         if not run_ids:
             self.exit_cpte(False, "Initial scenario does not exist")
@@ -559,14 +560,14 @@ class ClassInitializeModel:
         :return: True if a critical error occurred, False otherwise.
         :rtype: bool
         """
-        for nom, l in dict_lois.items():
-            if "valeurperm" not in l.keys():
+        for nom, lst in dict_lois.items():
+            if "valeurperm" not in lst.keys():
                 continue
-            if l["valeurperm"] is None:
+            if lst["valeurperm"] is None:
                 # For boundary-type laws create law from stored tables
-                tab = self.cl_bc.get_laws(nom, l["type"])
+                tab = self.cl_bc.get_laws(nom, lst["type"])
                 if tab:
-                    self.cl_bc.creer_loi(nom, tab, l["type"])
+                    self.cl_bc.creer_loi(nom, tab, lst["type"])
                 else:
                     txt = "The law for {} is not created.".format(nom)
                     self.mgis.add_info(txt)
@@ -595,17 +596,17 @@ class ClassInitializeModel:
                 else:
                     tfinal = 0
 
-                if l["type"] == 1:
-                    tab = {"time": [0, tfinal], "flowrate": [l["valeurperm"]] * 2}
+                if lst["type"] == 1:
+                    tab = {"time": [0, tfinal], "flowrate": [lst["valeurperm"]] * 2}
                 # rating curve (type 5) not usable with steady: replaced in xcas
-                elif l["type"] == 2 or l["type"] == 5:
-                    l["type"] = 2
-                    tab = {"time": [0, tfinal], "z": [l["valeurperm"]] * 2}
+                elif lst["type"] == 2 or lst["type"] == 5:
+                    lst["type"] = 2
+                    tab = {"time": [0, tfinal], "z": [lst["valeurperm"]] * 2}
                 else:
-                    tab = self.cl_bc.get_laws(nom, l["type"])
+                    tab = self.cl_bc.get_laws(nom, lst["type"])
 
                 if tab:
-                    self.cl_bc.creer_loi(nom, tab, l["type"])
+                    self.cl_bc.creer_loi(nom, tab, lst["type"])
                 else:
                     txt = "The law for {} is not created.".format(nom)
                     self.mgis.add_info(txt)

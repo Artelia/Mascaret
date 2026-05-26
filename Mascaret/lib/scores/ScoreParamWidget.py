@@ -16,20 +16,43 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 
 import os
+import numpy as np
 from datetime import datetime, timedelta
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QDateTime
+from qgis.PyQt.QtWidgets import (
+    QDateTimeEdit,
+    QDoubleSpinBox,
+    QMessageBox,
+    QTableWidgetItem,
+    QWidget,
+)
+from qgis.PyQt.uic import loadUi
 from scipy import interpolate
 
-from .FunctionScores import *
+
+from .FunctionScores import (
+    mean_err,
+    mean_abs_err,
+    mean_r_err,
+    biais,
+    mean_rabs_err,
+    precision,
+    std,
+    eqm,
+    nash_crit,
+    vol_err,
+    dist_err,
+    dist_abs_err,
+    err_temps_point,
+    err_point,
+    persistence,
+    generate_deltat,
+     
+    )
 from ..Function import datum_to_float
 from ...ui.custom_control import ScientificDoubleSpinBox
 from ...ui.custom_control import datetime2QDateTime
@@ -41,9 +64,9 @@ class ScoreParamWidget(QWidget):
     """
 
     def __init__(
-            self,
-            windmain,
-            all=True,
+        self,
+        windmain,
+        all=True,
     ):
         """
         Class constructor
@@ -107,6 +130,7 @@ class ScoreParamWidget(QWidget):
 
         self.lst_runs_old = self.lst_runs
         self.lst_runs = list_run
+        print("change list run : {}".format(self.lst_runs))
 
     def ch_dict_pk(self, pks):
         self.dict_pk = pks
@@ -238,9 +262,9 @@ class ScoreParamWidget(QWidget):
                 name_col = "{} - {}".format(dict_name[id_run]["run"], dict_name[id_run]["scenario"])
                 self.tw_param.setHorizontalHeaderItem(col, QTableWidgetItem(name_col))
 
-                current_row_count = (
-                    self.tw_param.rowCount()
-                )  # necessary even when there are no rows in the table
+                # current_row_count = (
+                #     self.tw_param.rowCount()
+                # )  # necessary even when there are no rows in the table
                 for ctrl_, row in self.lk_wgt_row.items():
                     self.tw_param.setCellWidget(row, col, self.widget_d[id_run][ctrl_])
 
@@ -346,7 +370,7 @@ class ScoreParamWidget(QWidget):
         :param only_init: only initialize
         :return:
         """
-        dico = self.mdb.select("runs", where="id={0}".format(id_run))
+        dico = self.mdb.select("runs", where="id = %s", params=[id_run])
 
         init_time = dico["init_date"][0]
 
@@ -355,8 +379,9 @@ class ScoreParamWidget(QWidget):
 
         info = self.mdb.select(
             "runs_graph",
-            where="id_runs={} " "AND type_res='opt'" "AND var='time'".format(id_run),
+            where="id_runs = %s AND type_res = %s AND var = %s ",
             list_var=["val"],
+            params=[id_run, "opt", "time"],
         )
 
         if len(info["val"]) > 0:
@@ -493,7 +518,8 @@ class ScoreParamWidget(QWidget):
                                 if "Q" in tmp.keys():
                                     if tmp["Q"]["per_err"] is None:
                                         other_txt += (
-                                            "- Persistance error (Run : {}, variable: Q , obs : {}):\n "
+                                            "- Persistance error "
+                                            "(Run : {}, variable: Q , obs : {}):\n "
                                             "    The Sum in denominator is null. \n".format(
                                                 name_run, code
                                             )
@@ -501,7 +527,8 @@ class ScoreParamWidget(QWidget):
                                 if "H" in tmp.keys():
                                     if tmp["H"]["per_err"] is None:
                                         other_txt += (
-                                            "- Persistance error (Run : {}, variable: H, obs : {}): \n"
+                                            "- Persistance error "
+                                            "(Run : {}, variable: H, obs : {}): \n"
                                             "    The Sum in denominator is null. \n".format(
                                                 name_run, code
                                             )
@@ -919,17 +946,28 @@ class ScoreParamWidget(QWidget):
         lst_pk = []
         for i in range(nb):
             if self.obs[code]["abscissa"][i]:
-                where = "abscissa = {0}".format(self.obs[code]["abscissa"][i])
+                info = self.mdb.select(
+                    "profiles",
+                    where="abscissa = %s",
+                    list_var=["abscissa"],
+                    params=[self.obs[code]["abscissa"][i]],
+                )
             elif self.obs[code]["name"][i]:
-                where = "name='{0}'".format(self.obs[code]["name"][i])
+                info = self.mdb.select(
+                    "profiles",
+                    where="name = %s",
+                    list_var=["abscissa"],
+                    params=[self.obs[code]["name"][i]],
+                )
             else:
                 txt = "No find profile {0}={1} ".format(
                     self.obs[code]["name"][i], self.obs[code]["abscissa"][i]
                 )
                 self.txt_err_get += txt
+                info = {"abscissa": []}
                 # return None
-            info = self.mdb.select("profiles", where=where, list_var=["abscissa"])
-            if info["abscissa"]:
+
+            if len(info.get("abscissa", [])) > 0:
                 lst_pk.append(info["abscissa"][0])
 
         if lst_pk:
@@ -944,11 +982,12 @@ class ScoreParamWidget(QWidget):
         :param pk : abscissa
         :return:
         """
-        where = "abscissa = {0}".format(pk)
-        info = self.mdb.select("profiles", where=where, list_var=["gid", "name", "abscissa"])
+        info = self.mdb.select(
+            "profiles", where="abscissa = %s", list_var=["gid", "name", "abscissa"], params=[pk]
+        )
         name = None
         abs = None
-        if len(info["abscissa"]) > 0:
+        if len(info.get("abscissa", [])) > 0:
             name = info["name"][0]
             abs = info["abscissa"][0]
         else:
@@ -975,7 +1014,6 @@ class ScoreParamWidget(QWidget):
         :param code : observation code
         :return:
         """
-
         dict_model = self.model[id_run]
         lst_varh = []
         lst_varq = []
@@ -997,11 +1035,10 @@ class ScoreParamWidget(QWidget):
         for var in lst_var:
             val = self.mdb.select(
                 "results",
-                where="id_runs={0} AND pknum= {1} "
-                      "and var = {2}".format(id_run, pk, dict_model["var"][var]),
+                where="id_runs = %s AND pknum = %s AND var = %s",
                 order="time",
                 list_var=["val"],
-                verbose=False,
+                params=[id_run, pk, dict_model["var"][var]],
             )
             tmp[var] = val["val"]
 
@@ -1049,9 +1086,7 @@ class ScoreParamWidget(QWidget):
 
         z = self.data[id_run][pk][code]["h_mod_ori"]
         time_mod = self.model[id_run]["times"]
-        self.data[id_run][pk][code]["h_mod"] = self.interpol_date(
-            obs_time, time_mod, z
-        )
+        self.data[id_run][pk][code]["h_mod"] = self.interpol_date(obs_time, time_mod, z)
 
     def resample_model_q(self, id_run, pk, code):
         """
@@ -1090,18 +1125,17 @@ class ScoreParamWidget(QWidget):
         for gg in lst_var:
             sql_query = (
                 "SELECT date, valeur FROM ("
-                "SELECT UNNEST(date) as date, "
-                "UNNEST(valeur) as valeur, "
-                "code, type "
-                "FROM {4}.observations WHERE "
-                "code = '{0}' AND type='{3}') t WHERE "
-                "date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                "ORDER BY date".format(
-                    code, dict_model["init_time"], dict_model["final_time"], gg, self.mdb.SCHEMA
-                )
+                "SELECT UNNEST(date) AS date, UNNEST(valeur) AS valeur, "
+                "code, type FROM {schema}.observations "
+                "WHERE code = %s AND type = %s) t "
+                "WHERE date >= %s AND date <= %s AND valeur > -999.9 "
+                "ORDER BY date"
             )
-
-            tmp_dict = self.mdb.query_todico(sql_query, verbose=False)
+            tmp_dict = self.mdb.query_todico(
+                sql_query,
+                params=[code, gg, dict_model["init_time"], dict_model["final_time"]],
+                schema=True,
+            )
             if self.obs[code]["zero"] is None:
                 code_zero = 0
             else:
@@ -1114,9 +1148,13 @@ class ScoreParamWidget(QWidget):
                 obs_time = np.array(
                     [datum_to_float(vv, tmp_dict["date"][0]) for vv in tmp_dict["date"]]
                 )
-                dic_tmp = {"h_obs_ori": z, "h_obs_date_ori": tmp_dict["date"], "h_obs_time_ori": obs_time,
-                           "h_obs": z, "h_obs_time": obs_time}
-                # self print(dic_tmp)
+                dic_tmp = {
+                    "h_obs_ori": z,
+                    "h_obs_date_ori": tmp_dict["date"],
+                    "h_obs_time_ori": obs_time,
+                    "h_obs": z,
+                    "h_obs_time": obs_time,
+                }
                 if code in self.data[id_run][pk].keys():
                     self.data[id_run][pk][code].update(dic_tmp)
                 else:
@@ -1125,7 +1163,6 @@ class ScoreParamWidget(QWidget):
                 obs_time = np.array(
                     [datum_to_float(vv, tmp_dict["date"][0]) for vv in tmp_dict["date"]]
                 )
-
                 dic_tmp = {
                     "q_obs_ori": np.array(tmp_dict["valeur"]),
                     "q_obs_date_ori": tmp_dict["date"],
@@ -1172,11 +1209,9 @@ class ScoreParamWidget(QWidget):
         """
         info = self.mdb.select(
             "runs_graph",
-            where="id_runs={} "
-                  "AND type_res='opt'"
-                  "AND var in "
-                  "('var','time','pknum')".format(id_run),
+            where="id_runs = %s AND type_res = 'opt' AND var IN ('var', 'time', 'pknum')",
             list_var=["var", "val"],
+            params=[id_run],
         )
         if len(info["var"]) > 0:
             data_rg = {var: info["val"][i] for i, var in enumerate(info["var"])}
@@ -1224,26 +1259,29 @@ class ScoreParamWidget(QWidget):
         """
         self.obs = {}
 
-        where = (
-            "active AND code IN (SELECT DISTINCT code FROM ("
-            "SELECT UNNEST(date)as date, code FROM {0}.observations) t "
-            " WHERE date>='{1}' AND date<='{2}') "
-            "AND (name IN (SELECT DISTINCT name  FROM {0}.profiles) "
-            "OR abscissa IN (SELECT DISTINCT abscissa "
-            "FROM {0}.profiles))".format(
-                self.mdb.SCHEMA, init_time, self.model[id_run]["final_time"]
-            )
+        qry = (
+            "SELECT code, abscissa, name, zero "
+            "FROM {schema}.outputs "
+            "WHERE active "
+            "AND code IN ("
+            "  SELECT DISTINCT code "
+            "  FROM (SELECT UNNEST(date) AS date, code FROM {schema}.observations) t "
+            "  WHERE date >= %s AND date <= %s"
+            ") "
+            "AND ("
+            "  name IN (SELECT DISTINCT name FROM {schema}.profiles) "
+            "  OR abscissa IN (SELECT DISTINCT abscissa FROM {schema}.profiles)"
+            ") "
+            "ORDER BY abscissa;"
         )
-        rows = self.mdb.select(
-            "outputs", where=where, order="abscissa", list_var=["code", "abscissa", "name", "zero"]
+        rows = self.mdb.query_todico(
+            qry, params=[init_time, self.model[id_run]["final_time"]], schema=True
         )
-
-        if len(rows["code"]) == 0:
+        if rows is None or len(rows.get("code", [])) == 0:
             dict_name = self.mdb.get_scen_name([id_run])
-            txt = "No find observation for {} - {}\n " "".format(
+            txt = "No find observation for {} - {}\n".format(
                 dict_name[id_run]["run"], dict_name[id_run]["scenario"]
             )
-            # self.mgis.add_info(txt)
             self.txt_err_get += txt
             return False
         for i, code in enumerate(rows["code"]):
@@ -1351,8 +1389,8 @@ class ScoreParamWidget(QWidget):
                 self.cmpt_var[id_run][pk][code] = {}
 
             if (
-                    "h_obs" in self.data[id_run][pk][code].keys()
-                    and "h_mod_ori" in self.data[id_run][pk][code].keys()
+                "h_obs" in self.data[id_run][pk][code].keys()
+                and "h_mod_ori" in self.data[id_run][pk][code].keys()
             ):
                 self.cmpt_var[id_run][pk][code]["H"] = True
                 self.resample_model_h(id_run, pk, code)
@@ -1364,8 +1402,8 @@ class ScoreParamWidget(QWidget):
                     self.cmpt_var[id_run][pk][code]["H"] = False
 
             if (
-                    "q_obs" in self.data[id_run][pk][code].keys()
-                    and "q_mod_ori" in self.data[id_run][pk][code].keys()
+                "q_obs" in self.data[id_run][pk][code].keys()
+                and "q_mod_ori" in self.data[id_run][pk][code].keys()
             ):
                 self.cmpt_var[id_run][pk][code]["Q"] = True
                 self.resample_model_q(id_run, pk, code)

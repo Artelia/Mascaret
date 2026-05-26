@@ -19,25 +19,25 @@ email                :
 """
 
 
-from shapely.geometry import *
+from shapely.geometry import  GeometryCollection
 
 from .ClassPolygone import ClassPolygone
 from .ClassTableStructure import ClassTableStructure
 
+
 class ClassMethod:
 
-    def __init__(self, parent, debug=False, cl_mess= None):
+    def __init__(self, parent, debug=False, cl_mess=None):
         self.cli = parent.cli
-        self.mgis=parent.mgis
+        self.mgis = parent.mgis
         self.mdb = parent.mgis.mdb
         self.debug = debug
-        self.mess =cl_mess
+        self.mess = cl_mess
 
         self.grav = 9.81
         self.tbst = ClassTableStructure()
         self.clpoly = ClassPolygone()
         self.num_mess = 0
-
 
     def create_poly_elem(self, id_config, config_type):
         """
@@ -172,7 +172,7 @@ class ClassMethod:
 
     def add_info(self, txt):
         if self.mess:
-            self.mess('clMehtod{}'.format(self.num_mess), 'info', txt)
+            self.mess("clMehtod{}".format(self.num_mess), "info", txt)
         else:
             print(txt)
 
@@ -208,8 +208,9 @@ class ClassMethod:
                 param_elem[info] = rows["value"][0]
             else:
                 if self.debug:
-                    self.add_info("[WARNING]{} not specified in struct_elem_param table".format(info))
-
+                    self.add_info(
+                        "[WARNING]{} not specified in struct_elem_param table".format(info)
+                    )
         return param_elem
 
     def get_struct(self):
@@ -218,16 +219,12 @@ class ClassMethod:
         :return dico
         """
         struct_dico = {}
-        list_var = ["id", "name", "type", "active", "method"]
-        if list_var is not None:
-            lvar = ",".join([str(v) for v in list_var])
-        else:
-            lvar = "*"
-        sql = "SELECT {1} FROM {0}.struct_config ORDER BY id;"
-        rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, lvar), fetch=True)
-        if rows is None:
+        sql = "SELECT id, name, type, active, method FROM {schema}.struct_config ORDER BY id;"
+        rows = self.mdb.run_query(sql, schema=True, fetch=True)
+        if not rows:
             if self.debug:
                 self.add_info("[WARNING]struct_config is empty")
+            return struct_dico
         for row in rows:
             struct_dico[row[0]] = {
                 "name": row[1],
@@ -236,9 +233,7 @@ class ClassMethod:
                 "idmethod": row[4],
                 "method": self.tbst.dico_meth_calc[row[4]],
             }
-        #
         return struct_dico
-
 
     def checkprofil(self, id_config):
         """ "
@@ -251,10 +246,6 @@ class ClassMethod:
             return True
         else:
             return False
-
-
-
-
 
 
 # *********************************************************

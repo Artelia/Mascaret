@@ -23,7 +23,7 @@ import json
 import os
 import re
 
-from ..Function import del_symbol, filter_xy_by_time_ensur
+from ..Function import del_symbol, filter_xy_by_time_ensur, safe_eval_numeric
 from ..HydroLawsDialog import dico_typ_law
 from .Fct_model_file import backup_file
 
@@ -138,9 +138,10 @@ class ClassBCWriter:
                         i = obs_stations[cd_hydro]["date"].index(t2)
                         val = obs_stations[cd_hydro]["valeur"][i]
                     calc = pattern.sub(str(val), calc, 1)
+
                 try:
-                    resultat = eval(calc)
-                except Exception:
+                    resultat = safe_eval_numeric(calc)
+                except (ValueError, SyntaxError, TypeError, ZeroDivisionError):
                     resultat = None
 
                 if resultat is not None:
@@ -170,23 +171,27 @@ class ClassBCWriter:
 
             sql_tab = (
                 "SELECT o.code, o.type, d.date, d.valeur "
-                "FROM {0}.observations o, "
+                "FROM {schema}.observations o, "
                 "LATERAL UNNEST(o.date, o.valeur) AS d(date, valeur) "
-                "WHERE o.code = '{1}' AND o.type = '{2}' "
-                "AND d.date >= '{3:%Y-%m-%d %H:%M}' "
-                " AND d.date <= COALESCE(( "
-                " SELECT MIN(d2.date) "
-                " FROM {0}.observations o2, "
+                "WHERE o.code = %s AND o.type = %s "
+                "AND d.date >= %s "
+                "AND d.date <= COALESCE(( "
+                "SELECT MIN(d2.date) "
+                "FROM {schema}.observations o2, "
                 "LATERAL UNNEST(o2.date) AS d2(date) "
-                "WHERE o2.code = '{1}' AND o2.type = '{2}' "
-                " AND d2.date >= '{4:%Y-%m-%d %H:%M}' "
-                " ), '{4:%Y-%m-%d %H:%M}') "
-                "ORDER BY d.date;".format(
-                    self.mdb.SCHEMA, cd_hydro, type_, date_debut + dt, date_fin + dt
-                )
+                "WHERE o2.code = %s AND o2.type = %s "
+                "AND d2.date >= %s "
+                "), %s) "
+                "ORDER BY d.date;"
             )
 
-            obs_stations[cd_hydro] = self.mdb.query_todico(sql_tab)
+            start_dt = date_debut + dt
+            end_dt = date_fin + dt
+            obs_stations[cd_hydro] = self.mdb.query_todico(
+                sql_tab,
+                params=[cd_hydro, type_, start_dt, cd_hydro, type_, end_dt, end_dt],
+                schema=True,
+            )
             if not obs_stations[cd_hydro]["date"]:
                 if self.mess:
                     self.mess.add_mess(
@@ -406,7 +411,6 @@ class ClassBCWriter:
                 condition = "geom_obj='{0}' AND id_law_type={1} AND active".format(
                     name_obj, typ_law
                 )
-
             config = self.mdb.select_one("law_config", condition)
             if config:
                 values = self.mdb.select(
@@ -430,8 +434,9 @@ class ClassBCWriter:
 
                 for value, id_var in zip(values["value"], values["id_var"]):
                     tab[conv_idvar[id_var]].append(float(value))
-                if not tab.get("time") or not config.get("starttime"):
+                if not tab.get("time") or not config.get("starttime") or not obs:
                     return tab  # no time column, nothing to process
+
                 start_time = config.get("starttime")
                 # Convert time (seconds) to absolute datetimes
                 lst_x = [start_time + datetime.timedelta(seconds=t) for t in tab["time"]]
@@ -749,11 +754,24 @@ class ClassBCWriter:
         param = {}
         lst_get = [("weirs", "gid"), ("struct_config", "id")]
         for tab, var in lst_get:
-            sql = (
-                f"SELECT {var}, name, branchnum, abscissa, erase_flag FROM {self.mdb.SCHEMA}.{tab} "
-                f"WHERE active ORDER BY {var};"
+            rows_d = self.mdb.select(
+                tab,
+                where="active",
+                order=var,
+                list_var=[var, "name", "branchnum", "abscissa", "erase_flag"],
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = []
+            if rows_d and rows_d.get(var):
+                for i in range(len(rows_d[var])):
+                    rows.append(
+                        (
+                            rows_d[var][i],
+                            rows_d["name"][i],
+                            rows_d["branchnum"][i],
+                            rows_d["abscissa"][i],
+                            rows_d["erase_flag"][i],
+                        )
+                    )
             if rows:
                 for row in rows:
                     # "name, branchnum, abscissa"
@@ -782,7 +800,10 @@ class ClassBCWriter:
             comp = branches["abs_start"] + branches["mesh"]
             if apports["abscissa"][i] < comp:
                 if self.mess:
-                    err = f"{apports['name'][i]} is located before the first mesh. Ignore in the model"
+                    err = (
+                        f"{apports['name'][i]} is located before the first mesh. "
+                        "Ignore in the model"
+                    )
                     self.mess.add_mess(f"lInflowPos_{apports['name'][i]}", "warning", err)
 
     def obs_to_file(self, dict_obs, date_debut, date_fin):

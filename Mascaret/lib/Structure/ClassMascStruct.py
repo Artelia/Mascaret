@@ -34,13 +34,11 @@ class ClassMascStruct:
         :return: law list
         """
         liste_f = []
-
-        where = "WHERE id_config={}".format(id_config)
-        order = "ORDER BY id_var, id_order "
-        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        tabval = self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, "struct_laws", where, order, "id_var , value"), fetch=True
+        sql = (
+            "SELECT id_var, value FROM {schema}.struct_laws "
+            "WHERE id_config = %s ORDER BY id_var, id_order;"
         )
+        tabval = self.mdb.run_query(sql, schema=True, fetch=True, params=[id_config])
         if not tabval:
             return liste_f
         tabval = np.array(tabval)
@@ -67,7 +65,7 @@ class ClassMascStruct:
 
         if not list_final:
             return
-        with open(os.path.join(dossier, f'{nom}.loi'), "w") as fich:
+        with open(os.path.join(dossier, f"{nom}.loi"), "w") as fich:
             fich.write("# " + nom + "\n")
             if typel == 6:
                 fich.write("# Debit Cote_Aval Cote_Amont\n")

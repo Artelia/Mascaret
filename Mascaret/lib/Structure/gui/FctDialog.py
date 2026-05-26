@@ -17,10 +17,8 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QSize, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
 
 
 def ctrl_set_value(ctrl, val, cc_is_checked=False):
@@ -47,9 +45,11 @@ def ctrl_set_value(ctrl, val, cc_is_checked=False):
             int_val = int(val)
             try:
                 # Essayer d'abord PyQt6
-                state_values = [Qt.CheckState.Unchecked,
-                                Qt.CheckState.PartiallyChecked,
-                                Qt.CheckState.Checked]
+                state_values = [
+                    Qt.CheckState.Unchecked,
+                    Qt.CheckState.PartiallyChecked,
+                    Qt.CheckState.Checked,
+                ]
                 ctrl.setCheckState(state_values[int_val])
             except (AttributeError, IndexError):
                 # Fallback PyQt5 ou valeur directe

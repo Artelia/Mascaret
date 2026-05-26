@@ -19,13 +19,8 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QComboBox, QTableWidgetItem, QWidget
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_get_value, fill_qcombobox
 from ..ClassTableStructure import ClassTableStructure

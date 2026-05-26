@@ -22,15 +22,12 @@ import matplotlib.lines as mlines
 import numpy as np
 from matplotlib import patches
 
-try:
-    pass
-except:
-    pass
 from qgis.PyQt.QtCore import qVersion
 from .GraphCommon import GraphCommonNew
 
 MPL_LINE_STYLE = {0: "-", 1: ":", 2: "--", 3: "-."}
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class GraphResult(GraphCommonNew):
     """
@@ -73,7 +70,7 @@ class GraphResult(GraphCommonNew):
         self.init_ui_common_p()
 
     def init_mdl(
-            self, lst_vars, lst_lbls, lst_colors, lst_line_style, lst_axe, unit_y, title_y=None
+        self, lst_vars, lst_lbls, lst_colors, lst_line_style, lst_axe, unit_y, title_y=None
     ):
         """
         Initialize the graph model with variables, labels, colors, axes, and units.
@@ -223,8 +220,10 @@ class GraphResult(GraphCommonNew):
             self.init_legende(handles)
         if weir:
             handles.append(
-                mlines.Line2D([], [], color='tab:orange', marker='d', linewidth=0,
-                              markersize=8, label='Weirs'))
+                mlines.Line2D(
+                    [], [], color="tab:orange", marker="d", linewidth=0, markersize=8, label="Weirs"
+                )
+            )
             self.ax[1]["curves"].append(self.courbe_weirs[0])
             self.init_legende(handles)
 
@@ -289,7 +288,7 @@ class GraphResult(GraphCommonNew):
             if patch in self.main_axe.patches:
                 try:
                     self.main_axe.patches.remove(patch)
-                except:
+                except Exception:
                     patch.remove()
 
         if data["x"] and data["leftminbed"] and data["rightminbed"]:
@@ -557,21 +556,30 @@ class GraphResult(GraphCommonNew):
 
         self.clear_weirs()
         self.courbe_weirs.append(
-            self.main_axe.scatter(weirs['x'], weirs['cote'],
-                                  color=weirs['couleurs'],
-                                  marker='d',
-                                  label="Geo Weirs (orange) or Weir Laws (brown)",
-                                  s=40,
-                                  linewidth=1))
+            self.main_axe.scatter(
+                weirs["x"],
+                weirs["cote"],
+                color=weirs["couleurs"],
+                marker="d",
+                label="Geo Weirs (orange) or Weir Laws (brown)",
+                s=40,
+                linewidth=1,
+            )
+        )
 
         self.courbe_weirs[0].set_visible(True)
-        for name, x, z, c in zip(weirs['name'], weirs['x'], weirs['cote'], weirs["couleurs"]):
-            temp = self.main_axe.annotate(str(name) + ' - ' + str(z), xy=(x, z), xytext=(3, 3),
-                                          ha='left', va='bottom',
-                                          fontsize='x-small',
-                                          color=c,
-                                          textcoords='offset points',
-                                          clip_on=True)
+        for name, x, z, c in zip(weirs["name"], weirs["x"], weirs["cote"], weirs["couleurs"]):
+            temp = self.main_axe.annotate(
+                str(name) + " - " + str(z),
+                xy=(x, z),
+                xytext=(3, 3),
+                ha="left",
+                va="bottom",
+                fontsize="x-small",
+                color=c,
+                textcoords="offset points",
+                clip_on=True,
+            )
 
             self.etiquetteweirs.append(temp)
 

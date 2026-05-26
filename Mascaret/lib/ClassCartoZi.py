@@ -20,18 +20,31 @@ email                :
 import os
 from datetime import timedelta
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtWidgets import QButtonGroup, QDialog, QFileDialog, QMessageBox
+from qgis.PyQt.uic import loadUi
+from qgis.core import (
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsCoordinateTransformContext,
+    QgsFeature,
+    QgsField,
+    QgsFields,
+    QgsGeometry,
+    QgsMapLayerProxyModel,
+    QgsProject,
+    QgsVectorFileWriter,
+    QgsVectorLayer,
+    QgsWkbTypes,
+)
 from scipy import interpolate
 
 from ..ui.custom_control import ClassWarningBox
 
-D_PARAM = {"z": {"txt": "Water level", "var_profil": "Z", "var_basin": "ZCAS"},
-           "char": {"txt": "Hydraulic head", "var_profil": "CHAR", "var_basin": None}}
+D_PARAM = {
+    "z": {"txt": "Water level", "var_profil": "Z", "var_basin": "ZCAS"},
+    "char": {"txt": "Hydraulic head", "var_profil": "CHAR", "var_basin": None},
+}
 
 
 class ClassCartoZI(QDialog):
@@ -73,10 +86,12 @@ class ClassCartoZI(QDialog):
     def init_cb_run(self):
         self.dict_run = dict()
         rows = self.mdb.run_query(
-            "SELECT id, run, scenario FROM {0}.runs "
-            "WHERE id in (SELECT DISTINCT id_runs FROM {0}.runs_graph) "
-            "ORDER BY date DESC, run ASC, scenario ASC;".format(self.mdb.SCHEMA),
-            fetch=True)
+            "SELECT id, run, scenario FROM {schema}.runs "
+            "WHERE id in (SELECT DISTINCT id_runs FROM {schema}.runs_graph) "
+            "ORDER BY date DESC, run ASC, scenario ASC;",
+            fetch=True,
+            schema=True,
+        )
         for row in rows:
             if row[1] not in self.dict_run.keys():
                 self.dict_run[row[1]] = dict()
@@ -119,15 +134,21 @@ class ClassCartoZI(QDialog):
             self.cb_time.clear()
 
             init_date = None
-            sql = "SELECT init_date FROM {0}.runs WHERE id = {1}" \
-                  "".format(self.mgis.mdb.SCHEMA, self.cur_scen)
-            info = self.mdb.run_query(sql, fetch=True)
+            info = self.mdb.run_query(
+                "SELECT init_date FROM {schema}.runs WHERE id = %s",
+                fetch=True,
+                params=(self.cur_scen,),
+                schema=True,
+            )
             if info:
                 init_date = info[0][0]
 
-            sql = "SELECT DISTINCT time FROM {0}.results WHERE id_runs = {1} ORDER BY time" \
-                  "".format(self.mgis.mdb.SCHEMA, self.cur_scen)
-            l_times = self.mdb.run_query(sql, fetch=True)
+            l_times = self.mdb.run_query(
+                "SELECT DISTINCT time FROM {schema}.results WHERE id_runs = %s ORDER BY time",
+                fetch=True,
+                params=(self.cur_scen,),
+                schema=True,
+            )
             for _time in l_times:
                 if init_date:
                     aff = init_date + timedelta(seconds=_time[0])
@@ -157,8 +178,9 @@ class ClassCartoZI(QDialog):
                         self.cc_profil.setText("Profiles")
                     else:
                         enable_profil = False
-                        self.cc_profil.setText("Profiles (No results found for the scenario "
-                                               "and parameter selected)")
+                        self.cc_profil.setText(
+                            "Profiles (No results found for the scenario " "and parameter selected)"
+                        )
                 else:
                     enable_profil = False
                     self.cc_profil.setText("Profiles (Parameter not available)")
@@ -172,7 +194,6 @@ class ClassCartoZI(QDialog):
         if not enable_profil:
             self.cc_lay_profil.setChecked(enable_profil)
 
-
         if self.cur_scen:
             if self.basin_cnt == 0:
                 enable_basin = False
@@ -184,8 +205,9 @@ class ClassCartoZI(QDialog):
                         self.cc_basin.setText("Basins")
                     else:
                         enable_basin = False
-                        self.cc_basin.setText("Basins (No results found for the scenario "
-                                              "and parameter selected)")
+                        self.cc_basin.setText(
+                            "Basins (No results found for the scenario " "and parameter selected)"
+                        )
                 else:
                     enable_basin = False
                     self.cc_basin.setText("Basins (Parameter not available)")
@@ -195,7 +217,6 @@ class ClassCartoZI(QDialog):
 
         self.cc_basin.setChecked(enable_basin)
         self.cc_basin.setEnabled(enable_basin)
-
 
     def value_changed(self, v_button):
         ib_button = self.bg_value.id(v_button)
@@ -261,14 +282,18 @@ class ClassCartoZI(QDialog):
             else:
                 for _lay_id in QgsProject.instance().mapLayers():
                     _lay = QgsProject.instance().mapLayer(_lay_id)
-                    if os.path.normpath(_lay.source()) in [os.path.normpath(profil_file),
-                                                           os.path.normpath(basin_file)]:
-                        QMessageBox.warning(None, "Warning", "Layers are opened in QGis "
-                                                             "and can't be deleted")
+                    if os.path.normpath(_lay.source()) in [
+                        os.path.normpath(profil_file),
+                        os.path.normpath(basin_file),
+                    ]:
+                        QMessageBox.warning(
+                            None, "Warning", "Layers are opened in QGis " "and can't be deleted"
+                        )
                         return
 
-        d_res = get_results(self.mdb, res_profile, res_basin,
-                            self.cur_scen, self.cur_param, cur_time)
+        d_res = get_results(
+            self.mdb, res_profile, res_basin, self.cur_scen, self.cur_param, cur_time
+        )
 
         if res_profile:
             d_profil = get_db_profiles(self.mdb)
@@ -298,12 +323,10 @@ class ClassCartoZI(QDialog):
 
 
 def get_layers_cnt(mdb):
-    sql = "SELECT COUNT(*) FROM {0}.profiles".format(mdb.SCHEMA)
-    rows = mdb.run_query(sql, fetch=True)
+    rows = mdb.run_query("SELECT COUNT(*) FROM {schema}.profiles", fetch=True, schema=True)
     profil_cnt = rows[0][0]
 
-    sql = "SELECT COUNT(*) FROM {0}.basins".format(mdb.SCHEMA)
-    rows = mdb.run_query(sql, fetch=True)
+    rows = mdb.run_query("SELECT COUNT(*) FROM {schema}.basins", fetch=True, schema=True)
     basin_cnt = rows[0][0]
 
     return profil_cnt, basin_cnt
@@ -319,10 +342,12 @@ def verif_values_exist(mdb, cur_scen, cur_param, lay):
 
     cnt_val = 0
     if var_id is not None:
-        sql = "SELECT COUNT(*) FROM {0}.results " \
-              "WHERE id_runs = {1} AND var = {2} " \
-              "".format(mdb.SCHEMA, cur_scen, var_id)
-        rows = mdb.run_query(sql, fetch=True)
+        rows = mdb.run_query(
+            "SELECT COUNT(*) FROM {schema}.results WHERE id_runs = %s AND var = %s",
+            fetch=True,
+            params=(cur_scen, var_id),
+            schema=True,
+        )
         cnt_val = rows[0][0]
 
     if cnt_val == 0:
@@ -339,7 +364,7 @@ def create_basins_shp(out_file, d_res, param, time, mdb):
     schema = QgsFields()
     schema.append(QgsField("basinnum", QVariant.Int))
     schema.append(QgsField("name", QVariant.String))
-    schema.append(QgsField(fld_val, QVariant.Double, 'double', 10, 2))
+    schema.append(QgsField(fld_val, QVariant.Double, "double", 10, 2))
 
     geom_type = QgsWkbTypes.MultiPolygon
     db_crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(mdb.SRID))
@@ -371,9 +396,9 @@ def create_profiles_shp(out_file, d_res, param, time, mdb):
 
     schema = QgsFields()
     schema.append(QgsField("branchnum", QVariant.Int))
-    schema.append(QgsField("abscissa", QVariant.Double, 'double', 10, 3))
+    schema.append(QgsField("abscissa", QVariant.Double, "double", 10, 3))
     schema.append(QgsField("name", QVariant.String))
-    schema.append(QgsField(fld_val, QVariant.Double, 'double', 10, 2))
+    schema.append(QgsField(fld_val, QVariant.Double, "double", 10, 2))
 
     geom_type = QgsWkbTypes.MultiLineString
     db_crs = QgsCoordinateReferenceSystem("POSTGIS:{}".format(mdb.SRID))
@@ -444,30 +469,49 @@ def get_user_profiles(mdb, d_profil, user_lay, user_field):
             res = geom_br.intersection(cur_geom)
             if res:
                 if res.wkbType() == QgsWkbTypes.Point:
-                    l_pk.append([num_br, round(param_br["pk_start"] +
-                                               geom_br.lineLocatePoint(res), 2)])
+                    l_pk.append(
+                        [num_br, round(param_br["pk_start"] + geom_br.lineLocatePoint(res), 2)]
+                    )
 
         if len(l_pk) == 1:
             num_br, pk = l_pk[0]
             if d_profil[num_br]["pk_max"] > pk > d_profil[num_br]["pk_min"]:
                 if pk not in d_profil[num_br]["lst_pk"].keys():
-                    d_profil[num_br]["lst_pk"][pk] = {"name": str(feat[user_field]), "geom": cur_geom.asWkt()}
+                    d_profil[num_br]["lst_pk"][pk] = {
+                        "name": str(feat[user_field]),
+                        "geom": cur_geom.asWkt(),
+                    }
                     d_profil[num_br]["lst_pk"] = dict(sorted(d_profil[num_br]["lst_pk"].items()))
 
 
 def get_db_profiles(mdb):
     d_profil = dict()
-    rows_br = mdb.run_query("SELECT branch, ST_Length(geom), ST_AsText(ST_LineMerge(geom)) "
-                            "FROM {0}.branchs WHERE active IS True ORDER BY branch".format(mdb.SCHEMA), fetch=True)
+    rows_br = mdb.run_query(
+        "SELECT branch, ST_Length(geom), ST_AsText(ST_LineMerge(geom)) "
+        "FROM {schema}.branchs WHERE active IS True ORDER BY branch",
+        fetch=True,
+        schema=True,
+    )
 
-    total_len = 0.
+    total_len = 0.0
     for row_br in rows_br:
-        d_tmp = {"geom": row_br[2], "length": row_br[1], "pk_start": total_len,
-                 "lst_pk": dict(), "pk_min": float(), "pk_max": float()}
+        d_tmp = {
+            "geom": row_br[2],
+            "length": row_br[1],
+            "pk_start": total_len,
+            "lst_pk": dict(),
+            "pk_min": float(),
+            "pk_max": float(),
+        }
 
-        rows_pr = mdb.run_query("SELECT abscissa, name, ST_AsText(geom) FROM {0}.profiles "
-                                "WHERE branchnum = {1} AND active IS True "
-                                "ORDER BY abscissa".format(mdb.SCHEMA, row_br[0]), fetch=True)
+        rows_pr = mdb.run_query(
+            "SELECT abscissa, name, ST_AsText(geom) FROM {schema}.profiles "
+            "WHERE branchnum = %s AND active IS True "
+            "ORDER BY abscissa",
+            fetch=True,
+            params=(row_br[0],),
+            schema=True,
+        )
         for row_pr in rows_pr:
             d_tmp["lst_pk"][row_pr[0]] = {"name": row_pr[1], "geom": row_pr[2]}
 
@@ -483,9 +527,13 @@ def get_db_profiles(mdb):
 def get_db_basins(mdb):
     d_basin = dict()
 
-    rows = mdb.run_query("SELECT basinnum, name, ST_AsText(geom) FROM {0}.basins "
-                         "WHERE active IS True "
-                         "ORDER BY basinnum".format(mdb.SCHEMA), fetch=True)
+    rows = mdb.run_query(
+        "SELECT basinnum, name, ST_AsText(geom) FROM {schema}.basins "
+        "WHERE active IS True "
+        "ORDER BY basinnum",
+        fetch=True,
+        schema=True,
+    )
     for row in rows:
         d_basin[row[0]] = {"name": row[1], "geom": row[2]}
 
@@ -495,42 +543,55 @@ def get_db_basins(mdb):
 def get_results(mdb, res_profile, res_basin, scen, param, time):
     d_obj = dict()
     if res_profile:
-        d_obj["profil"] = {"var_txt": D_PARAM[param]["var_profil"],
-                           "typ_var": "opt",
-                           "var_id": None,
-                           "res": dict()}
+        d_obj["profil"] = {
+            "var_txt": D_PARAM[param]["var_profil"],
+            "typ_var": "opt",
+            "var_id": None,
+            "res": dict(),
+        }
 
     if res_basin:
-        d_obj["basin"] = {"var_txt": D_PARAM[param]["var_basin"],
-                          "typ_var": "basin",
-                          "var_id": None,
-                          "res": dict()}
+        d_obj["basin"] = {
+            "var_txt": D_PARAM[param]["var_basin"],
+            "typ_var": "basin",
+            "var_id": None,
+            "res": dict(),
+        }
 
     for typ_obj, prm_obj in d_obj.items():
         var_id = get_var_id(mdb, prm_obj["typ_var"], prm_obj["var_txt"])
         if var_id is not None:
             prm_obj["var_id"] = var_id
-
-            if time in ["min", "max"]:
-                sql = "SELECT pknum, {0}(val) FROM {1}.results " \
-                      "WHERE id_runs = {2} AND var = {3} " \
-                      "GROUP BY pknum ORDER BY pknum" \
-                      "".format(time, mdb.SCHEMA, scen, var_id)
+            if time == "min":
+                params = (scen, var_id)
+                sql = (
+                    "SELECT pknum, MIN(val) FROM {schema}.results WHERE "
+                    "id_runs = %s AND var = %s GROUP BY pknum ORDER BY pknum"
+                )
+            elif time == "max":
+                params = (scen, var_id)
+                sql = (
+                    "SELECT pknum, MAX(val) FROM {schema}.results WHERE "
+                    "id_runs = %s AND var = %s GROUP BY pknum ORDER BY pknum"
+                )
             else:
-                sql = "SELECT pknum, val FROM {0}.results " \
-                      "WHERE time = {1} AND id_runs = {2} AND var = {3} " \
-                      "ORDER BY pknum" \
-                      "".format(mdb.SCHEMA, time, scen, var_id)
-
-            rows = mdb.run_query(sql, fetch=True)
+                params = (time, scen, var_id)
+                sql = (
+                    "SELECT pknum, val FROM {schema}.results WHERE "
+                    "time = %s AND id_runs = %s AND var = %s ORDER BY pknum"
+                )
+            rows = mdb.run_query(sql, fetch=True, params=params, schema=True)
             prm_obj["res"] = {r[0]: r[1] for r in rows}
 
     return d_obj
 
 
 def get_var_id(mdb, typ_var, var_txt):
-    sql = "SELECT id FROM {0}.results_var WHERE type_res = '{1}' AND var = '{2}'" \
-          "".format(mdb.SCHEMA, typ_var, var_txt)
-    info = mdb.run_query(sql, fetch=True)
+    info = mdb.run_query(
+        "SELECT id FROM {schema}.results_var WHERE type_res = %s AND var = %s",
+        fetch=True,
+        params=(typ_var, var_txt),
+        schema=True,
+    )
     if info:
         return info[0][0]

@@ -16,12 +16,12 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from shapely.geometry import *
+from shapely.geometry import LineString, Polygon
 
 
 # import time
@@ -67,7 +67,8 @@ class ClassProfInterp:
 
     def merge_prof(self, key="prof", id=-1):
         """
-        :param key : 'prof' interpolated profile, 'pr_am' upstream profile amont, 'pr_av' downstream profile
+        :param key : 'prof' interpolated profile, 'pr_am' upstream profile amont,
+            'pr_av' downstream profile
         :param id :  profil number (minor, major ,...) ,-1 global
         """
         dico = {}
@@ -276,11 +277,11 @@ class ClassProfInterp:
         df_g = pd.DataFrame(list_points_g, columns=["x", "z"])
         df_d = pd.DataFrame(list_points_d, columns=["x", "z"])
         prof_final = (
-                [(x_g, z_g)]
-                + df_g.sort_values(["x"]).values.tolist()
-                + [(x_f, z_f)]
-                + df_d.sort_values(["x"]).values.tolist()
-                + [(x_d, z_d)]
+            [(x_g, z_g)]
+            + df_g.sort_values(["x"]).values.tolist()
+            + [(x_f, z_f)]
+            + df_d.sort_values(["x"]).values.tolist()
+            + [(x_d, z_d)]
         )
         limx = [x_g, x_d]
         prof_final = LineString(prof_final)
@@ -309,7 +310,7 @@ class ClassProfInterp:
         if id_d == -1:
             limit_pr = pr[id_g:]
         else:
-            limit_pr = pr[id_g: id_d + 1]
+            limit_pr = pr[id_g : id_d + 1]
 
         wow = []
         pzmax = pr[id_g, 1]
@@ -337,11 +338,11 @@ class ClassProfInterp:
         if pasz == 0:
             return lst_line_disc
 
-        while z_level + pasz <= zmax and pasz != 0.:
+        while z_level + pasz <= zmax and pasz != 0.0:
             # line creation for cut
             z_level = z_level + pasz
             line = [(pr[id_g, 0] - 1, z_level), (pr[id_d, 0] + 1, z_level)]
-            point_fond = Point([x_fond, z_level])
+            # point_fond = Point([x_fond, z_level])
             line = LineString(line)
             geom = line.intersection(poly)
             if geom.is_empty:

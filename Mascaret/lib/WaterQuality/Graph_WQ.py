@@ -41,10 +41,12 @@ class GraphWaterQ(GraphCommon):
         self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, mod
+        rows = self.mdb.run_query(
+            "SELECT id, sigle FROM {schema}.tracer_name WHERE type = %s ORDER BY id",
+            fetch=True,
+            params=[mod],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
 
         self.list_trac = []
         for row in rows:
@@ -62,11 +64,15 @@ class GraphWaterQ(GraphCommon):
             lst = [[], []]
             if config is not None:
                 sql = (
-                    "SELECT time, value FROM {0}.laws_wq "
-                    "WHERE id_config = {1} and id_trac = {2}"
-                    " ORDER BY time".format(self.mdb.SCHEMA, config, trac["id"])
+                    "SELECT time, value FROM {schema}.laws_wq "
+                    "WHERE id_config = %s AND id_trac = %s ORDER BY time"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(
+                    sql,
+                    fetch=True,
+                    params=[config, trac["id"]],
+                    schema=True,
+                )
                 if len(rows) > 0:
                     lst = list(zip(*rows))
 
@@ -109,11 +115,15 @@ class GraphMeteo(GraphCommon):
             lst = [[], []]
             if config is not None:
                 sql = (
-                    "SELECT time, value FROM {0}.laws_meteo "
-                    "WHERE id_config = {1} and id_var = {2} "
-                    "ORDER BY time".format(self.mdb.SCHEMA, config, var["id"])
+                    "SELECT time, value FROM {schema}.laws_meteo "
+                    "WHERE id_config = %s AND id_var = %s ORDER BY time"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(
+                    sql,
+                    fetch=True,
+                    params=[config, var["id"]],
+                    schema=True,
+                )
                 if len(rows) > 0:
                     lst = list(zip(*rows))
 
@@ -141,10 +151,12 @@ class GraphInitConc(GraphCommon):
         self.fig.canvas.mpl_connect("pick_event", self.onpick)
 
     def init_mdl(self, mod):
-        sql = "SELECT id, sigle FROM {0}.tracer_name WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, mod
+        rows = self.mdb.run_query(
+            "SELECT id, sigle FROM {schema}.tracer_name WHERE type = %s ORDER BY id",
+            fetch=True,
+            params=[mod],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
 
         self.axes.cla()
         self.axes.tick_params(axis="both", labelsize=7.0)
@@ -166,12 +178,15 @@ class GraphInitConc(GraphCommon):
             lst = [[], []]
             if config is not None:
                 sql = (
-                    "SELECT abscissa, value FROM {0}.init_conc_wq "
-                    "WHERE id_config = {1} and bief = {2} and id_trac = {3} ORDER BY abscissa".format(
-                        self.mdb.SCHEMA, config, bief, trac["id"]
-                    )
+                    "SELECT abscissa, value FROM {schema}.init_conc_wq "
+                    "WHERE id_config = %s AND bief = %s AND id_trac = %s ORDER BY abscissa"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(
+                    sql,
+                    fetch=True,
+                    params=[config, bief, trac["id"]],
+                    schema=True,
+                )
                 if len(rows) > 0:
                     lst = list(zip(*rows))
 

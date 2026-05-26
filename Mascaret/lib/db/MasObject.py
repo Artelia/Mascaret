@@ -61,12 +61,6 @@ class MasObject(object):
                     schema_name, ",\n\t".join(attrs)
                 )
             )
-        # if self.spatial_index is True:
-        #     qry += 'SELECT "{0}".create_spatial_index(\'{0}\', \'{1}\');'.format(self.schema, self.name)
-        # else:
-        #     pass
-        # qry += 'ALTER TABLE {0}.{1}\n\tOWNER TO {2};\n'.format(self.schema, self.name, self.user)
-
         return qry
 
     def pg_geom_attri(self):
@@ -543,8 +537,8 @@ class links(MasObject):
             ("branchnum", "integer"),
             ("abscissa", "float"),
             ("active", "boolean NOT NULL DEFAULT TRUE"),
-            ('method_mob', 'text'),
-            ('active_mob', 'boolean NOT NULL DEFAULT FALSE'),
+            ("method_mob", "text"),
+            ("active_mob", "boolean NOT NULL DEFAULT FALSE"),
             ("CONSTRAINT links_pkey", "PRIMARY KEY (gid)"),
             ("CONSTRAINT link_name_unique", "UNIQUE (name)"),
             ("CONSTRAINT link_num_unique", "UNIQUE (linknum)"),
@@ -818,28 +812,25 @@ class class_fct_psql(MasObject):
     def pg_clone_schema(self, local=None):
         """
         clone schema in psql
-        example : SELECT clone_schema('ouvrage3','ouvrage3_ext','runs,results,results_sect,runs_graph');
+        example : SELECT clone_schema('ouvrage3','ouvrage3_ext','runs,results,
+        results_sect,runs_graph');
         """
         qry = """
 -- Function: clone_schema(source text, dest text, include_records boolean default true, show_details boolean default false)
-
 -- DROP FUNCTION clone_schema(text, text,text, boolean, boolean);
-
 CREATE OR REPLACE FUNCTION clone_schema(
   source_schema text,
   dest_schema text,
-	list_tab text ,
+    list_tab text ,
   include_recs boolean DEFAULT true,
   show_details boolean DEFAULT false)
   RETURNS void AS
 $BODY$
-
 --  This function will clone all sequences, tables, data, views & functions from any existing schema to a new one
 -- SAMPLE CALL:
 -- SELECT clone_schema('public', 'new_schema', 'list_tab_ignor');
 -- SELECT clone_schema('public', 'new_schema', 'list_tab_ignor', TRUE);
 -- SELECT clone_schema('public', 'new_schema', 'list_tab_ignor', TRUE, TRUE);
-
 DECLARE
   src_oid          oid;
   tbl_oid          oid;
@@ -867,9 +858,7 @@ DECLARE
   rec              record;
   source_schema_dot text = source_schema || '.';
   dest_schema_dot text = dest_schema || '.';
-
 BEGIN
-
   -- Check that source_schema exists
   SELECT oid INTO src_oid
   FROM pg_namespace
@@ -879,7 +868,6 @@ BEGIN
     RAISE NOTICE 'source schema % does not exist!', source_schema;
     RETURN ;
   END IF;
-
   -- Check that dest_schema does not yet exist
   PERFORM nspname
   FROM pg_namespace
@@ -889,12 +877,9 @@ BEGIN
     RAISE NOTICE 'dest schema % already exists!', dest_schema;
     RETURN ;
   END IF;
-
   EXECUTE 'CREATE SCHEMA ' || quote_ident(dest_schema) ;
-
   -- Defaults search_path to destination schema
   PERFORM set_config('search_path', dest_schema, true);
-
   -- Create sequences
   -- TODO: Find a way to make this sequence's owner is the correct table.
   FOR object IN
@@ -904,12 +889,10 @@ BEGIN
   LOOP
     EXECUTE 'CREATE SEQUENCE ' || quote_ident(dest_schema) || '.' || quote_ident(object);
     srctbl := quote_ident(source_schema) || '.' || quote_ident(object);
-
     EXECUTE 'SELECT last_value ,log_cnt, is_called
               FROM ' || quote_ident(source_schema) || '.' || quote_ident(object) || ';'
               INTO sq_last_value, sq_log_cnt, sq_is_called ;
-	sq_start_value =  1;
-
+    sq_start_value =  1;
     buffer := quote_ident(dest_schema) || '.' || quote_ident(object);
     IF include_recs
     THEN
@@ -919,25 +902,21 @@ BEGIN
     END IF;
     IF show_details THEN RAISE NOTICE 'Sequence created: %', object; END IF;
   END LOOP;
-
   -- Create tables
   FOR object IN
   SELECT TABLE_NAME::text
   FROM information_schema.tables
   WHERE table_schema = quote_ident(source_schema)
         AND table_type = 'BASE TABLE'
-
   LOOP
     buffer := dest_schema || '.' || quote_ident(object);
     EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || quote_ident(source_schema) || '.' || quote_ident(object)
             || ' INCLUDING ALL)';
-
     IF include_recs AND not (object IN (SELECT regexp_split_to_table(list_tab,'[,]')))
     THEN
       -- Insert records from source table
       EXECUTE 'INSERT INTO ' || buffer || ' SELECT * FROM ' || quote_ident(source_schema) || '.' || quote_ident(object) || ';';
     END IF;
-
     FOR column_, default_ IN
     SELECT column_name::text,
       REPLACE(column_default::text, source_schema, dest_schema)
@@ -948,11 +927,8 @@ BEGIN
     LOOP
       EXECUTE 'ALTER TABLE ' || buffer || ' ALTER COLUMN ' || column_ || ' SET DEFAULT ' || default_;
     END LOOP;
-
     IF show_details THEN RAISE NOTICE 'base table created: %', object; END IF;
-
   END LOOP;
-
   --  add FK constraint
   FOR xrec IN
   SELECT ct.conname as fk_name, rn.relname as tb_name,  'ALTER TABLE ' || quote_ident(dest_schema) || '.' || quote_ident(rn.relname)
@@ -962,33 +938,29 @@ BEGIN
   WHERE connamespace = src_oid
         AND rn.relkind = 'r'
         AND ct.contype = 'f'
-
   LOOP
     IF show_details THEN RAISE NOTICE 'Creating FK constraint %.%...', xrec.tb_name, xrec.fk_name; END IF;
     --RAISE NOTICE 'DEF: %', xrec.qry;
     EXECUTE xrec.qry;
   END LOOP;
-
   -- Create functions
   FOR xrec IN
   SELECT proname as func_name, oid as func_oid
   FROM pg_proc
   WHERE pronamespace = src_oid
-
   LOOP
     IF show_details THEN RAISE NOTICE 'Creating function %...', xrec.func_name; END IF;
     SELECT pg_get_functiondef(xrec.func_oid) INTO qry;
     SELECT replace(qry, source_schema_dot, dest_schema_dot) INTO dest_qry;
     EXECUTE dest_qry;
   END LOOP;
-
   -- add Table Triggers
   FOR rec IN
   SELECT
     trg.tgname AS trigger_name,
     tbl.relname AS trigger_table,
 (SELECT column_name FROM information_schema.columns 
-	WHERE ordinal_position=trg.tgattr[0] AND table_name=tbl.relname AND table_schema=source_schema) as trigger_attrib,
+    WHERE ordinal_position=trg.tgattr[0] AND table_name=tbl.relname AND table_schema=source_schema) as trigger_attrib,
     CASE
     WHEN trg.tgenabled='O' THEN 'ENABLED'
     ELSE 'DISABLED'
@@ -1016,14 +988,12 @@ BEGIN
     || '.' || proname || '('
     || regexp_replace(replace(trim(trailing '0' from encode(tgargs,'escape')), '0',','),'{(.+)}','''{}''','g')
     || ')' as action_statement
-
   FROM pg_trigger trg
     JOIN pg_class tbl on trg.tgrelid = tbl.oid
     JOIN pg_proc pc ON pc.oid = trg.tgfoid
   WHERE trg.tgname not like 'RI_ConstraintTrigger%'
         AND trg.tgname not like 'pg_sync_pg%'
         AND tbl.relnamespace = (SELECT oid FROM pg_namespace where nspname = quote_ident(source_schema) )
-
   LOOP
     buffer := dest_schema || '.' || quote_ident(rec.trigger_table);
     IF show_details THEN RAISE NOTICE 'Creating trigger % % % ON %...', rec.trigger_name, rec.action_timing, rec.trigger_event, rec.trigger_table; END IF;
@@ -1035,14 +1005,12 @@ BEGIN
             || rec.trigger_level || ' ' || replace(rec.action_statement, source_schema_dot, dest_schema_dot);
     END IF;
   END LOOP;
-
   -- Create views
   FOR object IN
   SELECT table_name::text,
     view_definition
   FROM information_schema.views
   WHERE table_schema = quote_ident(source_schema)
-
   LOOP
     buffer := dest_schema || '.' || quote_ident(object);
     SELECT replace(view_definition, source_schema_dot, dest_schema_dot) INTO v_def
@@ -1051,43 +1019,13 @@ BEGIN
           AND table_name = quote_ident(object);
     IF show_details THEN RAISE NOTICE 'Creating view % AS %', object, regexp_replace(v_def, '[\n\r]+', ' ', 'g'); END IF;
     EXECUTE 'CREATE OR REPLACE VIEW ' || buffer || ' AS ' || v_def || ';' ;
-
   END LOOP;
-
   RETURN;
-
 END;
-
 $BODY$
 LANGUAGE plpgsql VOLATILE
 COST 100;
 """
-        #         qry = """
-        # CREATE OR REPLACE FUNCTION public.clone_schema(source_schema text, dest_schema text, list_tab text ) RETURNS void AS
-        # $BODY$
-        # DECLARE
-        #   objeto text;
-        #   buffer text;
-        # BEGIN
-        #     EXECUTE 'CREATE SCHEMA ' || dest_schema ;
-        #
-        #     FOR objeto IN
-        #         SELECT table_name::text FROM information_schema.tables WHERE table_schema = source_schema
-        #     LOOP
-        #         buffer := dest_schema || '.' || objeto;
-        #
-        #         EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || objeto || ' INCLUDING CONSTRAINTS INCLUDING INDEXES INCLUDING DEFAULTS)';
-        # 		IF not (objeto IN (SELECT regexp_split_to_table(list_tab,'[,]'))) THEN
-        # 			EXECUTE 'INSERT INTO ' || buffer || '(SELECT * FROM ' || source_schema || '.' || objeto ||  ')';
-        # 		ELSE
-        # 			RAISE NOTICE '%', objeto;
-        # 		END IF;
-        # 	END LOOP;
-        #
-        # END;
-        # $BODY$
-        # LANGUAGE plpgsql VOLATILE;
-        # """
         return qry
 
     def pg_create_calcul_abscisse(self, local="public"):
@@ -1095,51 +1033,39 @@ COST 100;
             RETURNS trigger AS  
             $BODY$ 
             DECLARE  
-                long1	double precision; 
-                long2	double precision;  
-                g	public.geometry; 
-                b	integer; 
-                z	integer; 
-                d	double precision; 
-                f	double precision;
-                val	boolean;           
-             
+                long1    double precision; 
+                long2    double precision;  
+                g    public.geometry; 
+                b    integer; 
+                z    integer; 
+                d    double precision; 
+                f    double precision;
+                val    boolean;                        
                 BEGIN 
                 IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
                     EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
                     NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
                 ELSE
                     EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
-
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                         NEW.branchnum= b ;
-                    END IF;
-
-                        
+                    END IF;        
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                        EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING b INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
                        long2 = (SELECT (ST_Length(g)*f));
-                        
                        IF long1 IS NULL THEN
                            long1 = 0;
                        END IF;
-                        
                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
-
                     END IF;
-
-                    
-                END IF;                   
-                        
+                END IF;                         
                 RETURN NEW;
             END; 
-             
             $BODY$ 
               LANGUAGE plpgsql IMMUTABLE 
               COST 100; """
-
         return qry.format(local)
 
     def pg_create_calcul_abscisse_outputs(self, local="public"):
@@ -1149,52 +1075,43 @@ COST 100;
     COST 100
     IMMUTABLE NOT LEAKPROOF
     AS $BODY$
- 
             DECLARE  
-                long1	double precision; 
-                long2	double precision;  
-				pk	double precision;  
-                g	public.geometry; 
-                b	integer; 
-                z	integer; 
-                d	double precision; 
-                f	double precision;
-                val	boolean;           
-             
+                long1    double precision; 
+                long2    double precision;  
+                pk    double precision;  
+                g    public.geometry; 
+                b    integer; 
+                z    integer; 
+                d    double precision; 
+                f    double precision;
+                val    boolean; 
                 BEGIN 
-				
-				IF NEW.geom IS NULL  AND NEW.name IS NOT NULL  AND (NEW.abscissa IS NULL OR NEW.branchnum IS NULL) THEN
-					EXECUTE ' SELECT abscissa, branchnum FROM  ' || TG_TABLE_SCHEMA || '.profiles WHERE name =  $1 ' USING NEW.name INTO pk, b;
-					IF pk IS NOT NULL THEN
-						NEW.abscissa = ROUND(pk::numeric,2);
-						NEW.branchnum= b ;
-					END IF;
-				END IF;
-				
+                IF NEW.geom IS NULL  AND NEW.name IS NOT NULL  AND (NEW.abscissa IS NULL OR NEW.branchnum IS NULL) THEN
+                    EXECUTE ' SELECT abscissa, branchnum FROM  ' || TG_TABLE_SCHEMA || '.profiles WHERE name =  $1 ' USING NEW.name INTO pk, b;
+                    IF pk IS NOT NULL THEN
+                        NEW.abscissa = ROUND(pk::numeric,2);
+                        NEW.branchnum= b ;
+                    END IF;
+                END IF;
                 IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
                     EXECUTE '(SELECT ST_UNION(geom) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch=$1))' USING NEW.branchnum INTO g;
                     NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
                 ELSE
                     EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
-
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                         NEW.branchnum= b ;
                     END IF;
-                        
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                        EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch<$1))' USING b INTO long1;
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        NEW.geom = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
-                       long2 = (SELECT (ST_Length(g)*f));
-                        
+                       long2 = (SELECT (ST_Length(g)*f));                        
                        IF long1 IS NULL THEN
                            long1 = 0;
                        END IF;                        
                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
                     END IF;
-                    
                 END IF;                   
-                        
                 RETURN NEW;
             END;      
 $BODY$; """
@@ -1206,38 +1123,29 @@ $BODY$; """
                   RETURNS trigger AS
                 $BODY$
                 DECLARE
-                    long1	double precision;
-                    long2	double precision;
-                    g	public.geometry;
-                    p	public.geometry;
-                    b	integer;
-                    z	integer;
-                    d	double precision;
+                    long1    double precision;
+                    long2    double precision;
+                    g    public.geometry;
+                    p    public.geometry;
+                    b    integer;
+                    z    integer;
+                    d    double precision;
                     BEGIN
-                    
                     EXECUTE 'SELECT branch,  geom, ST_Distance(geom,$1) FROM ' || TG_TABLE_SCHEMA ||'.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d;
-
                     IF TG_OP='INSERT' OR NEW.branchnum IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                     NEW.branchnum=b;
                     END IF;
-
-                    
                     IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
                         EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA ||'.branchs WHERE (branch<$1)' USING b INTO long1;
                         p = (SELECT (ST_DUMP(ST_Intersection(NEW.geom, g))).geom LIMIT 1);
-                        long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));
-                        
+                        long2 = (SELECT (ST_Length(g)*ST_LineLocatePoint(ST_LineMerge(g),p)));                        
                         IF long1 IS NULL THEN
                             long1 = 0;
                         END IF;
-                        
                         NEW.abscissa = ROUND((long1+long2)::numeric,2);
-
-                    END IF;
-                        
+                    END IF;                        
                         RETURN NEW;
                     END;
-
                 $BODY$
                   LANGUAGE plpgsql IMMUTABLE
                   COST 100;"""
@@ -1251,8 +1159,8 @@ $BODY$; """
               RETURNS trigger AS
             $BODY$
             DECLARE
-                long1	float;
-                long2	float;
+                long1    float;
+                long2    float;
             BEGIN
                 EXECUTE 'SELECT ST_Length(ST_UNION(geom)) FROM ' || TG_TABLE_SCHEMA || '.branchs_old WHERE (branch<$1) OR (branch=$1 AND zonenum<$2)' USING NEW.branch,NEW.zonenum INTO long1;
                 long2 = (SELECT ST_Length(NEW.geom));
@@ -1320,25 +1228,25 @@ $$ LANGUAGE plpgsql;"""
         LANGUAGE 'plpgsql'
     AS $BODY$
          DECLARE
-            long2	double precision;
-            long1	double precision;
-            g	public.geometry;
-            p	public.geometry;
-            b	integer;
-            d	double precision;
+            long2    double precision;
+            long1    double precision;
+            g    public.geometry;
+            p    public.geometry;
+            b    integer;
+            d    double precision;
             geom_p public.geometry;
          BEGIN
-		    EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
-			EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
-			EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1))' USING b INTO long1;
-			p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
-			long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
-			branch := b;
+            EXECUTE 'SELECT geom FROM  ' || _tbl || ' WHERE gid = $1' USING id_prof INTO geom_p;
+            EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || _tbl_branchs || ' ORDER BY 3 LIMIT 1' USING geom_p INTO b,g,d  ;
+            EXECUTE '(SELECT ST_Length(ST_UNION(geom)) FROM ' || _tbl_branchs || ' WHERE (branch<$1))' USING b INTO long1;
+            p = (SELECT (ST_DUMP(ST_Intersection(geom_p, g))).geom LIMIT 1);
+            long2 = (SELECT ST_Length(g)* ST_LineLocatePoint(ST_LineMerge(g),p));
+            branch := b;
             IF long1 IS NULL THEN
                long1 = 0;
             END IF;
 
-		    abscissa:= ROUND((long1+long2)::numeric,2);
+            abscissa:= ROUND((long1+long2)::numeric,2);
 
             RETURN NEXT;
          END;
@@ -1377,15 +1285,14 @@ $BODY$;"""
     CREATE OR REPLACE FUNCTION {0}.abscisse_point(_tbl regclass, _tbl_branchs regclass, id_point integer)
     RETURNS TABLE(abscissa double precision, branch integer)
     LANGUAGE 'plpgsql'
-AS $BODY$
- 
+AS $BODY$ 
      DECLARE   
-        long2	double precision;  
-        long1	double precision;  
-        g	public.geometry; 
-        b	integer; 
-        d	double precision; 
-        f	double precision;         
+        long2    double precision;  
+        long1    double precision;  
+        g    public.geometry; 
+        b    integer; 
+        d    double precision; 
+        f    double precision;         
         geom_p  public.geometry;    
 
      BEGIN
@@ -1437,15 +1344,14 @@ $BODY$;"""
         """
         qry = """
 CREATE OR REPLACE FUNCTION {0}.abscisse_branch(
-	_tbl_branchs regclass,
-	id_branch integer)
+    _tbl_branchs regclass,
+    id_branch integer)
     RETURNS TABLE (zoneabsstart float, zoneabsend float)
     LANGUAGE 'plpgsql'
 AS $BODY$
-
     DECLARE
-        long1	float;
-        long2	float;
+        long1    float;
+        long2    float;
         geom_b  public.geometry;
         branch integer;
         zonenum integer;
@@ -1458,9 +1364,8 @@ AS $BODY$
         END IF;
         zoneabsstart := ROUND(long1::numeric,1);
         zoneabsend := ROUND((long1+long2)::numeric,1);
-      	RETURN NEXT ;
+          RETURN NEXT ;
     END;
-
 $BODY$;"""
         return qry.format(local)
 
@@ -1472,11 +1377,10 @@ $BODY$;"""
         """
         qry = """
 CREATE OR REPLACE FUNCTION {0}.update_abscisse_branch(
-	_tbl_branchs regclass)
+    _tbl_branchs regclass)
     RETURNS void
     LANGUAGE 'plpgsql'
 AS $BODY$
-
      DECLARE
         my_row  integer;
         abs1 float;
@@ -1490,7 +1394,6 @@ AS $BODY$
         END LOOP;
         RETURN  ;
      END;
-
 $BODY$;"""
         return qry.format(local)
 
@@ -1500,24 +1403,19 @@ $BODY$;"""
         :return:
         """
         qry = """
-        
         CREATE OR REPLACE FUNCTION {0}.delete_point_flood()
             RETURNS trigger
             LANGUAGE 'plpgsql'
             COST 100.0
-        
         AS $BODY$
          DECLARE 
          test boolean;
          BEGIN 
-        
-          EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING OLD.gid into test ;     			
+          EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING OLD.gid into test ;                 
           IF (test) THEN
             EXECUTE 'DELETE FROM ' || TG_TABLE_SCHEMA || '.visu_flood_marks WHERE id_marks = $1' USING OLD.gid;
           END IF;
           RETURN NEW;
-        
-        
          END
         $BODY$;
         """
@@ -1531,41 +1429,32 @@ CREATE OR REPLACE FUNCTION {0}.calcul_abscisse_point_flood()
     COST 100.0
     VOLATILE NOT LEAKPROOF 
 AS $BODY$
-
- 
             DECLARE  
-                long2	double precision;  
-                long1	double precision; 
-                g	public.geometry; 
-                b	integer; 
-                d	double precision; 
-                f	double precision;
-                test	boolean;       
+                long2    double precision;  
+                long1    double precision; 
+                g    public.geometry; 
+                b    integer; 
+                d    double precision; 
+                f    double precision;
+                test    boolean;       
                 val  double precision;
                 abs_tmp  double precision;
                 new_line  public.geometry;
                 geom_final_p public.geometry;
                 srid integer;
-                
-             
                 BEGIN 
-              
-                IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN
-         
+                IF NEW.geom IS NULL AND NEW.abscissa IS NOT NULL AND NEW.branchnum IS NOT NULL THEN         
                     EXECUTE 'SELECT ST_UNION(geom) FROM  ' || TG_TABLE_SCHEMA || '.branchs WHERE (branch = $1)' USING NEW.branchnum INTO g;
                     geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),NEW.abscissa/ST_Length(g)));
                     NEW.geom = geom_final_p;
-                    SELECT ST_SRID(g) INTO srid;                     
-                                       
-					EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
-                    EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;
-          			
-  				    IF (test) THEN
-                   		EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid;
+                    SELECT ST_SRID(g) INTO srid;                                                            
+                    EXECUTE 'SELECT ST_AsText( ST_MakeLine($1, $2))' USING geom_final_p,NEW.geom INTO new_line;
+                    EXECUTE 'SELECT EXISTS(SELECT 1 from ' || TG_TABLE_SCHEMA || '.visu_flood_marks where  id_marks =$1 )' USING NEW.gid into test ;                      
+                      IF (test) THEN
+                           EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid;
                     ELSE
-                    	EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
-        			END IF;
-                   	
+                        EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
+                    END IF;                       
                 ELSE
                     EXECUTE 'SELECT branch,  geom, ST_Distance(geom, $1) FROM ' || TG_TABLE_SCHEMA || '.branchs ORDER BY 3 LIMIT 1' USING NEW.geom INTO b,g,d  ;
                     NEW.branchnum= b ;
@@ -1573,8 +1462,7 @@ AS $BODY$
                     IF long1 IS NULL THEN
                             long1 = 0;
                     END IF;
-                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN
-                     	
+                    IF TG_OP='INSERT' OR NEW.abscissa IS NULL OR NOT ST_Equals(NEW.geom,OLD.geom) THEN                         
                         /* projection compute*/
                        f = (SELECT ST_LineLocatePoint(ST_LineMerge(g),NEW.geom));
                        geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),f));
@@ -1587,13 +1475,9 @@ AS $BODY$
                        IF  test THEN
                            EXECUTE 'UPDATE  ' || TG_TABLE_SCHEMA || '.visu_flood_marks  SET geom=ST_SetSRID($1,$2) WHERE id_marks = $3' USING new_line, srid,NEW.gid ;
                        ELSE
-                    	   EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
-        			   END IF;
-        			   
-        			   
-                      
-                       long2 = (SELECT (ST_Length(g)*f));
-                            
+                           EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
+                       END IF;
+                       long2 = (SELECT (ST_Length(g)*f));                            
                        NEW.abscissa = ROUND((long1+long2)::numeric,2);
                     ELSE                         
                         IF NOT  OLD.abscissa=  NEW.abscissa THEN
@@ -1602,8 +1486,8 @@ AS $BODY$
                             /* check if new abscissa is in branch*/
                             val = (abs_tmp)/ST_Length(g);
                             IF val>1 OR  val<0 THEN
-                            	RAISE NOTICE 'Branch : %',b;
-                            	RAISE NOTICE 'The new relative abscissa (%) is not between % and % ;', abs_tmp, 0, ST_Length(g);
+                                RAISE NOTICE 'Branch : %',b;
+                                RAISE NOTICE 'The new relative abscissa (%) is not between % and % ;', abs_tmp, 0, ST_Length(g);
                             END IF ;    
 
                             geom_final_p = (SELECT ST_LineInterpolatePoint(ST_LineMerge(g),val));                            
@@ -1615,16 +1499,11 @@ AS $BODY$
                             ELSE
                                 EXECUTE 'INSERT INTO ' || TG_TABLE_SCHEMA || '.visu_flood_marks (geom,gid, id_marks) VALUES( ST_SetSRID($1,$2),DEFAULT,$3)' USING new_line, srid,NEW.gid ;
                             END IF;
-                        END IF;
-                        
+                        END IF;           
                     END IF;
-
-                END IF;                  
-                        
+                END IF;                                          
                RETURN NEW;
-
-            END;   
-        
+            END;           
 $BODY$;
               """
         return qry.format(local)
@@ -1851,7 +1730,6 @@ class struct_config(MasObject):
             ("id_prof_ori", "integer"),
             ("erase_flag", "boolean NOT NULL DEFAULT FALSE"),
             ("comment", "text"),
-
             ("CONSTRAINT cle_struct_conf", "PRIMARY KEY (id)"),
         ]
 
@@ -2137,12 +2015,14 @@ class links_mob_val(MasObject):
         super(links_mob_val, self).__init__()
         self.order = 48
         self.geom_type = None
-        self.attrs = [('id_links', 'integer'),
-                      ('id_order', 'integer'),
-                      ('name_var', 'text'),
-                      ('value', 'text'),
-                      ('CONSTRAINT cle_lins_mob_val',
-                       'PRIMARY KEY (id_links,id_order,name_var)')]
+        self.attrs = [
+            ("id_links", "integer"),
+            ("id_order", "integer"),
+            ("name_var", "text"),
+            ("value", "text"),
+            ("CONSTRAINT cle_lins_mob_val", "PRIMARY KEY (id_links,id_order,name_var)"),
+        ]
+
 
 class assim_config(MasObject):
     def __init__(self):
@@ -2161,6 +2041,8 @@ class assim_config(MasObject):
             ("active", "boolean NOT NULL DEFAULT FALSE"),
             ("CONSTRAINT assim_config_pkey", " PRIMARY KEY (id_type)"),
         ]
+
+
 class assim_ks(MasObject):
     def __init__(self):
         super(assim_ks, self).__init__()
@@ -2186,6 +2068,8 @@ class assim_ks(MasObject):
             ("auto_del", "boolean"),
             ("CONSTRAINT assim_ks_pkey", " PRIMARY KEY (id_zone)"),
         ]
+
+
 class assim_law(MasObject):
     def __init__(self):
         super(assim_law, self).__init__()
@@ -2204,9 +2088,10 @@ class assim_law(MasObject):
             ("active_b", "boolean"),
             ("std_b", "double precision"),
             ("auto_del", "boolean"),
-            ('source_law', "text"),
+            ("source_law", "text"),
             ("CONSTRAINT assim_law_pkey", " PRIMARY KEY (id_law, source_law)"),
         ]
+
 
 class assim_res(MasObject):
     def __init__(self):
@@ -2223,6 +2108,7 @@ class assim_res(MasObject):
             ("CONSTRAINT assim_res_pkey", " PRIMARY KEY (id)"),
         ]
 
+
 class assim_res_ks(MasObject):
     def __init__(self):
         super(assim_res_ks, self).__init__()
@@ -2233,12 +2119,14 @@ class assim_res_ks(MasObject):
             ("id_runs", "integer NOT NULL"),
             ("zone_num", "integer NOT NULL"),
             ("branchnum", "integer NOT NULL"),
-            ("abs_min" , "double precision"),
+            ("abs_min", "double precision"),
             ("abs_max", "double precision"),
             ("ks_min", "double precision"),
             ("ks_maj", "double precision"),
-             ("CONSTRAINT assim_res_ks_pkey", " PRIMARY KEY (id_ctrl)"),
-         ]
+            ("CONSTRAINT assim_res_ks_pkey", " PRIMARY KEY (id_ctrl)"),
+        ]
+
+
 class assim_res_law(MasObject):
     def __init__(self):
         super(assim_res_law, self).__init__()
@@ -2251,8 +2139,9 @@ class assim_res_law(MasObject):
             ("source_law", "text"),
             ("name_file_law", "text"),
             ("name_law", "text"),
-             ("CONSTRAINT assim_res_law_pkey", " PRIMARY KEY (id_ctrl)"),
-         ]
+            ("CONSTRAINT assim_res_law_pkey", " PRIMARY KEY (id_ctrl)"),
+        ]
+
 
 # ****************************************************************************
 # *****************************************
@@ -2443,5 +2332,6 @@ class observations_old(MasObject):
         )
         qry += "\n"
         return qry
+
 
 # *****************************************

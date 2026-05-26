@@ -20,9 +20,8 @@ email                :
 
 # from shapely.wkb import loads
 import numpy as np
-from qgis.PyQt.QtCore import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtCore import QObject
+from qgis.core import QgsRaster
 
 from .ClassUpdateBedDialog import update_all_bed_geometry, refresh_minor_bed_layer
 
@@ -61,8 +60,8 @@ class ClassMNT(QObject):
                 self.mgis.add_info("This problem could come from the projection units.")
 
             else:
-                nom = feature["name"]
-                gid = feature["gid"]
+                # nom = feature["name"]
+                # gid = feature["gid"]
                 feature["xmnt"] = ""
                 feature["zmnt"] = ""
 

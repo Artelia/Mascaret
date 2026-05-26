@@ -32,6 +32,14 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    7.0.3 : Fixed bugs in export-data: correct All Scenarii button behavior
+            Fixed SQL security issues
+            Prevent duplicate schema imports when the schema is already loaded
+            Removed assimilation Edit button and enabled automatic editing
+            Added observation visualization in assimilation parameters
+            Fix GUI structure icons display for hydraulic structures
+            Optimized observations display
+            Fix bug in the hydraulic structures menu
     7.0.2 : Fixed bugs in the Mascaret library (Linux version)
             Fixed issues with window title display and parameter handling (bubble); added assimilation parameter in menu
     7.0.1 : Fixed bugs in hydraulic structure law creation.

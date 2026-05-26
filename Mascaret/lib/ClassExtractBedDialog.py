@@ -19,19 +19,25 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import Qt, qVersion
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QColor, QBrush
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
+from qgis.PyQt.QtWidgets import QButtonGroup, QDialog, QMessageBox
+from qgis.PyQt.uic import loadUi
+from qgis.core import (
+    QgsGeometry,
+    QgsMapLayerProxyModel,
+    QgsPointXY,
+    QgsProject,
+    QgsWkbTypes,
+)
 from qgis.core import NULL as qgis_null
-from qgis.gui import *
-from qgis.utils import *
 from ..ui.custom_control import _qt_is_checked
+
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassExtractBedDialog(QDialog):
     def __init__(self, mgis):
@@ -78,8 +84,8 @@ class ClassExtractBedDialog(QDialog):
         l_child = mas_group.children()
         for child in l_child:
             if (
-                    child.nodeType() == 1
-                    and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
+                child.nodeType() == 1
+                and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
             ):
                 if 'table="{}"."branchs"'.format(self.mdb.SCHEMA) in child.layer().source():
                     b_lay = child.layer()
@@ -89,8 +95,8 @@ class ClassExtractBedDialog(QDialog):
         return b_lay, p_lay
 
     def init_cb_branch(self):
-        sql = "SELECT branch, 'Branch ' || branch FROM {0}.branchs WHERE active IS True"
-        l_branch = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
+        sql = "SELECT branch, 'Branch ' || branch FROM {schema}.branchs WHERE active IS True"
+        l_branch = self.mdb.run_query(sql, fetch=True, schema=True)
         for id_branch, nm_branch in l_branch:
             self.cb_branch.addItem(nm_branch, id_branch)
 
@@ -141,9 +147,9 @@ class ClassExtractBedDialog(QDialog):
         else:
             ok_button = QMessageBox.Ok
             qt_disr = Qt.DisplayRole
-            qt_usr =  Qt.UserRole
+            qt_usr = Qt.UserRole
             qt_itm_ena = Qt.ItemIsEnabled
-            qt_itm_sel =Qt.ItemIsSelectable
+            qt_itm_sel = Qt.ItemIsSelectable
             qt_check = Qt
         if self.lay_bed.crs() != self.lay_profile.crs():
             QMessageBox.critical(
@@ -168,7 +174,6 @@ class ClassExtractBedDialog(QDialog):
         self.itm_val.setFlags(qt_itm_ena)
         self.itm_warn.setFlags(qt_itm_ena)
         self.itm_err.setFlags(qt_itm_ena)
-
 
         for itm in [self.itm_val, self.itm_warn, self.itm_err]:
             mdl.appendRow(itm)
@@ -199,9 +204,11 @@ class ClassExtractBedDialog(QDialog):
         for ft in l_ft:
             if ft["branchnum"] == branch and ft["active"] is True:
                 try:
-                    test = [float(x) for x in str(ft["x"]).strip().split(" ")]
+                    [float(x) for x in str(ft["x"]).strip().split(" ")]
                 except ValueError:
-                    QMessageBox.critical(self, "Error", "There is no points on the profile", ok_button)
+                    QMessageBox.critical(
+                        self, "Error", "There is no points on the profile", ok_button
+                    )
                     return
                 p = Profile(ft)
                 self.d_profiles[ft.id()] = p
@@ -234,12 +241,12 @@ class ClassExtractBedDialog(QDialog):
             profil.validate(typ_bed)
 
         if profil.status == -1:
-                idx = self.itm_err.rowCount()
-                itm = QStandardItem()
-                itm.setData("{} : {}".format(profil.name, profil.mess), qt_disr)
-                itm.setData(profil.id, qt_usr)
-                itm.setFlags(qt_itm_ena | qt_itm_sel)
-                self.itm_err.setChild(idx, itm)
+            idx = self.itm_err.rowCount()
+            itm = QStandardItem()
+            itm.setData("{} : {}".format(profil.name, profil.mess), qt_disr)
+            itm.setData(profil.id, qt_usr)
+            itm.setFlags(qt_itm_ena | qt_itm_sel)
+            self.itm_err.setChild(idx, itm)
         elif profil.status == 1:
             idx = self.itm_warn.rowCount()
             itm = QStandardItem()
@@ -292,10 +299,20 @@ class ClassExtractBedDialog(QDialog):
             elif profil.status == 1 and id_prof in l_prof_to_edit:
                 recs.append([*profil.intersections, id_prof])
 
-        sql = "UPDATE {0}.profiles SET left{1}_g = %s, right{1}_g = %s " "WHERE gid = %s;".format(
-            self.mdb.SCHEMA, D_FLD_BED[self.bg_type.checkedId()]
-        )
-        self.mdb.run_query(sql, many=True, list_many=recs)
+        fld = D_FLD_BED[self.bg_type.checkedId()]
+        if fld == "minbed":
+            sql = (
+                "UPDATE {schema}.profiles "
+                "SET leftminbed_g = %s, rightminbed_g = %s "
+                "WHERE gid = %s"
+            )
+        else:
+            sql = (
+                "UPDATE {schema}.profiles "
+                "SET leftstock_g = %s, rightstock_g = %s "
+                "WHERE gid = %s"
+            )
+        self.mdb.run_query(sql, schema=True, many=True, list_many=recs)
 
         self.lay_profile.reload()
         QMessageBox.information(self, "Information", "Import successful", ok_bt)

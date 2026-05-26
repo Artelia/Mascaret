@@ -24,6 +24,7 @@ scenario/result deletion for Mascaret runs.
 """
 
 import os
+import ast
 from pathlib import Path
 
 from ..assim.ClassAssimDB import ClassAssimDB
@@ -40,7 +41,7 @@ class ClassDictRun:
 
         :param main: Main plugin object exposing paths, DB interface and settings.
         :type main: object
-        :param rep_run: Optional custom run folder path. 
+        :param rep_run: Optional custom run folder path.
         If None, a default under the plugin path is used.
         :type rep_run: str or None
     """
@@ -495,13 +496,13 @@ class ClassDictRun:
         :return: Dictionary of parameters.
         :rtype: dict
         """
-        sql = "SELECT parametre, {0} FROM {1}.{2};"
-        rows = self.mdb.run_query(sql.format(noyau, self.mdb.SCHEMA, "parametres"), fetch=True)
+        sql = "SELECT parametre, {0} FROM {{schema}}.parametres;"
+        rows = self.mdb.run_query(sql.format(noyau), fetch=True, schema=True)
         par = {}
         for param, valeur in rows:
             try:
-                par[param] = eval(valeur.title())
-            except Exception:
+                par[param] = ast.literal_eval(valeur.title())
+            except (ValueError, SyntaxError):
                 par[param] = valeur
         return par
 
@@ -512,13 +513,14 @@ class ClassDictRun:
         :type nom_scen: str
         :param run: Run identifier to check against DB entries.
         :type run: str
-        :return: True if safe to proceed (no existing results or user confirmed deletion), False otherwise.
+        :return: True if safe to proceed (no existing results or user confirmed deletion),
+        False otherwise.
         :rtype: bool
         """
         # Retrieve existing scenarios for this run
 
-        condition = f"run LIKE '{run}'"
-        allscen = self.mdb.select_distinct("scenario", "runs", condition)
+        condition = "run LIKE %s"
+        allscen = self.mdb.select_distinct("scenario", "runs", condition, params=[run])
 
         # If no scenario is found, we can proceed
         if not allscen:
@@ -557,27 +559,32 @@ class ClassDictRun:
         """
         # Retrieve the run ID
         # condition_scenario = f"(scenario LIKE '{nom_scen}' OR scenario LIKE '{nom_scen}_init')"
-        condition_scenario = (
-            f"(scenario LIKE '{nom_scen}' "
-            f"OR  scenario  LIKE '{nom_scen}_init' "
-            f"OR  scenario  LIKE '{nom_scen}_ana_ctrl%') "
-        )
         id_run_query = (
-            f"SELECT id FROM {self.mdb.SCHEMA}.runs "
-            f"WHERE run = '{run}' AND {condition_scenario}"
+            "SELECT id FROM {schema}.runs "
+            "WHERE run = %s AND "
+            "(scenario LIKE %s OR scenario LIKE %s OR scenario LIKE %s)"
         )
-        id_run_result = self.mdb.run_query(id_run_query, fetch=True)
+        id_run_result = self.mdb.run_query(
+            id_run_query,
+            fetch=True,
+            params=[run, nom_scen, f"{nom_scen}_init", f"{nom_scen}_ana_ctrl%"],
+            schema=True,
+        )
 
         # Delete from the runs table
-        condition = f"{condition_scenario} AND run LIKE '{run}'"
-        self.mdb.delete("runs", condition)
+        condition = "run LIKE %s AND " "(scenario LIKE %s OR scenario LIKE %s OR scenario LIKE %s)"
+        self.mdb.delete(
+            "runs",
+            condition,
+            params=[run, nom_scen, f"{nom_scen}_init", f"{nom_scen}_ana_ctrl%"],
+        )
 
         # If no ID is found, stop here
         if not id_run_result:
             return
 
-        id_runs = ",".join([str(id[0]) for id in id_run_result])
-        condition = f"id_runs IN ({id_runs})"
+        id_runs = [id_row[0] for id_row in id_run_result]
+        condition = "id_runs = ANY(%s)"
         # Delete result variables
         self._delete_results_var(id_runs)
         # Delete from main tables
@@ -591,7 +598,7 @@ class ClassDictRun:
             "assim_res_law",
         ]
         for table in del_lst:
-            self.mdb.delete(table, condition)
+            self.mdb.delete(table, condition, params=[id_runs])
 
         # Delete from old tables if they exist
         self._delete_old_results(id_runs)
@@ -603,16 +610,15 @@ class ClassDictRun:
         :type id_run: int
         :return: None
         """
-        var_query = (
-            f"SELECT DISTINCT var FROM {self.mdb.SCHEMA}.results " f"WHERE id_runs in ({id_runs})"
-        )
-        var = self.mdb.run_query(var_query, fetch=True)
+        var_query = "SELECT DISTINCT var FROM {schema}.results WHERE id_runs = ANY(%s)"
+        var = self.mdb.run_query(var_query, fetch=True, params=[id_runs], schema=True)
 
         if var:
-            list_var = [str(v[0]) for v in var]
-            self.mdb.run_query(
-                f"DELETE FROM {self.mdb.SCHEMA}.results_var "
-                f"WHERE id IN ({','.join(list_var)}) AND type_res = 'tracer_TRANSPORT_PUR'"
+            list_var = [v[0] for v in var]
+            self.mdb.delete(
+                "results_var",
+                where="id = ANY(%s) AND type_res = %s",
+                params=[list_var, "tracer_TRANSPORT_PUR"],
             )
 
     def _delete_old_results(self, id_runs):
@@ -625,15 +631,15 @@ class ClassDictRun:
         lst_tab = self.mdb.list_tables()
 
         if "results_val" in lst_tab:
-            condition = (
-                f"idruntpk IN (SELECT DISTINCT id_runs FROM {self.mdb.SCHEMA}.results_idx "
-                f"WHERE id_runs IN ({id_runs}))"
-            )
-            self.mdb.delete("results_val", condition)
+            sql = "SELECT DISTINCT id_runs FROM {schema}.results_idx WHERE id_runs = ANY(%s)"
+            rows_idx = self.mdb.run_query(sql, fetch=True, params=[id_runs], schema=True)
+            ids_idx = [row[0] for row in rows_idx]
+            if ids_idx:
+                self.mdb.delete("results_val", "idruntpk = ANY(%s)", params=[ids_idx])
 
         for table in ["results_idx", "results_old"]:
             if table in lst_tab:
-                self.mdb.delete(table, f"id_runs IN ({id_runs})")
+                self.mdb.delete(table, "id_runs = ANY(%s)", params=[id_runs])
 
     def creat_lscenar(self, data):
         """Create scenario dictionaries for provided input data.

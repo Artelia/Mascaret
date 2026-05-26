@@ -37,43 +37,39 @@ class ClassUpdate4011:
         if not err:
             sorti = False
         if "results_old" not in lst_tab:
-            sql = "ALTER TABLE {0}.results RENAME TO results_old;"
-            sql = sql.format(self.mdb.SCHEMA)
-            err = self.mdb.run_query(sql)
+            sql = "ALTER TABLE {schema}.results RENAME TO results_old;"
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 sorti = False
         info = self.mdb.select_one("results_old")
         if info:
-            sql = "SELECT FROM {0}.results_old"
+            sql = "SELECT FROM {schema}.results_old"
             # creation results_idx
             sql = (
-                'INSERT INTO {0}.results_idx(id_runs, "time", pknum) '
-                'SELECT DISTINCT id_runs,  "time", pknum  FROM {0}.results_old;'
+                'INSERT INTO {schema}.results_idx(id_runs, "time", pknum) '
+                'SELECT DISTINCT id_runs,  "time", pknum  FROM {schema}.results_old;'
             )
-            sql = sql.format(self.mdb.SCHEMA)
-            err = self.mdb.run_query(sql)
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 sorti = False
             sql = (
-                "INSERT INTO {0}.results_val(idruntpk, var, val) "
-                "SELECT idruntpk, var, val   FROM {0}.results_idx "
-                "Inner join  {0}.results_old "
-                "on {0}.results_old.id_runs = {0}.results_idx.id_runs "
-                "AND {0}.results_old.time = {0}.results_idx.time "
-                "AND {0}.results_old.pknum = {0}.results_idx.pknum;"
+                "INSERT INTO {schema}.results_val(idruntpk, var, val) "
+                "SELECT idruntpk, var, val   FROM {schema}.results_idx "
+                "Inner join  {schema}.results_old "
+                "on {schema}.results_old.id_runs = {schema}.results_idx.id_runs "
+                "AND {schema}.results_old.time = {schema}.results_idx.time "
+                "AND {schema}.results_old.pknum = {schema}.results_idx.pknum;"
             )
-            sql = sql.format(self.mdb.SCHEMA)
-            err = self.mdb.run_query(sql)
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 sorti = False
         sql = (
-            "CREATE OR REPLACE VIEW {0}.results "
-            'AS SELECT id_runs, "time", pknum,  var, val  FROM {0}.results_idx 	'
-            "Inner join  {0}.results_val "
-            "on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;"
+            "CREATE OR REPLACE VIEW {schema}.results "
+            'AS SELECT id_runs, "time", pknum,  var, val  FROM {schema}.results_idx \t'
+            "Inner join  {schema}.results_val "
+            "on {schema}.results_val.idruntpk = {schema}.results_idx.idruntpk;"
         )
-        sql = sql.format(self.mdb.SCHEMA)
-        err = self.mdb.run_query(sql)
+        err = self.mdb.run_query(sql, schema=True)
         if err:
             sorti = False
         return sorti

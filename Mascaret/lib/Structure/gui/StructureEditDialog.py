@@ -20,29 +20,32 @@ email                :
 import os
 
 import numpy as np
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QT_VERSION
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QWidget
+from qgis.PyQt.uic import loadUi
 from shapely.geometry import Point
 
+from ...Function import safe_eval_numeric
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
+
 # Widgets Buse
 from .MetBordaBuWidget import MetBordaBuWidget
+
 # Widgets Dalot
 from .MetBordaDaWidget import MetBordaDaWidget
+
 # Widgets Pont arche
 from .MetBordaPaWidget import MetBordaPaWidget
 from .MetBordaPcWidget import MetBordaPcWidget
+
 # Widgets Pont cadre
 from .MetBradleyPcWidget import MetBradleyPcWidget
 from .MetOrificeBuWidget import MetOrificeBuWidget
 from .MetOrificeDaWidget import MetOrificeDaWidget
 from .MetOrificePaWidget import MetOrificePaWidget
 from .MetOrificePcWidget import MetOrificePcWidget
+
 # FloodGate
 from .StructureFgDialog import StructureFgDialog
 from ..ClassLaws import ClassLaws
@@ -96,17 +99,17 @@ class ClassStructureEditDialog(QDialog):
         self.b_ok.rejected.connect(self.reject_page)
         self.b_up_prof.clicked.connect(self.update_profil)
         self.b_up_prof.setIcon(
-            QIcon(os.path.join(self.mgis.masplugPath, "Structure/images/update.png"))
+            QIcon(os.path.join(self.mgis.masplugPath, "lib", "Structure", "images", "update.png"))
         )
         self.dico_ctrl_fg = None
 
         if id_struct:
             self.is_loading = True
             sql = (
-                "SELECT name, type, method, active, id_prof_ori,comment, zbreak, erase_flag FROM {0}.struct_config "
-                "WHERE id = {1}".format(self.mdb.SCHEMA, self.id_struct)
+                "SELECT name, type, method, active, id_prof_ori, comment, zbreak, erase_flag "
+                "FROM {schema}.struct_config WHERE id = %s"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.id_struct], schema=True)
             self.id_prof_ori = rows[0][4]
             self.typ_struct = rows[0][1]
 
@@ -131,9 +134,7 @@ class ClassStructureEditDialog(QDialog):
             fill_qcombobox(self.cb_met_calc, self.lst_meth_calc, val_def=rows[0][2])
             self.is_loading = False
 
-            rows = self.mdb.run_query(
-                "SELECT gid FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True
-            )
+            rows = self.mdb.run_query("SELECT gid FROM {schema}.profiles", fetch=True, schema=True)
 
             list_p = [v[0] for v in rows]
             if self.id_prof_ori in list_p:
@@ -181,12 +182,12 @@ class ClassStructureEditDialog(QDialog):
                 ok_button = QMessageBox.Ok
                 cancel_button = QMessageBox.Cancel
             if (
-                    QMessageBox.question(
-                        self,
-                        "Warning",
-                        "Save current parameters ?",
-                        cancel_button | ok_button,
-                    )
+                QMessageBox.question(
+                    self,
+                    "Warning",
+                    "Save current parameters ?",
+                    cancel_button | ok_button,
+                )
             ) == ok_button:
                 self.save_struct()
         self.txt_name.setFocus()
@@ -200,10 +201,8 @@ class ClassStructureEditDialog(QDialog):
         self.display_param_struct()
 
     def display_param_struct(self):
-        sql = "SELECT var, value FROM {0}.struct_param " "WHERE id_config = {1}".format(
-            self.mdb.SCHEMA, self.id_struct
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT var, value FROM {schema}.struct_param WHERE id_config = %s"
+        rows = self.mdb.run_query(sql, fetch=True, params=[self.id_struct], schema=True)
         for param, val in rows:
             if param in self.wgt_met.dico_ctrl.keys():
                 ctrls = self.wgt_met.dico_ctrl[param]
@@ -216,23 +215,24 @@ class ClassStructureEditDialog(QDialog):
             # tab.setRowCount(0)
             t = param["type"]
             sql = (
-                "SELECT id_elem FROM {0}.struct_elem "
-                "WHERE id_config = {1} AND type = {2} ORDER BY id_elem".format(
-                    self.mdb.SCHEMA, self.id_struct, t
-                )
+                "SELECT id_elem FROM {schema}.struct_elem "
+                "WHERE id_config = %s AND type = %s ORDER BY id_elem"
             )
-            elems = self.mdb.run_query(sql, fetch=True)
+            elems = self.mdb.run_query(sql, fetch=True, params=[self.id_struct, t], schema=True)
 
             for r, elem in enumerate(elems):
                 # tab.insertRow(r)
                 for c, col in enumerate(param["col"]):
                     sql = (
-                        "SELECT value FROM {0}.struct_elem_param WHERE id_config = {1} "
-                        "AND id_elem = {2} and var = '{3}'".format(
-                            self.mdb.SCHEMA, self.id_struct, elem[0], col["fld"]
-                        )
+                        "SELECT value FROM {schema}.struct_elem_param WHERE id_config = %s "
+                        "AND id_elem = %s AND var = %s"
                     )
-                    row = self.mdb.run_query(sql, fetch=True)
+                    row = self.mdb.run_query(
+                        sql,
+                        fetch=True,
+                        params=[self.id_struct, elem[0], col["fld"]],
+                        schema=True,
+                    )
                     if len(row) > 0:
                         val = row[0][0]
                     else:
@@ -285,32 +285,27 @@ class ClassStructureEditDialog(QDialog):
             zbreak = self.dbs_zbreak.value()
             bperm = self.ch_bperm.isChecked()
             if active:
-                sql = "SELECT id_prof_ori FROM {0}.struct_config WHERE id = {1}".format(
-                    self.mdb.SCHEMA, self.id_struct
-                )
-                row = self.mdb.run_query(sql, fetch=True)
+                sql = "SELECT id_prof_ori FROM {schema}.struct_config WHERE id = %s"
+                row = self.mdb.run_query(sql, fetch=True, params=[self.id_struct], schema=True)
                 id_profil = row[0][0]
-                sql = "UPDATE {0}.struct_config SET active = FALSE WHERE id_prof_ori = {1}".format(
-                    self.mdb.SCHEMA, id_profil
-                )
-                self.mdb.execute(sql)
+                sql = "UPDATE {schema}.struct_config SET active = FALSE WHERE id_prof_ori = %s"
+                self.mdb.execute(sql, params=[id_profil], schema=True)
 
             sql = (
-                "UPDATE {0}.struct_config SET name = '{2}', method = {3}, active = {4}, comment= '{5}', "
-                "zbreak = {6}, erase_flag = {7} WHERE id = {1}".format(
-                    self.mdb.SCHEMA, self.id_struct, name, self.current_meth, active, comm, zbreak, bperm
-                )
+                "UPDATE {schema}.struct_config "
+                "SET name = %s, method = %s, active = %s, comment=%s, zbreak = %s, erase_flag = %s "
+                "WHERE id = %s"
             )
-            self.mdb.execute(sql)
+            self.mdb.execute(
+                sql,
+                params=[name, self.current_meth, active, comm, zbreak, bperm, self.id_struct],
+                schema=True,
+            )
 
-            sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, self.id_struct
-            )
-            self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, self.id_struct
-            )
-            self.mdb.execute(sql)
+            sql = "DELETE FROM {schema}.struct_elem WHERE id_config = %s"
+            self.mdb.execute(sql, params=[self.id_struct], schema=True)
+            sql = "DELETE FROM {schema}.struct_elem_param WHERE id_config = %s"
+            self.mdb.execute(sql, params=[self.id_struct], schema=True)
 
             for var, ctrls in self.wgt_met.dico_ctrl.items():
                 if var == "FORMPIL":
@@ -318,29 +313,35 @@ class ClassStructureEditDialog(QDialog):
                 else:
                     val = float(ctrl_get_value(ctrls[0]))
 
-                sql = "SELECT * FROM {0}.struct_param WHERE id_config = {1} AND var = '{2}'".format(
-                    self.mdb.SCHEMA, self.id_struct, var
-                )
-                row = self.mdb.run_query(sql, fetch=True)
+                sql = "SELECT * FROM {schema}.struct_param WHERE id_config = %s AND var = %s"
+                row = self.mdb.run_query(sql, fetch=True, params=[self.id_struct, var], schema=True)
                 if len(row) > 0:
-                    sql = "UPDATE {0}.struct_param SET value = {3} WHERE id_config = {1} AND var = '{2}'".format(
-                        self.mdb.SCHEMA, self.id_struct, var, val
+                    sql = (
+                        "UPDATE {schema}.struct_param SET value = %s "
+                        "WHERE id_config = %s AND var = %s"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.execute(sql, params=[val, self.id_struct, var], schema=True)
                 else:
-                    sql = "INSERT INTO {0}.struct_param (id_config, var, value) VALUES ({1}, '{2}', {3})".format(
-                        self.mdb.SCHEMA, self.id_struct, var, val
+                    sql = (
+                        "INSERT INTO {schema}.struct_param (id_config, var, value) "
+                        "VALUES (%s, %s, %s)"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.execute(sql, params=[self.id_struct, var, val], schema=True)
 
             for tab, param in self.wgt_met.dico_tab.items():
                 type_elem = param["type"]
                 for r in range(tab.rowCount()):
-                    id_elem = eval(param["id"].format(r))
-                    sql = "INSERT INTO {0}.struct_elem (id_config, id_elem, type) VALUES ({1}, {2}, {3})".format(
-                        self.mdb.SCHEMA, self.id_struct, id_elem, type_elem
+                    raw_id = param["id"].format(r)
+                    try:
+                        id_elem = safe_eval_numeric(raw_id)
+                    except Exception:
+                        id_elem = raw_id
+
+                    sql = (
+                        "INSERT INTO {schema}.struct_elem (id_config, id_elem, type) "
+                        "VALUES (%s, %s, %s)"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.execute(sql, params=[self.id_struct, id_elem, type_elem], schema=True)
                     for c, col in enumerate(param["col"]):
                         var = col["fld"]
                         if col["cb"]:
@@ -354,12 +355,27 @@ class ClassStructureEditDialog(QDialog):
                         if val is None:
                             val = "Null"
                         sql = (
-                            "INSERT INTO {0}.struct_elem_param (id_config, id_elem, var, value) "
-                            "VALUES ({1}, {2}, '{3}', {4})".format(
-                                self.mdb.SCHEMA, self.id_struct, id_elem, var, val
-                            )
+                            "INSERT INTO {schema}.struct_elem_param "
+                            "(id_config, id_elem, var, value) "
+                            "VALUES (%s, %s, %s, %s)"
                         )
-                        self.mdb.execute(sql)
+                        self.mdb.execute(
+                            sql,
+                            params=[self.id_struct, id_elem, var, val],
+                            schema=True,
+                        )
+            # update state of structures in the database
+            dict_par = self.mdb.select("struct_config", list_var=["id"])
+            for id_config in dict_par.get("id", []):
+                self.cli.profil[id_config] = self.cli.get_db_profil(self.mdb, id_config)
+                self.cli.param_g[id_config] = self.cli.get_db_param_g(self.mdb, id_config)
+                # 0: hole, 1:span
+                self.cli.list_poly_trav[id_config] = self.cli.select_db_poly_elem(
+                    self.mdb, id_config, 0
+                )
+                self.cli.list_poly_pil[id_config] = self.cli.select_db_poly_elem(
+                    self.mdb, id_config, 1
+                )
 
             return True
         else:
@@ -485,10 +501,8 @@ class ClassStructureEditDialog(QDialog):
             return True, None
 
     def verif_haut_tablier(self, id_struct):
-        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(
-            self.mdb.SCHEMA, id_struct
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT MIN(z) FROM {schema}.profil_struct WHERE id_config = %s"
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_struct], schema=True)
         profil_z_min = rows[0][0]
 
         cote_tablier = ctrl_get_value(self.wgt_met.dico_ctrl["ZTOPTAB"][0])
@@ -498,10 +512,8 @@ class ClassStructureEditDialog(QDialog):
             return True, None
 
     def verif_bas_tablier(self, id_struct):
-        sql = "SELECT MIN(z) FROM {0}.profil_struct WHERE id_config = {1}".format(
-            self.mdb.SCHEMA, id_struct
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT MIN(z) FROM {schema}.profil_struct WHERE id_config = %s"
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_struct], schema=True)
         profil_z_min = rows[0][0]
 
         cote_bas_tablier = ctrl_get_value(self.wgt_met.dico_ctrl["ZTOPTAB"][0]) - ctrl_get_value(
@@ -523,10 +535,8 @@ class ClassStructureEditDialog(QDialog):
                 col_pile = v
                 break
 
-        sql = "SELECT MAX(x) FROM {0}.profil_struct WHERE id_config = {1}".format(
-            self.mdb.SCHEMA, id_struct
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT MAX(x) FROM {schema}.profil_struct WHERE id_config = %s"
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_struct], schema=True)
         profil_x_max = rows[0][0]
 
         x_fin = ctrl_get_value(self.wgt_met.dico_ctrl["FIRSTWD"][0])
@@ -548,7 +558,7 @@ class ClassStructureEditDialog(QDialog):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 2:
                 if self.wgt_met.tab_trav.item(r, 2).data(0) >= self.wgt_met.tab_trav.item(
-                        r, 3
+                    r, 3
                 ).data(0):
                     arche_err.append(r + 1)
 
@@ -567,7 +577,7 @@ class ClassStructureEditDialog(QDialog):
             forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
             if forme_arche == 1:
                 z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2
+                    self.wgt_met.tab_trav.item(r, 1).data(0) / 2
                 )
             elif forme_arche == 2:
                 z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
@@ -593,29 +603,37 @@ class ClassStructureEditDialog(QDialog):
                 forme_arche = ctrl_get_value(self.wgt_met.tab_trav.cellWidget(r, 0))
                 if forme_arche == 1:
                     z_top = self.wgt_met.tab_trav.item(r, 2).data(0) + (
-                            self.wgt_met.tab_trav.item(r, 1).data(0) / 2
+                        self.wgt_met.tab_trav.item(r, 1).data(0) / 2
                     )
                 elif forme_arche == 2:
                     z_top = self.wgt_met.tab_trav.item(r, 3).data(0)
                 sql = (
-                    "SELECT MAX(z) FROM {0}.profil_struct "
-                    "WHERE id_config = {1} AND x >= {2} AND x <= {3}".format(
-                        self.mdb.SCHEMA, id_struct, x_tmp, larg + x_tmp
-                    )
+                    "SELECT MAX(z) FROM {schema}.profil_struct "
+                    "WHERE id_config = %s AND x >= %s AND x <= %s"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(
+                    sql,
+                    fetch=True,
+                    params=[id_struct, x_tmp, larg + x_tmp],
+                    schema=True,
+                )
                 profil_z_max = rows[0][0]
                 if profil_z_max is None:
                     sql = (
-                        "SELECT z FROM {0}.profil_struct "
-                        "WHERE id_config = {1} "
+                        "SELECT z FROM {schema}.profil_struct "
+                        "WHERE id_config = %s "
                         "ORDER BY CASE "
-                        "WHEN x < {2} THEN {2} - x "
-                        "WHEN x > {3} THEN x - {3} "
+                        "WHEN x < %s THEN %s - x "
+                        "WHEN x > %s THEN x - %s "
                         "ELSE 0 END ASC, z DESC "
                         "LIMIT 1"
-                    ).format(self.mdb.SCHEMA, id_struct, x_tmp, larg + x_tmp)
-                    rows = self.mdb.run_query(sql, fetch=True)
+                    )
+                    rows = self.mdb.run_query(
+                        sql,
+                        fetch=True,
+                        params=[id_struct, x_tmp, x_tmp, larg + x_tmp, larg + x_tmp],
+                        schema=True,
+                    )
                     profil_z_max = rows[0][0]
                 if profil_z_max >= z_top:
                     arche_err.append(r + 1)
@@ -692,11 +710,9 @@ class ClassStructureEditDialog(QDialog):
     def init_gui_fg(self):
         """initialisation GUI for floodGate"""
 
-        sql = "SELECT active FROM {0}.struct_fg " "WHERE id_config = {1}".format(
-            self.mdb.SCHEMA, self.id_struct
-        )
+        sql = "SELECT active FROM {schema}.struct_fg WHERE id_config = %s"
 
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, params=[self.id_struct], schema=True)
 
         if len(rows) > 0:
             self.fg_active.setChecked(bool(rows[0][0]))
@@ -711,22 +727,19 @@ class ClassStructureEditDialog(QDialog):
         if act_val:
             self.b_fg.setEnabled(True)
             if self.check_exit_fg():
-                sql = "UPDATE {0}.struct_fg SET active = {2}  WHERE id_config = {1} ".format(
-                    self.mdb.SCHEMA, self.id_struct, act_val
-                )
-                self.mdb.execute(sql)
+                sql = "UPDATE {schema}.struct_fg SET active = %s WHERE id_config = %s"
+                self.mdb.execute(sql, params=[act_val, self.id_struct], schema=True)
             else:
-                sql = "INSERT INTO {0}.struct_fg (id_config, id_scen, active, type_fg) VALUES ({1}, {2}, {3}, '{4}')".format(
-                    self.mdb.SCHEMA, self.id_struct, 0, act_val, "D"
+                sql = (
+                    "INSERT INTO {schema}.struct_fg (id_config, id_scen, active, type_fg) "
+                    "VALUES (%s, %s, %s, %s)"
                 )
-                self.mdb.execute(sql)
+                self.mdb.execute(sql, params=[self.id_struct, 0, act_val, "D"], schema=True)
         else:
             self.b_fg.setEnabled(False)
             if self.check_exit_fg():
-                sql = "UPDATE {0}.struct_fg SET active = {2}  WHERE id_config = {1} ".format(
-                    self.mdb.SCHEMA, self.id_struct, act_val
-                )
-                self.mdb.execute(sql)
+                sql = "UPDATE {schema}.struct_fg SET active = %s WHERE id_config = %s"
+                self.mdb.execute(sql, params=[act_val, self.id_struct], schema=True)
 
     def display_fg(self):
         meth = self.cb_met_calc.itemData(self.cb_met_calc.currentIndex())
@@ -741,10 +754,8 @@ class ClassStructureEditDialog(QDialog):
     def check_exit_fg(self):
         """check if id_config is struct_fg table"""
         if self.id_struct:
-            sql = "SELECT * FROM {0}.struct_fg WHERE id_config = {1} ".format(
-                self.mdb.SCHEMA, self.id_struct
-            )
-            row = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT * FROM {schema}.struct_fg WHERE id_config = %s"
+            row = self.mdb.run_query(sql, fetch=True, params=[self.id_struct], schema=True)
             return len(row) > 0
         else:
             return False
@@ -788,20 +799,17 @@ class ClassStructureEditDialog(QDialog):
         :return: nothing
         """
         if not list_final:
-            sql = "SELECT name FROM {0}.{1} WHERE id={2}".format(
-                self.mdb.SCHEMA, "struct_config", id_config
-            )
+            sql = "SELECT name FROM {schema}.struct_config WHERE id = %s"
 
-            name = self.mdb.run_query(sql, fetch=True)
+            name = self.mdb.run_query(sql, fetch=True, params=[id_config], schema=True)
             name = name[0][0]
 
-            sql = "UPDATE {0}.{1} SET {2}  WHERE id={3};".format(
-                self.mdb.SCHEMA, "struct_config", "active=False", id_config
-            )
-            self.mdb.run_query(sql)
+            sql = "UPDATE {schema}.struct_config SET active = FALSE WHERE id = %s"
+            self.mdb.run_query(sql, params=[id_config], schema=True)
 
             self.mgis.add_info(
-                "No values for the law because the coefficients leave application domain of the method.\n"
+                "No values for the law because the coefficients leave "
+                "application domain of the method.\n"
                 "The <<{}>> hydraulic structur is deactivated".format(name)
             )
         else:
@@ -823,12 +831,4 @@ class ClassStructureEditDialog(QDialog):
         for j in self.tbst.dico_law_struct[method].keys():
             for i, val in enumerate(list_val[:, j]):
                 list_insert.append([id_config, j, i, val])
-        var = ",".join(liste_col)
-
-        sql = ""
-        for a in list_insert:
-            valeurs = str(tuple(a))
-            sql += "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                self.mdb.SCHEMA, "struct_laws", var, valeurs
-            )
-        self.mdb.run_query(sql)
+        self.mdb.insert_res("struct_laws", list_insert, liste_col)

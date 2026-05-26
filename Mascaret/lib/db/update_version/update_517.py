@@ -45,13 +45,13 @@ class ClassUpdate517:
 
         if valide:
             lst_alt = [
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightminbed_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  leftstock_g FLOAT;",
-                "ALTER TABLE {0}.profiles ADD COLUMN IF NOT EXISTS  rightstock_g FLOAT;",
+                "ALTER TABLE {schema}.profiles ADD COLUMN IF NOT EXISTS leftminbed_g FLOAT;",
+                "ALTER TABLE {schema}.profiles ADD COLUMN IF NOT EXISTS rightminbed_g FLOAT;",
+                "ALTER TABLE {schema}.profiles ADD COLUMN IF NOT EXISTS leftstock_g FLOAT;",
+                "ALTER TABLE {schema}.profiles ADD COLUMN IF NOT EXISTS rightstock_g FLOAT;",
             ]
             for sql in lst_alt:
-                self.mdb.execute(sql.format(self.mdb.SCHEMA))
+                self.mdb.execute(sql, schema=True)
         if valide:
             try:
                 update_all_bed_geometry(self.mdb)

@@ -21,7 +21,7 @@ import json
 import math as m
 
 import shapely.affinity
-from shapely.geometry import *
+from shapely.geometry import Polygon, Point, GeometryCollection, mapping
 
 
 class ClassPolygone:
@@ -194,11 +194,12 @@ class ClassPolygone:
         :param id_elem:  element index
         """
         poly_final = json.dumps(mapping(poly_final))
-        where = "WHERE id_config = {0}  AND id_elem = {1} ".format(id_config, id_elem)
-        sql = """UPDATE {0}.struct_elem SET polygon =ST_GeomFromGeoJSON('{1}')  {2}""".format(
-            mdb.SCHEMA, poly_final, where
+        sql = (
+            "UPDATE {schema}.struct_elem "
+            "SET polygon = ST_GeomFromGeoJSON(%s) "
+            "WHERE id_config = %s AND id_elem = %s"
         )
-        mdb.run_query(sql)
+        mdb.run_query(sql, schema=True, params=[poly_final, id_config, id_elem])
 
     def coup_poly_h(self, poly, cote, typ="U"):
         """
@@ -259,7 +260,7 @@ class ClassPolygone:
         :return: new polygon
         """
         msg = None
-        if type(xo) == list:
+        if isinstance(xo, list):
             typ = "LR"
         (minx, miny, maxx, maxy) = poly.bounds
         if typ == "L":

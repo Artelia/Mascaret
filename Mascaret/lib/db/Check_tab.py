@@ -106,6 +106,7 @@ class CheckTab:
             "7.0.0",
             "7.0.1",
             "7.0.2",
+            "7.0.3",
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -263,8 +264,7 @@ class CheckTab:
             "4.0.3": {},
             "4.0.4": {},
             "4.0.5": {
-                "fct": [lambda: self.update_400(),
-                        lambda: self.update_version("402")],
+                "fct": [lambda: self.update_400(), lambda: self.update_version("402")],
             },
             "4.0.6": {},
             "4.0.7": {},
@@ -282,8 +282,8 @@ class CheckTab:
             "5.0.5": {"fct": [lambda: self.update_505()]},
             "5.0.6": {},
             "5.0.7": {},
-            '5.0.8': {},
-            '5.0.9': {},
+            "5.0.8": {},
+            "5.0.9": {},
             "5.1.1": {"fct": [lambda: self.update_version("511")]},
             "5.1.2": {"fct": [lambda: self.update_version("512")]},
             "5.1.3": {"fct": [lambda: self.update_513()]},
@@ -314,7 +314,7 @@ class CheckTab:
             "7.0.0": {"fct": [lambda: self.update_version("700")]},
             "7.0.1": {},
             "7.0.2": {},
-
+            "7.0.3": {},
             # '3.0.x': { },
         }
 
@@ -338,11 +338,8 @@ class CheckTab:
                 self.mgis.add_info("failure!<br>{0}".format(Maso.admin_tab))
                 return
             for name_tab in tabs:
-                sql = (
-                    "INSERT INTO {0}.admin_tab (table_, version_ )"
-                    " VALUES ('{1}', '{2}')".format(self.mdb.SCHEMA, name_tab, "0.0.0")
-                )
-                self.mdb.execute(sql)
+                sql = "INSERT INTO {schema}.admin_tab (table_, version_) VALUES (%s, %s)"
+                self.mdb.execute(sql, params=[name_tab, "0.0.0"], schema=True)
 
         curent_v_tab = self.get_version()
         try:
@@ -353,7 +350,7 @@ class CheckTab:
 
         pos_fin = self.list_hist_version.index(version)
         tabs_no = deepcopy(tabs)
-        if len(self.list_hist_version[pos + 1: pos_fin + 1]) > 0:
+        if len(self.list_hist_version[pos + 1 : pos_fin + 1]) > 0:
             ok = self.box.yes_no_q(
                 "WARNING:\n "
                 "Do you want update tables for {} schema ?\n"
@@ -363,7 +360,7 @@ class CheckTab:
             )
             if ok:
                 list_test_ver = []
-                for ver in self.list_hist_version[pos + 1: pos_fin + 1]:
+                for ver in self.list_hist_version[pos + 1 : pos_fin + 1]:
                     list_test = []
                     if ver in self.dico_modif.keys():
                         self.mgis.add_info("version : {}".format(ver))
@@ -376,21 +373,17 @@ class CheckTab:
                                         lst_tab = modif[proc]
                                         for tab in lst_tab:
                                             if proc == "add_tab":
-                                                # self.mgis.add_info('add_tab {} {}'.format(ver ,tab))
                                                 valid, tab_name = self.add_tab(
                                                     tab["tab"], tab["overwrite"]
                                                 )
                                             elif proc == "alt_tab":
                                                 tab_name = tab["tab"]
-                                                # self.mgis.add_info('alt_tab {} {}'.format(ver ,tab))
                                                 valid = self.alt_tab(tab_name, tab["sql"])
                                             elif proc == "del_tab":
-                                                # self.mgis.add_info('del_tab {} {}'.format(ver, tab))
                                                 tab_name = tab
                                                 valid = self.del_tab(tab_name)
                                             else:
                                                 valid = False
-                                            # print (proc, tab_name, valid)
                                             if valid:
                                                 if proc != "del_tab":
                                                     self.updat_num_v(tab_name, ver)
@@ -401,7 +394,6 @@ class CheckTab:
                                             if tab_name in tabs_no:
                                                 tabs_no.remove(tab_name)
                                     else:
-                                        # self.mgis.add_info('fct_tab {} {}'.format(ver, tab))
                                         lst_fct = modif[proc]
                                         for fct in lst_fct:
                                             test_gd = fct()
@@ -442,8 +434,8 @@ class CheckTab:
         for name_tab in tabs:
             self.updat_num_v(name_tab, version)
         if clean:
-            sql = "SELECT table_ FROM {0}.admin_tab".format(self.mdb.SCHEMA)
-            row = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT table_ FROM {schema}.admin_tab"
+            row = self.mdb.run_query(sql, fetch=True, schema=True)
             for tab in row:
                 if tab[0] not in tabs:
                     self.del_num_v(tab[0])
@@ -454,18 +446,14 @@ class CheckTab:
         :return:
         """
 
-        sql = "SELECT * FROM {0}.admin_tab WHERE  table_ = '{1}' ".format(self.mdb.SCHEMA, name_tab)
-        row = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT * FROM {schema}.admin_tab WHERE table_ = %s"
+        row = self.mdb.run_query(sql, fetch=True, params=[name_tab], schema=True)
         if len(row) > 0:
-            sql = "UPDATE {0}.admin_tab SET version_  = '{1}' " "WHERE table_ = '{2}';".format(
-                self.mdb.SCHEMA, version, name_tab
-            )
-            self.mdb.execute(sql)
+            sql = "UPDATE {schema}.admin_tab SET version_ = %s WHERE table_ = %s;"
+            self.mdb.execute(sql, params=[version, name_tab], schema=True)
         else:
-            sql = "INSERT INTO {0}.admin_tab (table_, version_)" " VALUES ('{1}', '{2}')".format(
-                self.mdb.SCHEMA, name_tab, version
-            )
-            self.mdb.execute(sql)
+            sql = "INSERT INTO {schema}.admin_tab (table_, version_) VALUES (%s, %s)"
+            self.mdb.execute(sql, params=[name_tab, version], schema=True)
 
     def del_num_v(self, name_tab):
         """
@@ -474,13 +462,11 @@ class CheckTab:
         :return:
         """
 
-        sql = "SELECT * FROM {0}.admin_tab WHERE  table_ = '{1}' ".format(self.mdb.SCHEMA, name_tab)
-        row = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT * FROM {schema}.admin_tab WHERE table_ = %s"
+        row = self.mdb.run_query(sql, fetch=True, params=[name_tab], schema=True)
         if len(row) > 0:
-            sql = "DELETE FROM {0}.admin_tab WHERE table_ = '{1}';".format(
-                self.mdb.SCHEMA, name_tab
-            )
-            self.mdb.execute(sql)
+            sql = "DELETE FROM {schema}.admin_tab WHERE table_ = %s;"
+            self.mdb.execute(sql, params=[name_tab], schema=True)
 
     def add_tab(self, tab, overwrite=True):
         """
@@ -553,13 +539,13 @@ class CheckTab:
             data = ""
         return data
 
-    def update_version(self, version=''):
+    def update_version(self, version=""):
         """
         Call the update method for a given version.
         """
         base_dir = os.path.dirname(__file__)
-        plugin_root = os.path.abspath(os.path.join(base_dir, '..','..'))
-        file_path = os.path.join(base_dir, 'update_version', f'update_{version}.py')
+        plugin_root = os.path.abspath(os.path.join(base_dir, "..", ".."))
+        file_path = os.path.join(base_dir, "update_version", f"update_{version}.py")
         module_name = f"update_{version}"
         class_name = f"ClassUpdate{version}"
         method_name = f"update{version}"
@@ -641,11 +627,11 @@ class CheckTab:
         :return:
         """
         sql = (
-            "DELETE FROM {0}.admin_tab WHERE NOT(table_ IN ( "
+            "DELETE FROM {schema}.admin_tab WHERE NOT(table_ IN ("
             "SELECT table_name FROM information_schema.tables "
-            "WHERE table_schema = '{0}'))".format(self.mdb.SCHEMA)
+            "WHERE table_schema = %s))"
         )
-        self.mdb.run_query(sql)
+        self.mdb.run_query(sql, params=[self.mdb.SCHEMA], schema=True)
 
     def update_400(self):
         """update 4.0.0 version"""
@@ -660,10 +646,10 @@ class CheckTab:
             self.mdb.run_query(qry)
             ltabs = self.mdb.list_tables(self.mdb.SCHEMA)
             if "results_old" in ltabs:
-                sql = """CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum 
-                        ON {0}.results_old(id_runs, pknum);
-                        CREATE INDEX IF NOT EXISTS results_old_id_runs_time  
-                        ON {0}.results_old(id_runs, time);""".format(
+                sql = """CREATE INDEX IF NOT EXISTS results_old_id_runs_pknum
+                         ON {0}.results_old(id_runs, pknum);
+                        CREATE INDEX IF NOT EXISTS results_old_id_runs_time
+                         ON {0}.results_old(id_runs, time);""".format(
                     self.mdb.SCHEMA
                 )
             self.mdb.run_query(qry)
@@ -703,7 +689,7 @@ class CheckTab:
             self.mdb.run_query(qry)
             return True
         except Exception as e:
-            self.mgis.add_info("Error update clone function : ".format(str(e)))
+            self.mgis.add_info("Error update clone function : {}".format(str(e)))
             return False
 
     def update_505(self):
@@ -725,19 +711,8 @@ class CheckTab:
                     for ligne in file:
                         liste_value.append(ligne.replace("\n", "").split(";"))
                 liste_col = self.mdb.list_columns("parametres")
-                var = ",".join(liste_col)
-                valeurs = "("
-                for k in liste_col:
-                    valeurs += "%s,"
-                valeurs = valeurs[:-1] + ")"
-
                 self.mdb.delete("parametres")
-
-                sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                    self.mdb.SCHEMA, "parametres", var, valeurs
-                )
-
-                self.mdb.run_query(sql, many=True, list_many=liste_value)
+                self.mdb.insert_res("parametres", liste_value, liste_col)
             except Exception:
                 valid = False
         return valid

@@ -74,8 +74,17 @@ def modif_seuil(mdb, seuil, dico_str):
             else:
                 seuil[ls].append(None)
     if any(seuil["active_mob"]):
-        where = f"id_weirs in (SELECT gid FROM {mdb.SCHEMA}.weirs where active_mob)"
-        dico_mob = mdb.select("weirs_mob_val", where, "id_weirs")
+        rows = mdb.run_query(
+            "SELECT id_weirs, name_var, value FROM {schema}.weirs_mob_val "
+            "WHERE id_weirs IN (SELECT gid FROM {schema}.weirs WHERE active_mob)",
+            fetch=True,
+            schema=True,
+        )
+        dico_mob = {"id_weirs": [], "name_var": [], "value": []}
+        for id_weirs, name_var, value in rows:
+            dico_mob["id_weirs"].append(id_weirs)
+            dico_mob["name_var"].append(name_var)
+            dico_mob["value"].append(value)
         for id_w in dico_mob["id_weirs"]:
             try:
                 id_s = seuil["gid"].index(id_w)
@@ -94,11 +103,20 @@ def modif_link(mdb, liaisons):
     :param mdb: Database object providing select method.
     :return:
     """
-    where = f"id_links in (SELECT gid FROM {mdb.SCHEMA}.links where active_mob)"
-    lst_gid = mdb.select_distinct("id_links", "links_mob_val", where)
-    dico_mob = mdb.select("links_mob_val", where, "id_links")
-    if not lst_gid:
+    rows = mdb.run_query(
+        "SELECT id_links, name_var, value FROM {schema}.links_mob_val "
+        "WHERE id_links IN (SELECT gid FROM {schema}.links WHERE active_mob)",
+        fetch=True,
+        schema=True,
+    )
+    if not rows:
         return liaisons
+    dico_mob = {"id_links": [], "name_var": [], "value": []}
+    for id_links, name_var, value in rows:
+        dico_mob["id_links"].append(id_links)
+        dico_mob["name_var"].append(name_var)
+        dico_mob["value"].append(value)
+    lst_gid = {"id_links": sorted(set(dico_mob["id_links"]))}
     df_mob = pd.DataFrame(dico_mob)
     for id_lk in lst_gid["id_links"]:
         try:

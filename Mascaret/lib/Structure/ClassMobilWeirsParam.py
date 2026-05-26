@@ -21,12 +21,13 @@ email                :
 import json
 import os
 
-try :
+try:
     from ..Function import str2bool, data_to_float, data_to_int
     from ..ClassMessage import ClassMessage
-except:
+except ImportError:
     from Function import str2bool, data_to_float, data_to_int
     from ClassMessage import ClassMessage
+
 
 class ClassMobilWeirsParam(object):
     def __init__(self):
@@ -39,75 +40,170 @@ class ClassMobilWeirsParam(object):
         self.list_actif = []
         self.lst_param = {
             # weirs CASIER
-            "name": {"desc": "nom du weirs", "desc_en": "name of the weirs", 'typ': 'str'},
-            "level0": {"desc": "cote de radier (z_crest)", "desc_en": "bottom elevation (z_crest)", 'typ': 'float'},
-            "abscissa": {"desc": "pk du weirs", "desc_en": "chainage of the weirs", 'typ': 'float'},
-            "branchnum": {"desc": "branch", "desc_en": "branch", 'typ': 'int'},
-            "method_mob": {"desc": "mehtode utilisé : (0 ou NULL) ignore, meth_tempo(1), meth_regul(2)",
-                           "desc_en": "method used: (0 or NULL) ignore, meth_tempo(1), meth_regul(2), ",
-                           "default": "2", 'typ': 'str'},
+            "name": {"desc": "nom du weirs", "desc_en": "name of the weirs", "typ": "str"},
+            "level0": {
+                "desc": "cote de radier (z_crest)",
+                "desc_en": "bottom elevation (z_crest)",
+                "typ": "float",
+            },
+            "abscissa": {"desc": "pk du weirs", "desc_en": "chainage of the weirs", "typ": "float"},
+            "branchnum": {"desc": "branch", "desc_en": "branch", "typ": "int"},
+            "method_mob": {
+                "desc": "mehtode utilisé : (0 ou NULL) ignore, meth_tempo(1), meth_regul(2)",
+                "desc_en": "method used: (0 or NULL) ignore, meth_tempo(1), meth_regul(2), ",
+                "default": "2",
+                "typ": "str",
+            },
             # loi impacter par la modification de Singularite(ising)%CoteCrete
             # SINGULARITE_TYPE_ZAMONT_ZAVAL_Q = 1
             # SINGULARITE_TYPE_ZAMONT_Q       = 2
             # SINGULARITE_TYPE_PROFIL_CRETE   = 3
             # SINGULARITE_TYPE_CRETE_COEFF    = 4
-            "type": {"desc": "type de weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law",
-                     "desc_en": "type of weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law",
-                     'typ': 'int'},
+            "type": {
+                "desc": "type de weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law",
+                "desc_en": "type of weirs, 1:Zamont Zaval Q,2: Zam=f(Q) 3:Crest profile 4:Weir law",
+                "typ": "int",
+            },
             # methode de régulation
-            "DIRFG": {"desc": "direction si D cote monte et section diminue si U seul section diminue",
-                      "desc_en": "direction: if D, level rises and section decreases; if U, only section decreases",
-                      'typ': 'str'},
-            "VELOFGOPEN": {"desc": "vitesse d'ouverture m/s de la vanne", "desc_en": "opening speed of the gate (m/s)",
-                           'typ': 'float'},
-            "VELOFGCLOSE": {"desc": "vitesse de fermeture m/s de la vanne",
-                            "desc_en": "closing speed of the gate (m/s)", 'typ': 'float'},
-            "ZMAXFG": {"desc": "valeur Z limite max d'ouverture", "desc_en": "maximum Z limit for opening",
-                       'typ': 'float'},
-            "ZINITREG": {"desc": "cote initial de la vanne (compris entre ZMAXFG et cote de radier)",
-                         "desc_en": "initial gate level (between ZMAXFG and bottom level)", 'typ': 'float'},
-            "VREG": {"desc": "Variable regulation Z ou Q", "desc_en": "Regulation variable Z or Q", 'typ': 'str'},
-            "PK": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'},
-            "VREGCLOS": {"desc": "valeur fermeture de la vanne", "desc_en": "gate closing value", 'typ': 'float'},
-            "VREGOPEN": {"desc": "valeur d'ouverture de la vanne", "desc_en": "gate opening value", 'typ': 'float'},
-            "CRITDTREG": {"desc": "critère NDTREG ou DTREG", "desc_en": "criterion NDTREG or DTREG", 'typ': 'str'},
-            "NDTREG": {"desc": "Tout les N pas temps pour l'application",
-                       "desc_en": "Every N time steps for application", 'typ': 'int'},
-            "DTREG": {"desc": "Si =0 pas de temps  du calcul, sinn celui indiqué (en s)",
-                      "desc_en": "If 0, default time step; otherwise, specified value (s)", 'typ': 'float'},
-            "ZINCRFG": {"desc": "max d'incrementation", "desc_en": "maximum increment", 'typ': 'float'},
-            "TOLREG": {"desc": "Tolerance sur les variale de regulation",
-                       "desc_en": "Tolerance on regulation variables", 'typ': 'float'},
+            "DIRFG": {
+                "desc": "direction si D cote monte et section diminue si U seul section diminue",
+                "desc_en": "direction: if D, level rises and section decreases; "
+                "if U, only section decreases",
+                "typ": "str",
+            },
+            "VELOFGOPEN": {
+                "desc": "vitesse d'ouverture m/s de la vanne",
+                "desc_en": "opening speed of the gate (m/s)",
+                "typ": "float",
+            },
+            "VELOFGCLOSE": {
+                "desc": "vitesse de fermeture m/s de la vanne",
+                "desc_en": "closing speed of the gate (m/s)",
+                "typ": "float",
+            },
+            "ZMAXFG": {
+                "desc": "valeur Z limite max d'ouverture",
+                "desc_en": "maximum Z limit for opening",
+                "typ": "float",
+            },
+            "ZINITREG": {
+                "desc": "cote initial de la vanne (compris entre ZMAXFG et cote de radier)",
+                "desc_en": "initial gate level (between ZMAXFG and bottom level)",
+                "typ": "float",
+            },
+            "VREG": {
+                "desc": "Variable regulation Z ou Q",
+                "desc_en": "Regulation variable Z or Q",
+                "typ": "str",
+            },
+            "PK": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", "typ": "float"},
+            "VREGCLOS": {
+                "desc": "valeur fermeture de la vanne",
+                "desc_en": "gate closing value",
+                "typ": "float",
+            },
+            "VREGOPEN": {
+                "desc": "valeur d'ouverture de la vanne",
+                "desc_en": "gate opening value",
+                "typ": "float",
+            },
+            "CRITDTREG": {
+                "desc": "critère NDTREG ou DTREG",
+                "desc_en": "criterion NDTREG or DTREG",
+                "typ": "str",
+            },
+            "NDTREG": {
+                "desc": "Tout les N pas temps pour l'application",
+                "desc_en": "Every N time steps for application",
+                "typ": "int",
+            },
+            "DTREG": {
+                "desc": "Si =0 pas de temps  du calcul, sinn celui indiqué (en s)",
+                "desc_en": "If 0, default time step; otherwise, specified value (s)",
+                "typ": "float",
+            },
+            "ZINCRFG": {
+                "desc": "max d'incrementation",
+                "desc_en": "maximum increment",
+                "typ": "float",
+            },
+            "TOLREG": {
+                "desc": "Tolerance sur les variale de regulation",
+                "desc_en": "Tolerance on regulation variables",
+                "typ": "float",
+            },
             "MAINTFIRST": {
                 "desc": "Maintenir le niveau initial jusqu'à la première ouverture",
-                "desc_en": "Hold Initial level until first openings", 'typ': 'bool'
+                "desc_en": "Hold Initial level until first openings",
+                "typ": "bool",
             },
-            "VBREAKREG": {"desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'},
-            "BPERMREG": {"desc": "True Si la rupture est non permanent", "desc_en": "True If break isn't permanent",
-                         'typ': 'bool'},
-            "ZFINALREG": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
-                          'typ': 'float'},
-            "CLAPET": {"desc": "True Si pour éviter la remontée de la marée",
-                       "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
-            "WRITEREG": {"desc": "Nombre pas de temps pour l'ecriture",
-                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
+            "VBREAKREG": {
+                "desc": "Valeur de rupture ouvrage",
+                "desc_en": "Break value of structure",
+                "typ": "float",
+            },
+            "BPERMREG": {
+                "desc": "True Si la rupture est non permanent",
+                "desc_en": "True If break isn't permanent",
+                "typ": "bool",
+            },
+            "ZFINALREG": {
+                "desc": "Cote final weirs après rupture",
+                "desc_en": "Final weir level after break",
+                "typ": "float",
+            },
+            "CLAPET": {
+                "desc": "True Si pour éviter la remontée de la marée",
+                "desc_en": "True If valve to prevent the tide rising",
+                "typ": "bool",
+            },
+            "WRITEREG": {
+                "desc": "Nombre pas de temps pour l'ecriture",
+                "desc_en": "Number of time steps for writing",
+                "typ": "int",
+            },
             # meth_tempo
-            "TIMEZ": {"desc": "Valeur Temps en s", "desc_en": "Time value in seconds", 'typ': 'float'},
-            "VALUEZ": {"desc": "Valeur associé à TIME", "desc_en": "Value associated with TIME", 'typ': 'float'},
-            "VBREAKT": {"desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'},
-            "BPERMT": {"desc": "True Si la rupture est non permanent", "desc_en": "True If break isn't permanent",
-                       'typ': 'bool'},
-            "ZFINALT": {"desc": "Cote final weirs après rupture", "desc_en": "Final weir level after break",
-                        'typ': 'float'},
-            "CLAPETT": {"desc": "True Si pour éviter la remontée de la marée",
-                        "desc_en": "True If valve to prevent the tide rising", 'typ': 'bool'},
-            "WRITET": {"desc": "Nombre pas de temps pour l'ecriture",
-                       "desc_en": "Number of time steps for writing", 'typ': 'int'},
+            "TIMEZ": {
+                "desc": "Valeur Temps en s",
+                "desc_en": "Time value in seconds",
+                "typ": "float",
+            },
+            "VALUEZ": {
+                "desc": "Valeur associé à TIME",
+                "desc_en": "Value associated with TIME",
+                "typ": "float",
+            },
+            "VBREAKT": {
+                "desc": "Valeur de rupture ouvrage",
+                "desc_en": "Break value of structure",
+                "typ": "float",
+            },
+            "BPERMT": {
+                "desc": "True Si la rupture est non permanent",
+                "desc_en": "True If break isn't permanent",
+                "typ": "bool",
+            },
+            "ZFINALT": {
+                "desc": "Cote final weirs après rupture",
+                "desc_en": "Final weir level after break",
+                "typ": "float",
+            },
+            "CLAPETT": {
+                "desc": "True Si pour éviter la remontée de la marée",
+                "desc_en": "True If valve to prevent the tide rising",
+                "typ": "bool",
+            },
+            "WRITET": {
+                "desc": "Nombre pas de temps pour l'ecriture",
+                "desc_en": "Number of time steps for writing",
+                "typ": "int",
+            },
         }
 
-        self.dmeth = {"meth_time": str(1),
-                      "meth_regul": str(2),
-                      }
+        self.dmeth = {
+            "meth_time": str(1),
+            "meth_regul": str(2),
+        }
         self.mess = ClassMessage()
 
     def get_param(self, parent=None, file="weirs_cli_fg.obj"):
@@ -126,10 +222,10 @@ class ClassMobilWeirsParam(object):
 
         if complet:
             txt = "Import configuration weirs mobile"
-            self.mess.add_mess('import_weirs_fg', 'info''warning', txt)
+            self.mess.add_mess("import_weirs_fg", "info" "warning", txt)
         else:
             txt = "Error when the weirs mobile import"
-            self.mess.add_mess('import_weirs_fg', 'warning', txt)
+            self.mess.add_mess("import_weirs_fg", "warning", txt)
 
         return self.check_param()
 
@@ -142,15 +238,15 @@ class ClassMobilWeirsParam(object):
         """
         if not parent:
             txt = "Error No parent"
-            self.mess.add_mess('export_weirs_fg', 'critic', txt)
+            self.mess.add_mess("export_weirs_fg", "critic", txt)
             return False
         complet = self.fill_param_to_db(parent.mdb)
         if not complet:
             return False
         if not self.check_param():
-            txt = self.mess.get_mess('chk_weirs_fg')
-            if txt != '':
-                parent.box.info(txt, 'Error')
+            txt = self.mess.get_mess("chk_weirs_fg")
+            if txt != "":
+                parent.box.info(txt, "Error")
             return False
         self.export_cl(file)
 
@@ -160,32 +256,33 @@ class ClassMobilWeirsParam(object):
         :param db (object): Database object
         :return: (bool) True if parameters are successfully fetched, otherwise False
         """
-        lst_var = ["gid",
-                   "name",
-                   "z_crest",
-                   "abscissa",
-                   "method_mob",
-                   "branchnum",
-                   "type",
-                   "erase_flag",
-                   'z_break',
-                   ]
+        lst_var = [
+            "gid",
+            "name",
+            "z_crest",
+            "abscissa",
+            "method_mob",
+            "branchnum",
+            "type",
+            "erase_flag",
+            "z_break",
+        ]
         sql = (
-            "SELECT {1} "
-            "FROM {0}.weirs "
-            "WHERE active AND type in (1,2,3,4)  AND active_mob "
+            "SELECT gid, name, z_crest, abscissa, method_mob, branchnum, type, erase_flag, z_break "
+            "FROM {schema}.weirs "
+            "WHERE active AND type IN (1,2,3,4) AND active_mob "
             "ORDER BY gid;"
-        ).format(db.SCHEMA, ", ".join(lst_var))
-        rows = db.run_query(sql, fetch=True)
+        )
+        rows = db.run_query(sql, schema=True, fetch=True)
         if rows is None:
             self.param_fg = {}
             txt = "erreur de recuperation base de donnee weirs"
-            self.mess.add_mess('impt_weirs_fg1', 'warning', txt)
+            self.mess.add_mess("impt_weirs_fg1", "warning", txt)
             return False
         if len(rows) == 0:
             self.param_fg = {}
             return True
-        conv_var = {'z_crest': "level0"}
+        conv_var = {"z_crest": "level0"}
         for row in rows:
             id_weirs = row[0]
             if id_weirs not in self.param_fg.keys():
@@ -196,25 +293,22 @@ class ClassMobilWeirsParam(object):
                     var = conv_var[var]
                 self.param_fg[id_weirs][var] = row[pos + 1]
 
-        lst_var = ["id_weirs", "name_var", "value"]
         sql = (
-            "SELECT {1} " "FROM {0}.weirs_mob_val " "WHERE id_weirs in ({2}) " "ORDER BY id_weirs;"
-        ).format(db.SCHEMA, ", ".join(lst_var), ", ".join([str(v) for v in self.list_actif]))
-        rows = db.run_query(sql, fetch=True)
+            "SELECT id_weirs, name_var, value FROM {schema}.weirs_mob_val "
+            "WHERE id_weirs IN %s ORDER BY id_weirs;"
+        )
+        rows = db.run_query(sql, schema=True, fetch=True, params=[tuple(self.list_actif)])
         if rows is None:
             self.param_fg = {}
             txt = "Error reading database weirs_mob_val"
-            self.mess.add_mess('impt_weirs_fg2', 'warning', txt)
+            self.mess.add_mess("impt_weirs_fg2", "warning", txt)
             return False
         if len(rows) == 0:
             self.param_fg = {}
-
             txt = "weirs_mob_val not consistent with weirs"
-            self.mess.add_mess('impt_weirs_fg3', 'warning', txt)
+            self.mess.add_mess("impt_weirs_fg3", "warning", txt)
             return False
-        var_tab = [
-            "TIMEZ",
-            "VALUEZ"]
+        var_tab = ["TIMEZ", "VALUEZ"]
         lst_id_tab = []
         for row in rows:
             id_weirs = row[0]
@@ -224,26 +318,26 @@ class ClassMobilWeirsParam(object):
                 self.param_fg[id_weirs].update({var: []})
                 continue
             if var in self.lst_param:
-                self.param_fg[id_weirs][var] = self.typ_to_val(self.lst_param[var]['typ'], row[2])
+                self.param_fg[id_weirs][var] = self.typ_to_val(self.lst_param[var]["typ"], row[2])
             else:
                 self.param_fg[id_weirs][var] = row[2]
 
         lst_id_tab = list(set(lst_id_tab))
         if len(lst_id_tab) > 0:
-            lst_var = ["id_weirs", "name_var", "value", "id_order"]
             sql = (
-                "SELECT {1} " "FROM {0}.weirs_mob_val " "WHERE id_weirs in ({2}) AND name_var in ({3})"
-                "ORDER BY id_weirs,id_order;"
-            ).format(db.SCHEMA, ", ".join(lst_var), ", ".join([str(v) for v in lst_id_tab]),
-                     ", ".join([f"'{v}'" for v in var_tab]))
-            # print(sql)
-            rows = db.run_query(sql, fetch=True)
+                "SELECT id_weirs, name_var, value, id_order FROM {schema}.weirs_mob_val "
+                "WHERE id_weirs IN %s AND name_var IN %s "
+                "ORDER BY id_weirs, id_order;"
+            )
+            rows = db.run_query(
+                sql, schema=True, fetch=True, params=[tuple(lst_id_tab), tuple(var_tab)]
+            )
             if not (rows is None or len(rows) == 0):
                 for row in rows:
                     id_weirs = row[0]
                     var = row[1]
                     if var in var_tab:
-                        self.param_fg[id_weirs][var].append(self.typ_to_val('float', row[2]))
+                        self.param_fg[id_weirs][var].append(self.typ_to_val("float", row[2]))
 
         return True
 
@@ -255,11 +349,11 @@ class ClassMobilWeirsParam(object):
         :param val (any): The value to be converted
         :return: (any) The converted value
         """
-        if typ == 'bool':
+        if typ == "bool":
             return str2bool(val)
-        elif typ == 'int':
+        elif typ == "int":
             return data_to_int(val)
-        elif typ == 'float':
+        elif typ == "float":
             return data_to_float(val)
         else:
             return val
@@ -281,7 +375,7 @@ class ClassMobilWeirsParam(object):
                     txt += f"  - {var} : {self.lst_param[var]['desc_en']}\n"
                 except KeyError:
                     txt += f"  - {var} : \n"
-            self.mess.add_mess('chk_weirs_fg', 'critic', txt)
+            self.mess.add_mess("chk_weirs_fg", "critic", txt)
             return False
         return True
 
@@ -294,17 +388,20 @@ class ClassMobilWeirsParam(object):
         """
         if test["method_mob"] == 2:
             if test["VREGOPEN"] < test["VREGCLOS"]:
-                txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
-                       f"It should always be higher in this case.\n "
-                       f"The issue is for weirs {num}.")
-                self.mess.add_mess('chk_weirs_reg', 'critic', txt)
+                txt = (
+                    f"The opening level minus tolerance is lower than "
+                    f"the closing level plus tolerance. "
+                    f"It should always be higher in this case.\n "
+                    f"The issue is for weirs {num}."
+                )
+                self.mess.add_mess("chk_weirs_reg", "critic", txt)
                 return False
         return True
 
     def check_param(self):
         """
-            Verify that all is OK to run the model.
-            :return: (bool) True if all is OK, otherwise False
+        Verify that all is OK to run the model.
+        :return: (bool) True if all is OK, otherwise False
         """
         dlist = self.create_lst_test()
         for num, test in self.param_fg.items():
@@ -322,14 +419,28 @@ class ClassMobilWeirsParam(object):
         :return: (dict) Dictionary of list of required variables
         """
         lst_com = ["name", "level0", "abscissa", "branchnum", "method_mob"]
-        lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG",
-                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
-                   "CLAPET"]
+        lst_reg = [
+            "DIRFG",
+            "VELOFGOPEN",
+            "VELOFGCLOSE",
+            "ZMAXFG",
+            "ZINITREG",
+            "VREG",
+            "PK",
+            "VREGCLOS",
+            "VREGOPEN",
+            "CRITDTREG",
+            "NDTREG",
+            "DTREG",
+            "ZINCRFG",
+            "CLAPET",
+        ]
         lst_time = ["TIMEZ", "VALUEZ", "CLAPETT"]
 
-        dlist = {self.dmeth["meth_time"]: lst_com + lst_time,
-                 self.dmeth["meth_regul"]: lst_com + lst_reg,
-                 }
+        dlist = {
+            self.dmeth["meth_time"]: lst_com + lst_time,
+            self.dmeth["meth_regul"]: lst_com + lst_reg,
+        }
         return dlist
 
     def export_cl(self, name="weirs_cli_fg.obj"):
@@ -367,8 +478,11 @@ class ClassMobilWeirsParam(object):
         :return: (bool) True if there are active weirs, otherwise False
         """
         if db:
-            sql = f"SELECT EXISTS (SELECT 1 FROM {db.SCHEMA}.weirs WHERE active_mob = TRUE and active= TRUE );"
-            row = db.run_query(sql, fetch=True)
+            sql = (
+                "SELECT EXISTS (SELECT 1 FROM {schema}.weirs "
+                "WHERE active_mob = TRUE AND active = TRUE);"
+            )
+            row = db.run_query(sql, schema=True, fetch=True)
             return bool(row and row[0][0])
         else:
             return bool(self.param_fg)

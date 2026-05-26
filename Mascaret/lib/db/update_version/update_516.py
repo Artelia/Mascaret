@@ -37,10 +37,12 @@ class ClassUpdate516:
         if valide:
             test = "results_sect"
             sql = (
-                "ALTER TABLE IF EXISTS {0}.results_sect RENAME TO results_sect_old;\n"
-                "ALTER TABLE IF EXISTS {0}.results_sect_old DROP CONSTRAINT IF EXISTS results_sect_pkey;"
+                "ALTER TABLE IF EXISTS {schema}.results_sect "
+                "RENAME TO results_sect_old;\n"
+                "ALTER TABLE IF EXISTS {schema}.results_sect_old "
+                "DROP CONSTRAINT IF EXISTS results_sect_pkey;"
             )
-            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 self.mgis.add_info("Alter the result_sect table - ERROR")
                 valide = False
@@ -50,10 +52,12 @@ class ClassUpdate516:
         # OBSERVATION
         if valide:
             sql = (
-                "ALTER TABLE IF EXISTS {0}.observations RENAME TO observations_old;\n"
-                "ALTER TABLE IF EXISTS {0}.observations DROP CONSTRAINT IF EXISTS observations_pkey;"
+                "ALTER TABLE IF EXISTS {schema}.observations "
+                "RENAME TO observations_old;\n"
+                "ALTER TABLE IF EXISTS {schema}.observations "
+                "DROP CONSTRAINT IF EXISTS observations_pkey;"
             )
-            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 self.mgis.add_info("Alter the observations table - ERROR")
                 valide = False
@@ -75,13 +79,15 @@ class ClassUpdate516:
         if valide:
             test = "fill_res"
             self.mgis.add_info("Fill the New results table", dbg=True)
-            sql = "DELETE FROM {0}.results_by_pk;\n"
+            sql = "DELETE FROM {schema}.results_by_pk;\n"
             sql += (
-                'INSERT INTO {0}.results_by_pk (id_runs, pknum, var, "time", val)'
-                'SELECT id_runs, pknum, var, array_agg("time" ORDER BY "time"), array_agg(val ORDER BY "time")'
-                "FROM {0}.results GROUP BY id_runs, pknum, var;\n"
+                'INSERT INTO {schema}.results_by_pk (id_runs, pknum, var, "time", val)'
+                "SELECT id_runs, pknum, var, "
+                'array_agg("time" ORDER BY "time"), '
+                'array_agg(val ORDER BY "time")'
+                "FROM {schema}.results GROUP BY id_runs, pknum, var;\n"
             )
-            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 self.mgis.add_info("Fill the New results table - ERROR")
                 valide = False
@@ -91,13 +97,15 @@ class ClassUpdate516:
         if valide:
             test = "fill_res_sec"
             self.mgis.add_info("Fill the New results section table", dbg=True)
-            sql = "DELETE FROM {0}.results_sect;\n"
+            sql = "DELETE FROM {schema}.results_sect;\n"
             sql += (
-                "INSERT INTO {0}.results_sect (id_runs, branch, pk , section)"
-                'SELECT id_runs, branch, array_agg("pk" ORDER BY "pk"), array_agg(section ORDER BY "pk")'
-                "FROM {0}.results_sect_old GROUP BY id_runs, branch;\n"
+                "INSERT INTO {schema}.results_sect (id_runs, branch, pk , section)"
+                "SELECT id_runs, branch, "
+                'array_agg("pk" ORDER BY "pk"), '
+                'array_agg(section ORDER BY "pk")'
+                "FROM {schema}.results_sect_old GROUP BY id_runs, branch;\n"
             )
-            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 self.mgis.add_info("Fill the New results section table - ERROR")
                 valide = False
@@ -106,12 +114,13 @@ class ClassUpdate516:
         if valide:
             test = "fill_obs"
             self.mgis.add_info("Fill the New observations table", dbg=True)
-            sql = "DELETE FROM {0}.observations;\n"
-            sql += """INSERT INTO {0}.observations(code,type, comment, valeur, date)
-                   SELECT code, type,  array_agg(comment ORDER BY date), array_agg(valeur ORDER BY date), 
+            sql = "DELETE FROM {schema}.observations;\n"
+            sql += """INSERT INTO {schema}.observations(code,type, comment, valeur, date)
+                   SELECT code, type,  array_agg(comment ORDER BY date), 
+                   array_agg(valeur ORDER BY date), 
                    array_agg(date ORDER BY date)
-                   FROM {0}.observations_old GROUP BY code,type;"""
-            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                   FROM {schema}.observations_old GROUP BY code,type;"""
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 self.mgis.add_info("Fill the New observations table - ERROR")
                 valide = False
@@ -120,14 +129,14 @@ class ClassUpdate516:
         if valide:
             test = "fill_res_view"
             self.mgis.add_info("New View results")
-            sql = "DROP VIEW  IF EXISTS {0}.results;\n"
+            sql = "DROP VIEW  IF EXISTS {schema}.results;\n"
             sql += (
-                "CREATE VIEW {0}.results AS SELECT results_by_pk.id_runs, "
+                "CREATE VIEW {schema}.results AS SELECT results_by_pk.id_runs, "
                 'UNNEST(results_by_pk."time") as time, '
                 "results_by_pk.pknum, results_by_pk.var, "
-                "UNNEST(results_by_pk.val) as val FROM {0}.results_by_pk;"
+                "UNNEST(results_by_pk.val) as val FROM {schema}.results_by_pk;"
             )
-            err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+            err = self.mdb.run_query(sql, schema=True)
             if err:
                 self.mgis.add_info("New View results - ERROR")
                 valide = False
@@ -137,14 +146,14 @@ class ClassUpdate516:
         if not valide:
             self.mgis.add_info("Cancel update")
             if test == "fill_res":
-                sql = "DROP VIEW  IF EXISTS {0}.results;\n"
+                sql = "DROP VIEW  IF EXISTS {schema}.results;\n"
                 sql += (
-                    'CREATE VIEW {0}.results AS SELECT id_runs, "time", pknum,  var, val '
-                    "FROM {0}.results_idx Inner join  {0}.results_val "
-                    "on {0}.results_val.idruntpk = {0}.results_idx.idruntpk;"
+                    'CREATE VIEW {schema}.results AS SELECT id_runs, "time", pknum,  var, val '
+                    "FROM {schema}.results_idx Inner join  {schema}.results_val "
+                    "on {schema}.results_val.idruntpk = {schema}.results_idx.idruntpk;"
                 )
 
-                err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                err = self.mdb.run_query(sql, schema=True)
             elif test in ["fill_res", "fill_res_sect", "create", "fill_obs"]:
 
                 if test != "create":
@@ -152,19 +161,23 @@ class ClassUpdate516:
                     t_pk = self.mdb.drop_table("results_by_pk", cascade=True)
                     t_obs = self.mdb.drop_table("observations", cascade=True)
                 if t_sec:
-                    sql = "ALTER TABLE IF EXISTS {0}.results_sect_old RENAME TO results_sect;\n"
+                    sql = (
+                        "ALTER TABLE IF EXISTS {schema}.results_sect_old RENAME TO results_sect;\n"
+                    )
                     sql += (
-                        "ALTER TABLE IF EXISTS {0}.results_sect "
+                        "ALTER TABLE IF EXISTS {schema}.results_sect "
                         "ADD CONSTRAINT results_sect_pkey PRIMARY KEY (id_runs, pk, branch);"
                     )
-                    err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                    err = self.mdb.run_query(sql, schema=True)
                 if t_obs:
-                    sql = "ALTER TABLE IF EXISTS {0}.observations_old RENAME TO observations;\n"
+                    sql = (
+                        "ALTER TABLE IF EXISTS {schema}.observations_old RENAME TO observations;\n"
+                    )
                     sql += (
-                        "ALTER TABLE IF EXISTS {0}.observations "
+                        "ALTER TABLE IF EXISTS {schema}.observations "
                         "ADD CONSTRAINT observations_pkey PRIMARY KEY (id);"
                     )
-                    err = self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+                    err = self.mdb.run_query(sql, schema=True)
                 if not t_pk or not t_sec or not t_obs:
                     err = True
 

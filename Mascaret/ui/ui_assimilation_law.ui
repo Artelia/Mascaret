@@ -365,13 +365,9 @@
              </spacer>
             </item>
             <item>
-             <widget class="QPushButton" name="bt_edit_law">
+             <widget class="QPushButton" name="bt_clr_warn_law">
               <property name="text">
-               <string>Edition</string>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</normaloff>:/plugins/Mascaret/icones/mActionToggleEditing.png</iconset>
+               <string>Clear</string>
               </property>
              </widget>
             </item>
@@ -514,45 +510,6 @@
                <property name="bottomMargin">
                 <number>0</number>
                </property>
-               <item>
-                <widget class="QPushButton" name="bt_cancel_law">
-                 <property name="toolTip">
-                  <string>Cancel</string>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>20</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_4">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="bt_valid_law">
-                 <property name="toolTip">
-                  <string>Save</string>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>20</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
               </layout>
              </widget>
             </item>

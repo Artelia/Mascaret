@@ -16,17 +16,12 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 import os
 
 from qgis import core
 from qgis.PyQt import QtWidgets, uic
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.core import QgsProject
 
 from ..ui.custom_control import ClassWarningBox
 
@@ -39,7 +34,6 @@ except AttributeError:
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "ui/edit_ks_mesh_plan.ui"))
 )
-
 
 
 class ClassEditKsDialog(BASE, FORM_CLASS):

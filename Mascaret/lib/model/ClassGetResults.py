@@ -264,11 +264,12 @@ class ClassGetResults:
             if id_z in list_var and compute_max:
                 for pknum in set(val["PK"]):
                     query = (
-                        f"SELECT MAX(val) FROM {self.mdb.SCHEMA}.results "
-                        f"WHERE var = {id_z} AND id_runs={id_run} "
-                        f"AND pknum = {pknum};"
+                        "SELECT MAX(val) FROM {schema}.results "
+                        "WHERE var = %s AND id_runs = %s AND pknum = %s;"
                     )
-                    rows = self.mdb.run_query(query, fetch=True)
+                    rows = self.mdb.run_query(
+                        query, fetch=True, params=[id_z, id_run, pknum], schema=True
+                    )
                     try:
                         dico_zmax[pknum] = rows[0][0]
                     except Exception:
@@ -538,7 +539,6 @@ class ClassGetResults:
         :param id_run: run index
         :return: True
         """
-        val_keys = val.keys()
         pk_column = next((col for col in ["PK", "BNUM", "LNUM"] if col in val), None)
         if not pk_column:
             return False

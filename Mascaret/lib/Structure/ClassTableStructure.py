@@ -128,7 +128,7 @@ class ClassTableStructure:
             "ZBAS": {"name": "cotes basse", "unit": "m"},
             "ZHAUT": {"name": "cotes haute", "unit": "m"},
             "ZREG": {"name": "cotes d'exploitation", "unit": "m"},
-            "VDESC": {"name": "vitesses d\’abaissement", "unit": "m/s"},
+            "VDESC": {"name": "vitesses d'abaissement", "unit": "m/s"},
             "VMONT": {"name": "vitesses de remontée", "unit": "m/s"},
             "TIME": {"name": "temps", "unit": "s"},
             "ZVAR": {"name": "cotes de crêtes", "unit": "m"},
@@ -142,30 +142,28 @@ def update_etat_struct(mdb):
     :param mdb (object): Database connection object
     :return: None
     """
-    sql = "SELECT gid FROM {0}.profiles ".format(mdb.SCHEMA)
+    sql = "SELECT gid FROM {schema}.profiles"
 
-    rows = mdb.run_query(sql, fetch=True)
+    rows = mdb.run_query(sql, schema=True, fetch=True)
 
     try:
         lst_prof = [var[0] for var in rows]
-    except IndexError or TypeError:
+    except (IndexError, TypeError):
         return
-    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config " "WHERE active ".format(mdb.SCHEMA)
-    rows = mdb.run_query(sql, fetch=True)
+    sql = "SELECT DISTINCT id_prof_ori FROM {schema}.struct_config " "WHERE active "
+    rows = mdb.run_query(sql, schema=True, fetch=True)
 
     try:
         prof_act = [var[0] for var in rows]
-    except IndexError or TypeError:
+    except (IndexError, TypeError):
         prof_act = []
 
-    sql = "SELECT DISTINCT id_prof_ori FROM {0}.struct_config " "WHERE active=false".format(
-        mdb.SCHEMA
-    )
-    rows = mdb.run_query(sql, fetch=True)
+    sql = "SELECT DISTINCT id_prof_ori FROM {schema}.struct_config " "WHERE active=false"
+    rows = mdb.run_query(sql, schema=True, fetch=True)
     try:
         prof_d = [var[0] for var in rows]
-    except IndexError or TypeError:
-        prof_act = []
+    except (IndexError, TypeError):
+        prof_d = []
 
     list_udpate = []
 
@@ -177,13 +175,11 @@ def update_etat_struct(mdb):
         else:
             list_udpate.append((gid, 0))
 
-    sql = (
-        "UPDATE {0}.profiles SET struct= val.state "
-        "FROM ( values {1}) as val(id,state) "
-        "WHERE gid = val.id".format(mdb.SCHEMA, ",".join(map(str, list_udpate)))
-    )
-
-    mdb.run_query(sql)
+    if list_udpate:
+        sql = "UPDATE {schema}.profiles SET struct = %s WHERE gid = %s"
+        mdb.run_query(
+            sql, schema=True, many=True, list_many=[(state, gid) for gid, state in list_udpate]
+        )
 
 
 def get_no_keep_break(file="no_keep_break.json"):
@@ -194,7 +190,7 @@ def get_no_keep_break(file="no_keep_break.json"):
     :return: param (dict): Parameters dictionary
     """
     param = {}
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","mascaret"))
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "mascaret"))
     path = os.path.join(path, file)
     if os.path.isfile(path):
         with open(path, "r") as file:

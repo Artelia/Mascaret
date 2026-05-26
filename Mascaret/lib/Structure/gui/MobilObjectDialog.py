@@ -19,24 +19,17 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QButtonGroup, QDialog
+from qgis.PyQt.uic import loadUi
 
 from .MobilObjectMet1Widget import ClassMobilObjectMet1Widget
 from .MobilObjectMet2Widget import ClassMobilObjectMet2Widget
 from .MobilObjectMet3Widget import ClassMobilObjectMet3Widget
 
-from ....ui.custom_control import _qt_is_checked
+from ....ui.custom_control import _qt_is_checked, get_qt_checked
 
-D_TYP_LINKS = {1: "Weir",
-               2: "Channel",
-               3: "Syphon",
-               4: "Culvert"}
+D_TYP_LINKS = {1: "Weir", 2: "Channel", 3: "Syphon", 4: "Culvert"}
 
 
 class ClassMobilObjectDialog(QDialog):
@@ -53,22 +46,22 @@ class ClassMobilObjectDialog(QDialog):
         self.cur_obj = int()
         self.updating_info = False
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      "ui/structures/ui_mobil_object.ui"),
-                         self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_mobil_object.ui"), self
+        )
 
-        if self.typ_obj == 'weir':
+        if self.typ_obj == "weir":
             self.setWindowTitle("Movable Weirs")
             self.lbl_table.setText("Active weirs (checked = movable)")
-            self.obj_table = 'weirs'
-            self.mob_table = 'weirs_mob_val'
-            self.mob_table_id = 'id_weirs'
-        elif self.typ_obj == 'link':
+            self.obj_table = "weirs"
+            self.mob_table = "weirs_mob_val"
+            self.mob_table_id = "id_weirs"
+        elif self.typ_obj == "link":
             self.setWindowTitle("Movable Links")
             self.lbl_table.setText("Active links (checked = movable)")
-            self.obj_table = 'links'
-            self.mob_table = 'links_mob_val'
-            self.mob_table_id = 'id_links'
+            self.obj_table = "links"
+            self.mob_table = "links_mob_val"
+            self.mob_table_id = "id_links"
 
         self.wgt_m1 = ClassMobilObjectMet1Widget(self.mgis, self.typ_obj)
         self.ui.lay_met1.addWidget(self.wgt_m1)
@@ -88,7 +81,7 @@ class ClassMobilObjectDialog(QDialog):
         self.bg_method.addButton(self.rb_met_0, 0)
         self.bg_method.addButton(self.rb_met_1, 1)
         self.bg_method.addButton(self.rb_met_2, 2)
-        if self.typ_obj == 'link':
+        if self.typ_obj == "link":
             self.bg_method.addButton(self.rb_met_3, 3)
         else:
             self.rb_met_3.hide()
@@ -119,12 +112,17 @@ class ClassMobilObjectDialog(QDialog):
         Delete data in the mobility table that does not correspond to existing objects.
         :return: None
         """
-        sql = "DELETE FROM {0}.{2} WHERE {3} NOT IN " \
-              "(SELECT gid FROM {0}.{1})".format(self.mdb.SCHEMA,
-                                                 self.obj_table,
-                                                 self.mob_table,
-                                                 self.mob_table_id)
-        self.mdb.run_query(sql)
+        if self.typ_obj == "weir":
+            sql = (
+                "DELETE FROM {schema}.weirs_mob_val WHERE id_weirs NOT IN "
+                "(SELECT gid FROM {schema}.weirs)"
+            )
+        else:
+            sql = (
+                "DELETE FROM {schema}.links_mob_val WHERE id_links NOT IN "
+                "(SELECT gid FROM {schema}.links)"
+            )
+        self.mdb.run_query(sql, schema=True)
 
     def fill_lst_objects(self, def_id=None):
         """
@@ -132,23 +130,29 @@ class ClassMobilObjectDialog(QDialog):
         :param def_id (int): Optional, ID of the object to select by default
         :return: None
         """
-        if QT_VERSION > 5:
-            qt_check =Qt.CheckState.Checked
-        else:
-            qt_check = Qt.Checked
+
+        qt_check = get_qt_checked()
         mdl = QStandardItemModel()
         mdl.setColumnCount(1)
 
         self.ui.lst_obj.setModel(mdl)
         self.ui.lst_obj.setModelColumn(0)
 
-        sql = "SELECT gid, name, type, active_mob FROM {0}.{1} WHERE active='t' " \
-              "ORDER BY name".format(self.mdb.SCHEMA, self.obj_table)
-        rows = self.mdb.run_query(sql, fetch=True)
+        if self.typ_obj == "weir":
+            sql = (
+                "SELECT gid, name, type, active_mob FROM {schema}.weirs "
+                "WHERE active = 't' ORDER BY name"
+            )
+        else:
+            sql = (
+                "SELECT gid, name, type, active_mob FROM {schema}.links "
+                "WHERE active = 't' ORDER BY name"
+            )
+        rows = self.mdb.run_query(sql, fetch=True, schema=True)
 
         for r, row in enumerate(rows):
             obj_id, obj_name, obj_type, obj_act = row
-            if self.typ_obj == 'link':
+            if self.typ_obj == "link":
                 obj_name = "{0} ({1})".format(obj_name, D_TYP_LINKS[obj_type])
             new_itm = QStandardItem(obj_name)
             new_itm.setData(obj_id, 32)
@@ -181,13 +185,13 @@ class ClassMobilObjectDialog(QDialog):
             cur_itm = self.ui.lst_obj.model().itemFromIndex(cur_idx)
             self.cur_obj = cur_itm.data(32)
 
-            rows = self.mdb.select(self.obj_table,
-                                   where="gid = {0}".format(self.cur_obj),
-                                   list_var=["method_mob"])
+            rows = self.mdb.select(
+                self.obj_table, where="gid = %s", params=[self.cur_obj], list_var=["method_mob"]
+            )
 
             cur_met = 0
             if rows:
-                if rows["method_mob"][0] is not None and rows["method_mob"][0].strip() != 'None':
+                if rows["method_mob"][0] is not None and rows["method_mob"][0].strip() != "None":
                     cur_met = int(rows["method_mob"][0])
                 else:
                     cur_met = 0
@@ -212,11 +216,11 @@ class ClassMobilObjectDialog(QDialog):
             self.bt_edit.setEnabled(True)
 
         if not self.updating_info:
-            sql = "UPDATE {0}.{1} SET method_mob = '{2}' WHERE gid = {3}".format(self.mdb.SCHEMA,
-                                                                                 self.obj_table,
-                                                                                 cur_method,
-                                                                                 self.cur_obj)
-            self.mdb.run_query(sql)
+            if self.typ_obj == "weir":
+                sql = "UPDATE {schema}.weirs SET method_mob = %s WHERE gid = %s"
+            else:
+                sql = "UPDATE {schema}.links SET method_mob = %s WHERE gid = %s"
+            self.mdb.run_query(sql, params=[str(cur_method), self.cur_obj], schema=True)
 
     def cur_object_status_changed(self, itm):
         """
@@ -225,16 +229,16 @@ class ClassMobilObjectDialog(QDialog):
         :param itm (QStandardItem): The item whose status changed
         :return: None
         """
-        if _qt_is_checked(itm,check_level="full"):
-            cur_val = 't'
+        if _qt_is_checked(itm, check_level="full"):
+            cur_val = "t"
         else:
-            cur_val = 'f'
+            cur_val = "f"
 
-        sql = "UPDATE {0}.{1} SET active_mob = '{2}' WHERE gid = {3}".format(self.mdb.SCHEMA,
-                                                                             self.obj_table,
-                                                                             cur_val,
-                                                                             itm.data(32))
-        self.mdb.run_query(sql)
+        if self.typ_obj == "weir":
+            sql = "UPDATE {schema}.weirs SET active_mob = %s WHERE gid = %s"
+        else:
+            sql = "UPDATE {schema}.links SET active_mob = %s WHERE gid = %s"
+        self.mdb.run_query(sql, params=[cur_val, itm.data(32)], schema=True)
 
     def edit_object(self):
         """

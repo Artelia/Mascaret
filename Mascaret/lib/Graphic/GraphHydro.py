@@ -118,10 +118,11 @@ class GraphHydroLaw(GraphCommon):
         """
         leglines = self.leg.get_lines()
 
-        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
-            self.mdb.SCHEMA, id_law, self.axeX
+        sql = (
+            "SELECT value FROM {schema}.law_values WHERE id_law = %s "
+            "AND id_var = %s ORDER BY id_order"
         )
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_law, self.axeX], schema=True)
         if date_ref:
             lst_x = [mdates.date2num(date_ref + timedelta(seconds=r[0])) for r in rows]
         else:
@@ -130,10 +131,11 @@ class GraphHydroLaw(GraphCommon):
         for v, var in enumerate(self.list_var):
             lst_y = []
             if id_law is not None:
-                sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
-                    self.mdb.SCHEMA, id_law, var["id"]
+                sql = (
+                    "SELECT value FROM {schema}.law_values "
+                    "WHERE id_law = %s AND id_var = %s ORDER BY id_order"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(sql, fetch=True, params=[id_law, var["id"]], schema=True)
                 if len(rows) > 0:
                     lst_y = [r[0] for r in rows]
 
@@ -165,10 +167,10 @@ class GraphHydroLaw(GraphCommon):
 
         if id_law:
             sql = (
-                "SELECT DISTINCT value FROM {0}.law_values WHERE id_law = {1} AND id_var = {2} "
-                "ORDER BY value".format(self.mdb.SCHEMA, id_law, self.axeZ)
+                "SELECT DISTINCT value FROM {schema}.law_values "
+                "WHERE id_law = %s AND id_var = %s ORDER BY value"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, params=[id_law, self.axeZ], schema=True)
             self.list_z = [r[0] for r in rows]
 
             for idx, z in enumerate(self.list_z):
@@ -202,19 +204,33 @@ class GraphHydroLaw(GraphCommon):
 
         for idx, z in enumerate(self.list_z):
             sql = (
-                "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = {2} AND id_order IN "
-                "(SELECT id_order FROM {0}.law_values WHERE id_law = {1} AND id_var = {3} AND value = {4}) "
-                "ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX, self.axeZ, z)
+                "SELECT value FROM {schema}.law_values WHERE id_law = %s "
+                "AND id_var = %s AND id_order IN "
+                "(SELECT id_order FROM {schema}.law_values WHERE id_law = %s "
+                "AND id_var = %s AND value = %s) "
+                "ORDER BY id_order"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(
+                sql,
+                fetch=True,
+                params=[id_law, self.axeX, id_law, self.axeZ, z],
+                schema=True,
+            )
             lst_x = [r[0] for r in rows]
 
             sql = (
-                "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 2 AND id_order IN "
-                "(SELECT id_order FROM {0}.law_values WHERE id_law = {1} AND id_var = {3} AND value = {4}) "
-                "ORDER BY id_order".format(self.mdb.SCHEMA, id_law, self.axeX, self.axeZ, z)
+                "SELECT value FROM {schema}.law_values WHERE id_law = %s "
+                "AND id_var = 2 AND id_order IN "
+                "(SELECT id_order FROM {schema}.law_values WHERE id_law = %s "
+                "AND id_var = %s AND value = %s) "
+                "ORDER BY id_order"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(
+                sql,
+                fetch=True,
+                params=[id_law, id_law, self.axeZ, z],
+                schema=True,
+            )
             lst_y = [r[0] for r in rows]
 
             if not lst_x_ref:
@@ -311,19 +327,28 @@ class GraphHydroLaw(GraphCommon):
         if typ_law:
             self.axeX = param_law["graph"]["x"]["var"]
             for v, var in enumerate(param_law["graph"]["y"]["var"]):
-                self.list_var.append({"id": var, "name": f'Initial law -{param_law["var"][var]["name"]}'})
+                self.list_var.append(
+                    {"id": var, "name": f'Initial law -{param_law["var"][var]["name"]}'}
+                )
                 (courbe_laws,) = self.axes.plot(
-                    [], [], linestyle='-', zorder=100 - v * 2, label=f'Initial law -{param_law["var"][var]["name"]}',
+                    [],
+                    [],
+                    linestyle="-",
+                    zorder=100 - v * 2,
+                    label=f'Initial law -{param_law["var"][var]["name"]}',
                     color="grey",
                 )
                 self.courbes.append(courbe_laws)
-                self.list_var.append({"id": var, "name": f'New law - {param_law["var"][var]["name"]}'})
+                self.list_var.append(
+                    {"id": var, "name": f'New law - {param_law["var"][var]["name"]}'}
+                )
                 (courbe_ctrl,) = self.axes.plot(
-                    [], [],
-                    linestyle='-',
-                    color='blue',
+                    [],
+                    [],
+                    linestyle="-",
+                    color="blue",
                     label=f'New law - {param_law["var"][var]["name"]}',
-                    zorder=100 - (v + 1) * 2
+                    zorder=100 - (v + 1) * 2,
                 )
                 self.courbes.append(courbe_ctrl)
 
@@ -387,10 +412,11 @@ class GraphHydroLaw(GraphCommon):
         """
         leglines = self.leg.get_lines()
 
-        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
-            self.mdb.SCHEMA, id_law, self.axeX
+        sql = (
+            "SELECT value FROM {schema}.law_values WHERE "
+            "id_law = %s AND id_var = %s ORDER BY id_order"
         )
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_law, self.axeX], schema=True)
         if date_ref:
             lst_x = [mdates.date2num(date_ref + timedelta(seconds=r[0])) for r in rows]
         else:
@@ -399,10 +425,11 @@ class GraphHydroLaw(GraphCommon):
         for v, var in enumerate(self.list_var):
             lst_y = []
             if id_law is not None:
-                sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
-                    self.mdb.SCHEMA, id_law, var["id"]
+                sql = (
+                    "SELECT value FROM {schema}.law_values "
+                    "WHERE id_law = %s AND id_var = %s ORDER BY id_order"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(sql, fetch=True, params=[id_law, var["id"]], schema=True)
                 if len(rows) > 0:
                     lst_y = [r[0] for r in rows]
 
