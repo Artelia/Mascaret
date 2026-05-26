@@ -19,12 +19,8 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.uic import loadUi
 
 
 class ClassFilterDialog(QDialog):

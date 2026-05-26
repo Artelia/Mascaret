@@ -39,6 +39,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QObject
 from .ClassGetResults import ClassGetResults
 from .ClassBCWriter import ClassBCWriter
 from ..assim.ClassStorageDB import ClassStorageDB
+from ..python_exec import resolve_python_executable
 
 MESSAGE_CATEGORY = "TaskMascaret"
 
@@ -126,7 +127,8 @@ class TaskMascaret(QgsTask):
     def _process_completed_results(self):
         """Process and emit results in submission order even if finished out-of-order.
 
-        This method emits model_completed signals for consecutive results starting at self.next_to_process.
+        This method emits model_completed signals for consecutive results starting
+        at self.next_to_process.
         :return: None
         """
         while self.next_to_process in self.completed_results:
@@ -149,7 +151,8 @@ class TaskMascaret(QgsTask):
             self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers)
 
             self.on_message(
-                f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
+                f"Starting {self.total_models} models with {self.max_workers} "
+                "parallel workers (threads)"
             )
 
             # Submit the initial workers
@@ -368,13 +371,12 @@ class TaskMascaret(QgsTask):
             ] += f"Folder: {self.get_folder_display_basic(params.get('RUN_REP'), name_scen)}\n"
 
             if self.cond_api:
-                os.chdir(os.path.join(script_dir, "..", "api"))
+                api_dir = os.path.join(script_dir, "..", "api")
+                py_exec = resolve_python_executable()
+                run_kwargs = self.creat_kwargs(api_dir)
                 process = subprocess.run(
-                    ["python", "ClassAPIMascaret.py", param_file],
-                    shell=True,
-                    text=True,
-                    check=True,
-                    capture_output=True,
+                    [py_exec, "ClassAPIMascaret.py", param_file],
+                    **run_kwargs,
                 )
             else:
                 test = sys.platform
@@ -394,16 +396,16 @@ class TaskMascaret(QgsTask):
                 # Windows = 'win32'
                 # Windows / Cygwin = 'cygwin'
                 shutil.copy2(source_file, params.get("RUN_REP"))
-                os.chdir(params.get("RUN_REP"))
+                run_rep = params.get("RUN_REP")
+                executable = os.path.join(run_rep, soft)
                 process = subprocess.run(
-                    soft,  # list -> no need for shell=True
+                    [executable],
+                    cwd=run_rep,
                     text=True,  # stdout/stderr as str
                     check=True,  # raise exception if return code != 0
-                    shell=True,
                     capture_output=True,  # capture stdout/stderr
                     encoding="utf-8",  # uncomment if you want to force encoding
                 )
-                os.chdir(script_dir)
 
             # print(process.stdout, 'uuu')
             results.update(
@@ -608,3 +610,47 @@ class TaskMascaret(QgsTask):
         )
         id_run = info["id"][0]
         return id_run
+
+    def creat_kwargs(self, script_dir):
+        """
+        Create a dictionary of keyword arguments for subprocess.run
+        with secure and cross-platform configuration.
+
+        Parameters
+        ----------
+        script_dir : str
+            Working directory where the subprocess will be executed.
+
+        Returns
+        -------
+        dict
+            Dictionary of keyword arguments ready to be passed to subprocess.run.
+        """
+
+        run_kwargs = {
+            "cwd": script_dir,  # Working directory for the subprocess
+            "text": True,  # Return stdout/stderr as strings instead of bytes
+            "check": True,  # Raise CalledProcessError if the command fails
+            "capture_output": True,  # Capture stdout and stderr
+            "shell": False,  # IMPORTANT: avoid shell=True (prevents B602 vulnerability)
+            "stdin": subprocess.DEVNULL,  # Prevent any blocking interactive input
+        }
+
+        if os.name == "nt":
+            # Windows-specific configuration
+            # Hide the console window when running the subprocess
+            run_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            # Additional startup configuration to suppress the window display
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            run_kwargs["startupinfo"] = startupinfo
+
+        else:
+            # POSIX systems (Linux, macOS)
+            # Start the process in a new session (detached from the terminal)
+            run_kwargs["start_new_session"] = True
+
+        return run_kwargs

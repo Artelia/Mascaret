@@ -19,13 +19,8 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ..ClassTableStructure import ClassTableStructure
@@ -105,28 +100,29 @@ class StructureFgDialog(QDialog):
                     var = "type_fg"
                 else:
                     var = None
-                sql = "UPDATE {0}.struct_fg SET {2} = '{3}'  WHERE id_config = {1} ".format(
-                    self.mdb.SCHEMA, self.id_struct, var, val
-                )
-                self.mdb.execute(sql)
+                if var == "xpos":
+                    sql = "UPDATE {schema}.struct_fg SET xpos = %s WHERE id_config = %s"
+                elif var == "var_reg":
+                    sql = "UPDATE {schema}.struct_fg SET var_reg = %s WHERE id_config = %s"
+                else:
+                    sql = "UPDATE {schema}.struct_fg SET type_fg = %s WHERE id_config = %s"
+                self.mdb.run_query(sql, params=[val, self.id_struct], schema=True)
             else:
-                sql = "SELECT * FROM {0}.struct_fg_val WHERE id_config = {1} AND  name_var = '{2}' ".format(
-                    self.mdb.SCHEMA, self.id_struct, var
-                )
-                row = self.mdb.run_query(sql, fetch=True)
+                sql = "SELECT 1 FROM {schema}.struct_fg_val WHERE id_config = %s AND name_var = %s"
+                row = self.mdb.run_query(sql, fetch=True, params=[self.id_struct, var], schema=True)
                 if len(row) > 0:
-                    sql = "UPDATE {0}.struct_fg_val SET value = {3} WHERE id_config = {1} AND  name_var = '{2}'".format(
-                        self.mdb.SCHEMA, self.id_struct, var, val
+                    sql = (
+                        "UPDATE {schema}.struct_fg_val SET value = %s "
+                        "WHERE id_config = %s AND name_var = %s"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.run_query(sql, params=[val, self.id_struct, var], schema=True)
                 else:
                     sql = (
-                        "INSERT INTO {0}.struct_fg_val (id_config, id_scen, id_order, name_var, value)"
-                        " VALUES ({1}, {2}, {3},'{4}',{5})".format(
-                            self.mdb.SCHEMA, self.id_struct, 0, 0, var, val
-                        )
+                        "INSERT INTO {schema}.struct_fg_val "
+                        "(id_config, id_scen, id_order, name_var, value)"
+                        " VALUES (%s, %s, %s, %s, %s)"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.run_query(sql, params=[self.id_struct, 0, 0, var, val], schema=True)
 
         self.accept()
 
@@ -171,10 +167,8 @@ class StructureFgDialog(QDialog):
         self.zinc_fg.setMaximum(self.cote_max_fg.value())
 
     def display_fg_struct(self):
-        sql = "SELECT  name_var, value FROM {0}.struct_fg_val " "WHERE id_config = {1} ".format(
-            self.mdb.SCHEMA, self.id_struct
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT name_var, value FROM {schema}.struct_fg_val WHERE id_config = %s"
+        rows = self.mdb.run_query(sql, fetch=True, params=[self.id_struct], schema=True)
         if len(rows) > 0:
             dico = {}
             for param, val in rows:
@@ -211,8 +205,9 @@ class StructureFgDialog(QDialog):
 
         rows = self.mdb.select(
             "struct_fg",
-            where="id_config = {0}".format(self.id_struct),
+            where="id_config = %s",
             list_var=["type_fg", "xpos", "var_reg"],
+            params=[self.id_struct],
         )
         for param, val in rows.items():
             param = self.tbst.dico_vardb_to_var_fg[param]

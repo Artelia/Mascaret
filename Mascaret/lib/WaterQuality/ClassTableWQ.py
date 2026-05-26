@@ -59,11 +59,12 @@ class ClassTableWQ:
         ]
 
     def get_cur_wq_mod(self):
-        # modeleQualiteEau
-        sql = "SELECT steady FROM {0}.parametres WHERE parametre = 'modeleQualiteEau'".format(
-            self.mdb.SCHEMA
+        rows = self.mdb.run_query(
+            "SELECT steady FROM {schema}.parametres WHERE parametre = %s",
+            fetch=True,
+            params=["modeleQualiteEau"],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
         return int(rows[0][0])
 
     def tracer_physic_default(self):
@@ -229,7 +230,8 @@ class ClassTableWQ:
                     },
                     {
                         "sigle": "KE",
-                        "text": "EXTINCTION COEFF. FOR SOLAR RADIATION RAY WITHOUT PHYTOPLANKTON (M-1)",
+                        "text": "EXTINCTION COEFF. FOR SOLAR RADIATION RAY "
+                        "WITHOUT PHYTOPLANKTON (M-1)",
                         "textfr": "COEFFICIENT D'EXTINCTION DU RAY SANS PHYTO (M-1)",
                         "value": 3.0,
                     },
@@ -277,14 +279,17 @@ class ClassTableWQ:
                     },
                     {
                         "sigle": "FP",
-                        "text": "PROPORTION OF PHOSPHORUS IN THE PHYTOPLANKTON CELLS (MGP/MICROGCHLA)",
+                        "text": "PROPORTION OF PHOSPHORUS IN "
+                        "THE PHYTOPLANKTON CELLS (MGP/MICROGCHLA)",
                         "textfr": "PROP DE PHOSPHORE DANS LES CELLULES DU PHYTO (MGP/MICROGCHLA)",
                         "value": 0.0025,
                     },
                     {
                         "sigle": "DTP",
-                        "text": "PERCENTAGE OF PHOSPHORUS DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)",
-                        "textfr": "POURCENT. DE PHOSPHORE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)",
+                        "text": "PERCENTAGE OF PHOSPHORUS DIRECTLY ASSIMILATED "
+                        "BY DEAD PHYTOPLANKTON (%)",
+                        "textfr": "POURCENT. DE PHOSPHORE DIRECT. ASSIMILABLE "
+                        "DANS LE PHYTO MORT (%)",
                         "value": 0.5,
                     },
                     {
@@ -295,13 +300,15 @@ class ClassTableWQ:
                     },
                     {
                         "sigle": "FN",
-                        "text": "PROPORTION OF NITROGEN IN THE PHYTOPLANKTON CELLS (MGN/MICROGCHLA)",
+                        "text": "PROPORTION OF NITROGEN IN THE "
+                        "PHYTOPLANKTON CELLS (MGN/MICROGCHLA)",
                         "textfr": "PROP D'AZOTE DANS LES CELLULES DU PHYTO (MGN/MICROGCHLA)",
                         "value": 0.0035,
                     },
                     {
                         "sigle": "DTN",
-                        "text": "PERCENTAGE OF NITROGEN DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)",
+                        "text": "PERCENTAGE OF NITROGEN DIRECTLY ASSIMILATED "
+                        "BY DEAD PHYTOPLANKTON (%)",
                         "textfr": "POURCENT. D'AZOTE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)",
                         "value": 0.5,
                     },
@@ -384,7 +391,8 @@ class ClassTableWQ:
                     },
                     {
                         "sigle": "KE",
-                        "text": "EXTINCTION COEFF. FOR SOLAR RADIATION RAY WITHOUT PHYTOPLANKTON (M-1)",
+                        "text": "EXTINCTION COEFF. FOR SOLAR RADIATION RAY "
+                        "WITHOUT PHYTOPLANKTON (M-1)",
                         "textfr": "COEFFICIENT D'EXTINCTION DU RAY SANS PHYTO (M-1)",
                         "value": 3.0,
                     },
@@ -432,14 +440,18 @@ class ClassTableWQ:
                     },
                     {
                         "sigle": "FP",
-                        "text": "PROPORTION OF PHOSPHORUS IN THE PHYTOPLANKTON CELLS (MGP/MICROGCHLA)",
-                        "textfr": "PROP DE PHOSPHORE DANS LES CELLULES DU PHYTO (MGP/MICROGCHLA)",
+                        "text": "PROPORTION OF PHOSPHORUS IN "
+                        "THE PHYTOPLANKTON CELLS (MGP/MICROGCHLA)",
+                        "textfr": "PROP DE PHOSPHORE DANS "
+                        "LES CELLULES DU PHYTO (MGP/MICROGCHLA)",
                         "value": 0.0025,
                     },
                     {
                         "sigle": "DTP",
-                        "text": "PERCENTAGE OF PHOSPHORUS DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)",
-                        "textfr": "POURCENT. DE PHOSPHORE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)",
+                        "text": "PERCENTAGE OF PHOSPHORUS DIRECTLY ASSIMILATED "
+                        "BY DEAD PHYTOPLANKTON (%)",
+                        "textfr": "POURCENT. DE PHOSPHORE DIRECT. ASSIMILABLE "
+                        "DANS LE PHYTO MORT (%)",
                         "value": 0.5,
                     },
                     {
@@ -450,13 +462,15 @@ class ClassTableWQ:
                     },
                     {
                         "sigle": "FN",
-                        "text": "PROPORTION OF NITROGEN IN THE PHYTOPLANKTON CELLS (MGN/MICROGCHLA)",
+                        "text": "PROPORTION OF NITROGEN IN "
+                        "THE PHYTOPLANKTON CELLS (MGN/MICROGCHLA)",
                         "textfr": "PROP D'AZOTE DANS LES CELLULES DU PHYTO (MGN/MICROGCHLA)",
                         "value": 0.0035,
                     },
                     {
                         "sigle": "DTN",
-                        "text": "PERCENTAGE OF NITROGEN DIRECTLY ASSIMILATED BY DEAD PHYTOPLANKTON (%)",
+                        "text": "PERCENTAGE OF NITROGEN DIRECTLY ASSIMILATED "
+                        "BY DEAD PHYTOPLANKTON (%)",
                         "textfr": "POURCENT. D'AZOTE DIRECT. ASSIMILABLE DANS LE PHYTO MORT (%)",
                         "value": 0.5,
                     },
@@ -487,7 +501,8 @@ class ClassTableWQ:
                     {
                         "sigle": "K1",
                         "text": "KINETIC CONST. FOR ORGANIC LOAD DEPLETION  K1 (DAY-1)",
-                        "textfr": "CONST. DE CINET. DE DEGRADATION DE LA CHARGE ORGANIQUE K120 (J-1)",
+                        "textfr": "CONST. DE CINET. DE DEGRADATION "
+                        "DE LA CHARGE ORGANIQUE K120 (J-1)",
                         "value": 0.25,
                     },
                     {
@@ -730,23 +745,7 @@ class ClassTableWQ:
                 id1 += 1
 
         liste_col = self.mdb.list_columns("tracer_physic")
-        var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += "%s,"
-        valeurs = valeurs[:-1] + ")"
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-            self.mdb.SCHEMA, "tracer_physic", var, valeurs
-        )
-        self.mdb.run_query(sql, many=True, list_many=list_var_phy)
+        self.mdb.insert_res("tracer_physic", list_var_phy, liste_col)
 
         liste_col = self.mdb.list_columns("tracer_name")
-        var = ",".join(liste_col)
-        valeurs = "("
-        for k in liste_col:
-            valeurs += "%s,"
-        valeurs = valeurs[:-1] + ")"
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-            self.mdb.SCHEMA, "tracer_name", var, valeurs
-        )
-        self.mdb.run_query(sql, many=True, list_many=list_var_name)
+        self.mdb.insert_res("tracer_name", list_var_name, liste_col)

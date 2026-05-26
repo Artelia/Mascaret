@@ -30,7 +30,14 @@ class ClassUpdate700:
     def update700(self):
         self.mgis.add_info("*** Update 7.0.0  ***")
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
-        lst_add_tab = ["assim_config", "assim_ks", "assim_law", "assim_res", "assim_res_ks", "assim_res_law"]
+        lst_add_tab = [
+            "assim_config",
+            "assim_ks",
+            "assim_law",
+            "assim_res",
+            "assim_res_ks",
+            "assim_res_law",
+        ]
         valide = True
         for attr in lst_add_tab:
             if attr not in tabs:
@@ -40,15 +47,19 @@ class ClassUpdate700:
                     valide = False
 
         lst_alt = [
-            "ALTER TABLE {0}.outputs ADD COLUMN IF NOT EXISTS  obsZ_stdErr DOUBLE PRECISION DEFAULT 0.05;",
-            "ALTER TABLE {0}.outputs ADD COLUMN IF NOT EXISTS  obsQ_stdErr DOUBLE PRECISION DEFAULT 10;",
-            "ALTER TABLE {0}.outputs ADD COLUMN IF NOT EXISTS  obsQ_rejectLimit DOUBLE PRECISION DEFAULT NULL;",
-            "ALTER TABLE {0}.outputs ADD COLUMN IF NOT EXISTS  obsZ_rejectLimit DOUBLE PRECISION DEFAULT NULL;",
+            "ALTER TABLE {schema}.outputs ADD COLUMN "
+            "IF NOT EXISTS obsZ_stdErr DOUBLE PRECISION DEFAULT 0.05;",
+            "ALTER TABLE {schema}.outputs ADD COLUMN "
+            "IF NOT EXISTS obsQ_stdErr DOUBLE PRECISION DEFAULT 10;",
+            "ALTER TABLE {schema}.outputs ADD COLUMN "
+            "IF NOT EXISTS obsQ_rejectLimit DOUBLE PRECISION DEFAULT NULL;",
+            "ALTER TABLE {schema}.outputs ADD COLUMN "
+            "IF NOT EXISTS obsZ_rejectLimit DOUBLE PRECISION DEFAULT NULL;",
         ]
         # Alter colonne value en text
         for sql in lst_alt:
             try:
-                self.mdb.execute(sql.format(self.mdb.SCHEMA))
+                self.mdb.execute(sql, schema=True)
             except Exception:
                 self.mgis.add_info("Alter  the output table - ERROR")
                 valide = False

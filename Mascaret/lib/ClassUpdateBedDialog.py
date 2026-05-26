@@ -19,21 +19,21 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import Qt, qVersion
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QColor, QBrush
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from qgis.PyQt.uic import loadUi
+from qgis.core import QgsProject
 from shapely.geometry import LineString
 from shapely.ops import unary_union, linemerge, substring
 from shapely.wkt import loads as wkt_loads
+from ..ui.custom_control import _qt_is_checked
 
 D_TYP_BED = {0: "bed", 1: "stock"}
 D_FLD_BED = {0: "minbed", 1: "stock"}
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class Profile:
     def __init__(self, row):
@@ -96,8 +96,8 @@ class ClassUpdateBedDialog(QDialog):
         l_child = mas_group.children()
         for child in l_child:
             if (
-                    child.nodeType() == 1
-                    and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
+                child.nodeType() == 1
+                and "dbname='{}'".format(self.mdb.dbname) in child.layer().source()
             ):
                 if 'table="{}"."profiles"'.format(self.mdb.SCHEMA) in child.layer().source():
                     p_lay = child.layer()
@@ -105,8 +105,8 @@ class ClassUpdateBedDialog(QDialog):
         return p_lay
 
     def init_cb_branch(self):
-        sql = "SELECT branch, 'Branch ' || branch FROM {0}.branchs WHERE active IS True"
-        l_branch = self.mdb.run_query(sql.format(self.mdb.SCHEMA), fetch=True)
+        sql = "SELECT branch, 'Branch ' || branch FROM {schema}.branchs WHERE active IS True"
+        l_branch = self.mdb.run_query(sql, fetch=True, schema=True)
         for id_branch, nm_branch in l_branch:
             self.cb_branch.addItem(nm_branch, id_branch)
 
@@ -181,9 +181,9 @@ class ClassUpdateBedDialog(QDialog):
         sql = (
             "SELECT gid, name, x, z, leftminbed, rightminbed, leftstock, rightstock, "
             "leftminbed_g, rightminbed_g, leftstock_g, rightstock_g  "
-            "FROM {0}.profiles WHERE active IS True AND branchnum = {1}"
+            "FROM {schema}.profiles WHERE active IS True AND branchnum = %s"
         )
-        l_profiles = self.mdb.run_query(sql.format(self.mdb.SCHEMA, branch), fetch=True)
+        l_profiles = self.mdb.run_query(sql, fetch=True, schema=True, params=(branch,))
 
         self.d_profiles.clear()
         for row in l_profiles:
@@ -277,7 +277,7 @@ class ClassUpdateBedDialog(QDialog):
             qt_usr = Qt.ItemDataRole.UserRole
         else:
             ok_button = QMessageBox.Ok
-            qt_usr =  Qt.UserRole
+            qt_usr = Qt.UserRole
         l_prof_to_edit = list()
         branch = self.cb_branch.currentData()
         typ_bed = self.cb_typ_bed.currentData()
@@ -343,8 +343,8 @@ class ClassUpdateBedDialog(QDialog):
 def interpolate_x_val(new_x, lx, lz):
     for i, x in enumerate(lx):
         if x > new_x:
-            x0, x1 = lx[i - 1: i + 1]
-            z0, z1 = lz[i - 1: i + 1]
+            x0, x1 = lx[i - 1 : i + 1]
+            z0, z1 = lz[i - 1 : i + 1]
             new_z = z0 + (z1 - z0) / (x1 - x0) * (new_x - x0)
             lx.insert(i, new_x)
             lz.insert(i, new_z)
@@ -447,7 +447,6 @@ def refresh_minor_bed_layer(mdb, iface):
                 mrb_lay = child.layer()
             if 'table="{}"."profiles"'.format(mdb.SCHEMA) in child.layer().source():
                 p_lay = child.layer()
-
     for lay in [mrb_lay, p_lay]:
         if lay:
             lay.reload()
@@ -458,8 +457,8 @@ def refresh_minor_bed_layer(mdb, iface):
 
 
 def update_all_bed_geometry(mdb):
-    sql = "SELECT branch, 'Branch ' || branch FROM {0}.branchs WHERE active IS True"
-    l_branch = mdb.run_query(sql.format(mdb.SCHEMA), fetch=True)
+    sql = "SELECT branch, 'Branch ' || branch FROM {schema}.branchs WHERE active IS True"
+    l_branch = mdb.run_query(sql, fetch=True, schema=True)
     for id_branch, nm_branch in l_branch:
         update_bed_geometry(mdb, id_branch, ["leftminbed", "rightminbed"])
 
@@ -469,7 +468,8 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
         bank = typ_bed.replace("minbed", "")
 
         sql = (
-            "SELECT pr_num, pr_name, pr_id, next_pr_id, pr_pk, next_pr_pk, dist_prj, next_dist_prj, "
+            "SELECT pr_num, pr_name, pr_id, next_pr_id, pr_pk, "
+            "next_pr_pk, dist_prj, next_dist_prj, "
             "interp_pt_txt, next_interp_pt_txt, pt_prj_txt, next_pt_prj_txt, "
             "ST_Length(ST_LineSubstring(br_geom, pr_pk, next_pr_pk)), "
             "ST_AsText(ST_LineSubstring(br_geom, pr_pk, next_pr_pk)) "
@@ -490,20 +490,33 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
             "(SELECT *, ST_ClosestPoint(br_geom, interp_pt) As pt_prj "
             "FROM "
             "(SELECT ROW_NUMBER() OVER (ORDER BY abscissa) As pr_num, "
-            "name as pr_name, pr.gid As pr_id, pr.abscissa As pr_abs, {2} As dist, "
-            "ST_LineInterpolatePoint(ST_LineMerge(pr.geom), {2}/ST_LENGTH(pr.geom)) As interp_pt, "
+            "name as pr_name, pr.gid As pr_id, pr.abscissa As pr_abs, "
+            "CASE %s WHEN 'leftminbed' THEN "
+            "leftminbed WHEN 'rightminbed' THEN rightminbed END As dist, "
+            "ST_LineInterpolatePoint(ST_LineMerge(pr.geom), "
+            "CASE %s WHEN 'leftminbed' THEN leftminbed WHEN 'rightminbed' THEN rightminbed END"
+            "/ST_LENGTH(pr.geom)) As interp_pt, "
             "ST_LineMerge(pr.geom) As pr_geom, ST_LineMerge(br.geom) As br_geom "
-            "FROM {0}.profiles As pr, {0}.branchs As br "
+            "FROM {schema}.profiles As pr, {schema}.branchs As br "
             "WHERE ST_Intersects(ST_LineMerge(br.geom), pr.geom) AND pr.active AND br.active "
-            "AND br.branch = {1} ORDER BY abscissa) "
+            "AND br.branch = %s ORDER BY abscissa) "
             "As r1) As r2) As r3) As r4"
         )
-
-        rows = mdb.run_query(sql.format(mdb.SCHEMA, id_branch, typ_bed), fetch=True)
-        if not rows :
-            mdb.run_query(
-                "DELETE FROM {0}.visu_minor_river_bed "
-                "WHERE bank = '{1}' AND branchnum = {2}".format(mdb.SCHEMA, bank, id_branch)
+        rows = mdb.run_query(
+            sql,
+            fetch=True,
+            schema=True,
+            params=(
+                typ_bed,
+                typ_bed,
+                id_branch,
+            ),
+        )
+        if not rows:
+            mdb.delete(
+                "visu_minor_river_bed",
+                "bank = %s AND branchnum = %s",
+                params=(bank, id_branch),
             )
             return
         recs = list()
@@ -581,14 +594,14 @@ def update_bed_geometry(mdb, id_branch, l_typ_bed):
                 l_coords.extend(wkt_loads(next_pt_prof).coords)
                 pl_final = LineString(l_coords)
                 recs.append([id_branch, pr_name, bank, pl_final.wkt])
-
-        mdb.run_query(
-            "DELETE FROM {0}.visu_minor_river_bed "
-            "WHERE bank = '{1}' AND branchnum = {2}".format(mdb.SCHEMA, bank, id_branch)
+        mdb.delete(
+            "visu_minor_river_bed",
+            "bank = %s AND branchnum = %s",
+            params=(bank, id_branch),
         )
         if recs:
             sql = (
-                "INSERT INTO {0}.visu_minor_river_bed (branchnum, profile, bank, geom) "
-                "VALUES (%s, %s, %s, ST_GeomFromText(%s))".format(mdb.SCHEMA)
+                "INSERT INTO {schema}.visu_minor_river_bed (branchnum, profile, bank, geom) "
+                "VALUES (%s, %s, %s, ST_GeomFromText(%s))"
             )
-            mdb.run_query(sql, many=True, list_many=recs)
+            mdb.run_query(sql, many=True, list_many=recs, schema=True)

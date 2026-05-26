@@ -18,14 +18,21 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import ast
 import os
 import traceback
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDoubleSpinBox,
+    QFileDialog,
+    QMessageBox,
+    QRadioButton,
+    QSpinBox,
+)
+from qgis.PyQt.uic import loadUi
 
 from .Function import del_accent, del_symbolv2
 from .model.ClassDictRun import ClassDictRun
@@ -82,8 +89,11 @@ class ClassParamExportDialog(QDialog):
         """initialisation variable of GUI"""
         self.combo = {
             "code": {1: "Steady", 2: "Unsteady", 3: "Transcritical"},
-            "option": {1: "Sections de calcul", 2: "couche Points de sortie",
-                       3: "couche profils + amont/aval singularite"},
+            "option": {
+                1: "Sections de calcul",
+                2: "couche Points de sortie",
+                3: "couche profils + amont/aval singularite",
+            },
             "critereArret": {
                 1: "Temps maximum",
                 2: "Nombre de pas de temps max",
@@ -203,8 +213,7 @@ class ClassParamExportDialog(QDialog):
             ],
             "transcritical": [],
         }
-        self.d_type = {"*.zip": "zip",
-                       "*.tar.gz": "gztar"}
+        self.d_type = {"*.zip": "zip", "*.tar.gz": "gztar"}
         self.create_dico_para()
         self.init_gui()
         self.lname_export.setText("model_masc")
@@ -214,26 +223,39 @@ class ClassParamExportDialog(QDialog):
         """
         Creation of parameters dictionary
         """
-        self.par = {}
         # requete pour recuperer les parametres dans la base
-        sql = "SELECT parametre, {0}, libelle, gui, gui_type FROM {1}.{2};"
+        self.par = {}
 
-        rows = self.mdb.run_query(
-            sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True
-        )
+        kernel_column = {
+            "steady": "steady",
+            "unsteady": "unsteady",
+            "transcritical": "transcritical",
+        }.get(self.kernel)
+        if kernel_column is None:
+            raise ValueError("Unsupported kernel '{}'".format(self.kernel))
+
+        if kernel_column == "steady":
+            sql = "SELECT parametre, steady, libelle, gui, gui_type FROM {schema}.parametres;"
+        elif kernel_column == "unsteady":
+            sql = "SELECT parametre, unsteady, libelle, gui, gui_type FROM {schema}.parametres;"
+        else:
+            sql = (
+                "SELECT parametre, transcritical, libelle, gui, gui_type FROM {schema}.parametres;"
+            )
+        rows = self.mdb.run_query(sql, fetch=True, schema=True)
         for param, valeur, libelle, gui, gui_type in rows:
             if gui_type == "parameters":
                 if param == "variablesStockees":
                     self.par[param] = {}
                     try:
-                        self.par[param]["val"] = eval(valeur.title())
-                    except:
+                        self.par[param]["val"] = ast.literal_eval(valeur.title())
+                    except (ValueError, SyntaxError):
                         self.par[param]["val"] = valeur
 
                     # valeurs = list(map(eval, valeur.title().split()))
                     valeurs = []
                     for var1 in valeur.title().split():
-                        valeurs.append(eval(var1))
+                        valeurs.append(ast.literal_eval(var1))
 
                     for var, val, lib in zip(self.variables, valeurs, self.libel_var):
                         self.par[var] = {
@@ -246,8 +268,8 @@ class ClassParamExportDialog(QDialog):
                 else:
                     self.par[param] = {}
                     try:
-                        self.par[param]["val"] = eval(valeur.title())
-                    except:
+                        self.par[param]["val"] = ast.literal_eval(valeur.title())
+                    except (ValueError, SyntaxError):
                         self.par[param]["val"] = valeur
 
                     self.par[param]["libelle"] = libelle
@@ -255,14 +277,14 @@ class ClassParamExportDialog(QDialog):
                     self.par[param]["gui_type"] = gui_type
         # Clear the useless parameters
         old_par = self.par.copy()
-        self.lig_eau_init = self.par["LigEauInit"]['val']
-        if self.kernel == 'steady':
+        self.lig_eau_init = self.par["LigEauInit"]["val"]
+        if self.kernel == "steady":
             self.lig_eau_init = False
-        self.event = self.par["evenement"]['val']
+        self.event = self.par["evenement"]["val"]
 
         for param, info in old_par.items():
             try:
-                obj = getattr(self.ui, param)
+                getattr(self.ui, param)
             except AttributeError:
                 del self.par[param]
                 continue
@@ -293,9 +315,9 @@ class ClassParamExportDialog(QDialog):
             if param in self.exclusion[self.kernel]:
                 obj.hide()
                 if (
-                        isinstance(obj, QSpinBox)
-                        or isinstance(obj, QDoubleSpinBox)
-                        or isinstance(obj, QComboBox)
+                    isinstance(obj, QSpinBox)
+                    or isinstance(obj, QDoubleSpinBox)
+                    or isinstance(obj, QComboBox)
                 ):
                     getattr(self.ui, "label_" + param).hide()
         # other parameters
@@ -308,8 +330,17 @@ class ClassParamExportDialog(QDialog):
             self.show_lstobj(lst_ev)
 
         # if lig_eau
-        lst_lig = [self.cb_init_run, self.cb_init_scen, self.rb_init, self.rb_init_lig,
-                   self.label_init_cas, self.lbl_lig, self.bt_lig, self.label_init_lig, self.gb_init]
+        lst_lig = [
+            self.cb_init_run,
+            self.cb_init_scen,
+            self.rb_init,
+            self.rb_init_lig,
+            self.label_init_cas,
+            self.lbl_lig,
+            self.bt_lig,
+            self.label_init_lig,
+            self.gb_init,
+        ]
         if not self.lig_eau_init:
             self.hide_lstobj(lst_lig)
         else:
@@ -344,8 +375,9 @@ class ClassParamExportDialog(QDialog):
         """
         self.cb_init_scen.clear()
         init_run = self.cb_init_run.currentText()
-        condition = "run LIKE '{0}'".format(init_run)
-        dico_scen = self.mdb.select_distinct("scenario", "runs", condition)
+        dico_scen = self.mdb.select_distinct(
+            "scenario", "runs", where="run LIKE %s", params=[init_run]
+        )
         if dico_scen:
             liste_scen = ["{}".format(v) for v in dico_scen["scenario"]]
         else:
@@ -359,9 +391,7 @@ class ClassParamExportDialog(QDialog):
         dict_scen_tmp = self.mdb.select("events", "run", "starttime")
         if dict_scen_tmp:
             if len(dict_scen_tmp["name"]) == 0:
-                QMessageBox.warning(
-                    self, "WARNING", "**** Warning: scenario not found  ***"
-                )
+                QMessageBox.warning(self, "WARNING", "**** Warning: scenario not found  ***")
                 self.close()
             list_event = dict_scen_tmp["name"]
         else:
@@ -382,16 +412,21 @@ class ClassParamExportDialog(QDialog):
             self.show_lstobj(lst_lig)
 
     def enable_tabwgt(self):
-        """ Disable and Enbale tabWidget"""
+        """Disable and Enbale tabWidget"""
         self.tab_widget.setEnabled(self.bt_edit_param.isChecked())
 
     def path_search_lig(self):
         """search path windows"""
-        path, _ = QFileDialog.getOpenFileNames(self, "Choose a File", self.mgis.repProject, "File (*.lig)", )
+        path, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Choose a File",
+            self.mgis.repProject,
+            "File (*.lig)",
+        )
         if path:
             self.lbl_lig.setText(path[0])
         else:
-            self.lbl_lig.setText('')
+            self.lbl_lig.setText("")
 
     def path_search(self):
         """search path windows"""
@@ -399,7 +434,7 @@ class ClassParamExportDialog(QDialog):
         if path:
             self.txt_rep.setText(path)
         else:
-            self.txt_rep.setText('')
+            self.txt_rep.setText("")
 
     def hide_lstobj(self, lst_obj):
         """Hide the PyQt object list
@@ -427,8 +462,8 @@ class ClassParamExportDialog(QDialog):
 
     def selb(self, obj):
         """function selectbox
-         Args:
-            :param obj: (object QT)
+        Args:
+           :param obj: (object QT)
         """
         return lambda: self.selectbox(obj)
 
@@ -441,7 +476,7 @@ class ClassParamExportDialog(QDialog):
             checkbox.setChecked(box.isChecked())
 
     def get_new_par(self):
-        """ Get new parameters dictionnary"""
+        """Get new parameters dictionnary"""
         self.new_par = {}
         var = []
         for param, info in self.par.items():
@@ -456,9 +491,9 @@ class ClassParamExportDialog(QDialog):
                     elif isinstance(obj, QComboBox):
                         val = obj.currentIndex()
                         if (
-                                param == "option"
-                                or param == "critereArret"
-                                or param == "postProcesseur"
+                            param == "option"
+                            or param == "critereArret"
+                            or param == "postProcesseur"
                         ):
                             val = val + 1
                     else:
@@ -470,10 +505,10 @@ class ClassParamExportDialog(QDialog):
             for param, obj in var:
                 if var2 == param:
                     liste.append(str(obj.isChecked()).lower())
-        self.new_par['variablesStockees'] = " ".join(liste)
+        self.new_par["variablesStockees"] = " ".join(liste)
 
     def check_str(self):
-        """ check name :
+        """check name :
         - delete accent and symbol"""
         self.lname_export.blockSignals(True)
         name = self.lname_export.text().strip()
@@ -492,22 +527,18 @@ class ClassParamExportDialog(QDialog):
         self.dict_accept = {}
         self.get_new_par()
 
-        self.dict_accept['lig_eau_init'] = self.lig_eau_init
-        self.dict_accept['event'] = self.event
+        self.dict_accept["lig_eau_init"] = self.lig_eau_init
+        self.dict_accept["event"] = self.event
         if not os.path.isdir(self.txt_rep.text()):
-            QMessageBox.warning(
-                self, "WARNING", "The save folder does not exist."
-            )
+            QMessageBox.warning(self, "WARNING", "The save folder does not exist.")
             return
 
         if self.lname_export.text().strip() == "":
-            QMessageBox.warning(
-                self, "WARNING", "Specify the compressed directory name."
-            )
+            QMessageBox.warning(self, "WARNING", "Specify the compressed directory name.")
             return
 
-        self.dict_accept['path_rep'] = os.path.normpath(self.txt_rep.text())
-        self.dict_accept['name_rep'] = os.path.normpath(self.lname_export.text().strip())
+        self.dict_accept["path_rep"] = os.path.normpath(self.txt_rep.text())
+        self.dict_accept["name_rep"] = os.path.normpath(self.lname_export.text().strip())
 
         if self.lig_eau_init:
             if self.rb_init.isChecked():
@@ -519,41 +550,38 @@ class ClassParamExportDialog(QDialog):
                 #     "AND scenario = '{2}'".format(self.mdb.SCHEMA, case, scen),
                 #     fetch=True,
                 # )
-                self.dict_accept['lig'] = False
+                self.dict_accept["lig"] = False
                 # self.dict_accept["id_run_init"] = [id_run]
                 self.dict_accept["run_init"] = [case, scen]
 
             else:
-                self.dict_accept['lig'] = True
-                self.dict_accept['path_copy'] = self.lbl_lig.text()
+                self.dict_accept["lig"] = True
+                self.dict_accept["path_copy"] = self.lbl_lig.text()
 
         if self.event:
             dict_scen_tmp = self.mdb.select("events", "run", "starttime")
             if dict_scen_tmp:
                 scen_event = self.cb_event.currentText()
                 if not scen_event:
-                    QMessageBox.warning(
-                        self, "WARNING", "**** Warning: scenario not found  ***"
-                    )
+                    QMessageBox.warning(self, "WARNING", "**** Warning: scenario not found  ***")
                     return
                 id = dict_scen_tmp["name"].index(scen_event)
-                self.dict_accept['dict_scen'] = {
+                self.dict_accept["dict_scen"] = {
                     "name": [dict_scen_tmp["name"][id]],
                     # "starttime": [dict_scen_tmp["starttime"][id]],
                     # "endtime": [dict_scen_tmp["endtime"][id]],
                     # "run": [dict_scen_tmp["run"][id]],
                 }
             else:
-                self.dict_accept['dict_scen'] = {"name": [self.dict_accept['name_rep']]}
+                self.dict_accept["dict_scen"] = {"name": [self.dict_accept["name_rep"]]}
         else:
-            self.dict_accept['dict_scen'] = {"name": [self.dict_accept['name_rep']]}
+            self.dict_accept["dict_scen"] = {"name": [self.dict_accept["name_rep"]]}
 
-        self.dict_accept['par'] = self.new_par
-        self.dict_accept['typ_compress'] = self.cb_type_comp.currentData()
+        self.dict_accept["par"] = self.new_par
+        self.dict_accept["typ_compress"] = self.cb_type_comp.currentData()
         self.creat_model_compress()
         self.complet = True
         self.close()
-
 
     def creat_model_compress(self):
         """
@@ -562,51 +590,52 @@ class ClassParamExportDialog(QDialog):
         """
         try:
             export_config = self.dict_accept
-            name_run = export_config.get('name_rep', 'Mascaret')
-            rep_run = os.path.join(export_config['path_rep'], name_run)
+            name_run = export_config.get("name_rep", "Mascaret")
+            rep_run = os.path.join(export_config["path_rep"], name_run)
 
             # Initialisation du modèle
             obj_model = ClassDictRun(self.mgis, rep_run=rep_run)
             obj_model.fill_drun(self.kernel, name_run)
 
             # Paramètres de modification du run
-            obj_model.set_drun({
-                "event": export_config.get('event', False),
-                "ligInit": export_config.get('lig_eau_init', False),
-                "repriseCalcul": False,
-                "has_run_init": False,
-                #"has_assimilation": False,
-            })
+            obj_model.set_drun(
+                {
+                    "event": export_config.get("event", False),
+                    "ligInit": export_config.get("lig_eau_init", False),
+                    "repriseCalcul": False,
+                    "has_run_init": False,
+                    # "has_assimilation": False,
+                }
+            )
 
             # Préparation du scénario
-            scen_name = export_config['dict_scen']['name'][0]
+            scen_name = export_config["dict_scen"]["name"][0]
             run_init, scen_init = export_config.get("run_init", [None, None])
             data = {
                 "Scenario Name": scen_name,
                 "Run init": run_init,
                 "Scenario init": scen_init,
                 "lig file": None,
-                "Comment": ''
+                "Comment": "",
             }
 
             # Ajout du fichier lig si présent
-            file_lig = export_config.get('path_copy')
+            file_lig = export_config.get("path_copy")
             if file_lig:
-                data["lig file"] = {
-                    "file_name": os.path.basename(file_lig),
-                    "file_path": file_lig
-                }
+                data["lig file"] = {"file_name": os.path.basename(file_lig), "file_path": file_lig}
 
             obj_model.fill_lscenario([data])
             # Initialisation du modèle
-            ClassInitializeModel(self.mgis, obj_model).main(up_param=export_config['par'])
+            ClassInitializeModel(self.mgis, obj_model).main(up_param=export_config["par"])
 
             # Export et nettoyage
             self.mgis.export_run(
                 path_run=rep_run,
-                folder_name_path=export_config['path_rep'],
-                typ_compress=export_config['typ_compress']
+                folder_name_path=export_config["path_rep"],
+                typ_compress=export_config["typ_compress"],
             )
             del_folder_mas(rep_run, mgis=self)
         except Exception as err:
-            self.mgis.add_info(f'[ ERROR ] Error: {str(err)} \n traceback : {traceback.format_exc()}')
+            self.mgis.add_info(
+                f"[ ERROR ] Error: {str(err)} \n traceback : {traceback.format_exc()}"
+            )

@@ -21,11 +21,6 @@ comment:
 """
 import os
 
-from qgis.PyQt.QtWidgets import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
-
 from .ClassTableWQ import ClassTableWQ
 from ..Function import interpole, del_symbol
 
@@ -47,11 +42,12 @@ class ClassMascWQ:
         self.dico_phy = self.tbwq.dico_phy
         self.dossier_file_masc = file
 
-        sql = "SELECT {} FROM {}.parametres WHERE parametre = 'modeleQualiteEau'".format(
-            "steady", self.schema
+        result = self.mdb.run_query(
+            "SELECT steady FROM {schema}.parametres WHERE parametre = %s",
+            fetch=True,
+            params=["modeleQualiteEau"],
+            schema=True,
         )
-
-        result = self.mdb.run_query(sql, fetch=True)
         if not result:
             val = 1
         else:
@@ -63,12 +59,13 @@ class ClassMascWQ:
         """creation .phy file"""
         if dossier is None:
             dossier = self.dossier_file_masc
-        where = "type = '{}'".format(self.cur_wq_mod)
-        order = "id"
-        result = self.mdb.select("tracer_physic", where, order)
+        result = self.mdb.select(
+            "tracer_physic", where="type = %s", order="id", params=[self.cur_wq_mod]
+        )
         # entetfr = u": NOMBRE DE PARAMETRES PHYSIQUES"
         entet = ": NUMBER OF PHYSICAL PARAMETERS"
-        # with open(os.path.join(self.dossier_file_masc, self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
+        # with open(os.path.join(self.dossier_file_masc,
+        #                        self.cur_wq_mod.lower() + '.phy'), 'w') as fich:
         with open(os.path.join(dossier, "mascaret.phy"), "w") as fich:
             fich.write("{} {}\n".format(len(self.dico_phy[self.cur_wq_mod]["physic"]), entet))
             for i, phy in enumerate(self.dico_phy[self.cur_wq_mod]["physic"]):
@@ -103,25 +100,30 @@ class ClassMascWQ:
                 }
 
         if list_loi:
-            where = "type = '{}'".format(self.cur_wq_mod)
-            order = "id"
-            list_trac = self.mdb.select("tracer_name", where, order)
+            list_trac = self.mdb.select(
+                "tracer_name", where="type = %s", order="id", params=[self.cur_wq_mod]
+            )
             for name in list_loi:
-                order = "id"
-                where = "type = '{}' AND name = '{}'".format(self.cur_wq_mod_int, name)
-                loi_trac = self.mdb.select("tracer_config", where, order)
+                loi_trac = self.mdb.select(
+                    "tracer_config",
+                    where="type = %s AND name = %s",
+                    order="id",
+                    params=[self.cur_wq_mod_int, name],
+                )
                 if not loi_trac["id"]:
                     self.mgis.add_info(
                         "The <<{}>> law doesn't exist. Please check  laws. ".format(name)
                     )
                 else:
-                    order = 'ORDER BY "time",id_trac'
-                    where = "WHERE id_config= '{}' ".format(loi_trac["id"][0])
-                    sql = """SELECT DISTINCT id_trac,time,value FROM {0}.{1} {2} {3}"""
                     loi_val, col = self.mdb.run_query(
-                        sql.format(self.mdb.SCHEMA, "laws_wq", where, order),
+                        "SELECT DISTINCT id_trac, time, value "
+                        "FROM {schema}.laws_wq "
+                        "WHERE id_config = %s "
+                        'ORDER BY "time", id_trac',
                         fetch=True,
                         namvar=True,
+                        params=[loi_trac["id"][0]],
+                        schema=True,
                     )
                     # write law
                     fich = open(os.path.join(dossier, del_symbol(name.lower()) + "_tra.loi"), "w")
@@ -148,7 +150,8 @@ class ClassMascWQ:
                     # if init_case:
                     #     # initial_ law with first value
                     #
-                    #     fich = open(os.path.join(dossier, del_symbol(name.lower()) + '_init_tra.loi'), 'w')
+                    #     fich = open(os.path.join(dossier,
+                    #                              del_symbol(name.lower()) + '_init_tra.loi'), 'w')
                     #     header = '# {}\n'.format(name)
                     #     header += '# Times (s) '
                     #     for sigle in list_trac['sigle']:
@@ -173,18 +176,25 @@ class ClassMascWQ:
         """creation of initial concentration file for tracer"""
         if dossier is None:
             dossier = self.dossier_file_masc
-        order = "id"
-        where = "type = '{}' AND active=true".format(self.cur_wq_mod_int)
-        init_trac = self.mdb.select("init_conc_config", where, order)
+        init_trac = self.mdb.select(
+            "init_conc_config",
+            where="type = %s AND active=true",
+            order="id",
+            params=[self.cur_wq_mod_int],
+        )
         if not init_trac["id"]:
             self.mgis.add_info("Warning: Please select the initial conditions for tracers")
             return
-        order = "ORDER BY bief,abscissa,id_trac"
-        where = "WHERE id_config= '{}' ".format(init_trac["id"][0])
-        sql = """SELECT DISTINCT id_trac,bief,abscissa,value FROM {0}.{1} {2} {3}"""
 
         init_val, col = self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, "init_conc_wq", where, order), fetch=True, namvar=True
+            "SELECT DISTINCT id_trac, bief, abscissa, value "
+            "FROM {schema}.init_conc_wq "
+            "WHERE id_config = %s "
+            "ORDER BY bief, abscissa, id_trac",
+            fetch=True,
+            namvar=True,
+            params=[init_trac["id"][0]],
+            schema=True,
         )
         if init_val == [] or init_val is None:
             self.mgis.add_info("Warning: Please fill the initial conditions for tracers")
@@ -222,11 +232,9 @@ class ClassMascWQ:
         exit_satus = False
         if dossier is None:
             dossier = self.dossier_file_masc
-        order = "id"
-        where = "active=true"
-        meteo_trac = self.mdb.select("meteo_config", where, order)
+        meteo_trac = self.mdb.select("meteo_config", where="active=true", order="id")
         if not meteo_trac["id"]:
-            txt = ("Please select the meteo configuration for tracers")
+            txt = "Please select the meteo configuration for tracers"
             exit_satus = True
             return exit_satus, txt
         deb_time = None
@@ -234,31 +242,42 @@ class ClassMascWQ:
         if typ_time == "date" and meteo_trac["starttime"][0] is not None:
             duree = int((dateend - datefirst).total_seconds())
             if duree < 0:
-                txt = ("Scenario date aren't correct.")
+                txt = "Scenario date aren't correct."
                 exit_satus = True
                 return exit_satus, txt
             dif_time = int((datefirst - meteo_trac["starttime"][0]).total_seconds())
             if dif_time < 0:
-                txt = ("Date for meteo law aren't correct.")
+                txt = "Date for meteo law aren't correct."
                 exit_satus = True
                 return exit_satus, txt
             deb_time = dif_time
             end_time = dif_time + duree
 
-        order = "ORDER BY time,id_var"
-        where = "WHERE id_config= '{}' ".format(meteo_trac["id"][0])
         if deb_time is not None and end_time is not None:
-            where += "AND time >= {} AND time < {} ".format(deb_time, end_time)
+            meteo_val, col = self.mdb.run_query(
+                "SELECT DISTINCT id_var, time, value "
+                "FROM {schema}.laws_meteo "
+                "WHERE id_config = %s AND time >= %s AND time < %s "
+                "ORDER BY time, id_var",
+                fetch=True,
+                namvar=True,
+                params=[meteo_trac["id"][0], deb_time, end_time],
+                schema=True,
+            )
         else:
             deb_time = 0
-        sql = """SELECT DISTINCT id_var,time,value FROM {0}.{1} {2} {3}"""
-        #
-        meteo_val, col = self.mdb.run_query(
-            sql.format(self.mdb.SCHEMA, "laws_meteo", where, order), fetch=True, namvar=True
-        )
-
+            meteo_val, col = self.mdb.run_query(
+                "SELECT DISTINCT id_var, time, value "
+                "FROM {schema}.laws_meteo "
+                "WHERE id_config = %s "
+                "ORDER BY time, id_var",
+                fetch=True,
+                namvar=True,
+                params=[meteo_trac["id"][0]],
+                schema=True,
+            )
         if meteo_val == [] or meteo_val is None:
-            txt = ("Please fill the meteo conditions for tracers")
+            txt = "Please fill the meteo conditions for tracers"
             exit_satus = True
             return exit_satus, txt
 
@@ -275,28 +294,30 @@ class ClassMascWQ:
 
         t_pre = meteo_val[0][1] - deb_time
         if t_pre > 0:
-            order = "ORDER BY time"
-            sql = """SELECT DISTINCT time FROM {0}.{1} {2}"""
-            #
             temps_list = self.mdb.run_query(
-                sql.format(self.mdb.SCHEMA, "laws_meteo", order), fetch=True
+                "SELECT DISTINCT time FROM {schema}.laws_meteo ORDER BY time",
+                fetch=True,
+                schema=True,
             )
             time_inter = 0
             for i, time in enumerate(temps_list):
                 if time[0] >= deb_time:
                     time_inter = temps_list[i - 1][0]
                     break
-            where = "WHERE id_config= '{}' AND time= '{}'".format(meteo_trac["id"][0], time_inter)
-            order = "ORDER BY id_var"
-            sql = """SELECT DISTINCT  id_var,value FROM {0}.{1} {2} {3}"""
 
             val = self.mdb.run_query(
-                sql.format(self.mdb.SCHEMA, "laws_meteo", where, order), fetch=True
+                "SELECT DISTINCT id_var, value FROM {schema}.laws_meteo "
+                "WHERE id_config = %s AND time = %s "
+                "ORDER BY id_var",
+                fetch=True,
+                params=[meteo_trac["id"][0], time_inter],
+                schema=True,
             )
             list_val = []
             for id, valu in val:
                 valf = interpole(deb_time, [time_inter, meteo_val[0][1]], [valu, meteo_val[0][2]])
-                # valf= (deb_time-time_inter)/(meteo_val[0][1]-time_inter) *(meteo_val[0][2]-valu)+ valu
+                # valf= (deb_time-time_inter)/(meteo_val[0][1]-time_inter) *\
+                #       (meteo_val[0][2]-valu)+ valu
                 list_val.append([id, deb_time, valf])
             meteo_val = list_val + meteo_val
 
@@ -311,4 +332,4 @@ class ClassMascWQ:
                 ligne += "{} ".format(val)
         fich.write(ligne)
         fich.close()
-        return exit_satus, ''
+        return exit_satus, ""

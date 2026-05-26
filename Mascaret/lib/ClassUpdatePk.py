@@ -16,18 +16,17 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtWidgets import QDialog, QTreeWidgetItem
+from qgis.PyQt.uic import loadUi
 
-from ..ui.custom_control import ClassWarningBox,_qt_is_checked
+from ..ui.custom_control import ClassWarningBox, _qt_is_checked
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassUpdatePk(QDialog):
     """
@@ -50,7 +49,7 @@ class ClassUpdatePk(QDialog):
             "lateral_inflows",
             "lateral_weirs",
             "tracer_lateral_inflows",
-            "outputs"
+            "outputs",
         ]
         self.other = ["struct_config"]
         self.liste_tables = self.lst_tables_p + self.lst_tables_pt + self.other
@@ -79,7 +78,7 @@ class ClassUpdatePk(QDialog):
                 self.parent[table] = QTreeWidgetItem(self.tree)
                 self.parent[table].setText(0, table)
                 self.parent[table].setFlags(self.parent[table].flags() | qt_tris | qt_item_check)
-                self.parent[table].setCheckState(0,  qt_ucheck)
+                self.parent[table].setCheckState(0, qt_ucheck)
         else:
             self.ui.b_delete.setDisabled(True)
         self.ui.b_delete.clicked.connect(self.lancement)
@@ -89,16 +88,16 @@ class ClassUpdatePk(QDialog):
         """Delete selection function"""
         selection = []
         for table in self.liste_tables:
-            if _qt_is_checked(self.parent[table],check_level="any"):
+            if _qt_is_checked(self.parent[table], check_level="any"):
                 selection.append("{}".format(table))
         self.close()
 
         if not self.mdb.check_fct(
-                ["update_abscisse_profil", "abscisse_profil", "update_abscisse_point", "abscisse_point"]
+            ["update_abscisse_profil", "abscisse_profil", "update_abscisse_point", "abscisse_point"]
         ):
             self.mdb.add_fct_for_update_pk()
 
-        n = len(selection)
+        # n = len(selection)
 
         sql = ""
         for i, table in enumerate(selection):
@@ -113,20 +112,23 @@ class ClassUpdatePk(QDialog):
             elif table == "struct_config":
                 feature = self.mdb.select(table, list_var=["id", "id_prof_ori"])
                 if feature:
-                    if len(feature['id']):
-                        for idx, gid in enumerate(feature['id']):
+                    if len(feature["id"]):
+                        for idx, gid in enumerate(feature["id"]):
                             where = "gid = '{0}' ".format(feature["id_prof_ori"][idx])
                             feat = self.mdb.select(
                                 "profiles", where=where, list_var=["abscissa", "branchnum"]
                             )
                             if feat:
                                 if len(feat["abscissa"]) > 0:
-                                    sql += "UPDATE {0}.{1} SET abscissa={2}, branchnum={3} WHERE id={4};\n".format(
-                                        self.mdb.SCHEMA,
-                                        table,
-                                        feat['abscissa'][0],
-                                        feat['branchnum'][0],
-                                        gid)
+                                    upd_sql = (
+                                        "UPDATE {schema}.struct_config "
+                                        "SET abscissa = %s, branchnum = %s WHERE id = %s;"
+                                    )
+                                    self.mdb.run_query(
+                                        upd_sql,
+                                        params=[feat["abscissa"][0], feat["branchnum"][0], gid],
+                                        schema=True,
+                                    )
         self.mdb.run_query(sql)
         self.mgis.add_info("Update pk Done")
 

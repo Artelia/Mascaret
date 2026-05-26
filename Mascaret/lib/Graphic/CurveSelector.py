@@ -23,8 +23,8 @@ import os
 from datetime import timedelta
 
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
+from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.uic import loadUi
 
 
 def list_sql(liste, typ="str"):
@@ -190,38 +190,74 @@ class CurveSelectorWidget(QWidget):
                     }
                 ]
             elif self.typ_graph in ["link_fg"]:
-                self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
-                                   "name": 'Gate movement', "unit": 'm',
-                                   "vars": ['ZLINK']},
-                                  {"type_res": self.typ_res, "id": 'gate_width',
-                                   "name": 'Width (Fusible)', "unit": 'm',
-                                   "vars": ['WIDTHLINK']},
-                                  {"type_res": self.typ_res, "id": 'reg_var',
-                                   "name": 'Variable of regulation', "unit": '',
-                                   "vars": ['REGVAR']},
-                                  {"type_res": self.typ_res, "id": 'gate_area',
-                                   "name": 'Opening area (culvert)', "unit": 'm2',
-                                   "vars": ['CSECLINK']},
-                                  ]
+                self.lst_graph = [
+                    {
+                        "type_res": self.typ_res,
+                        "id": "gate_move",
+                        "name": "Gate movement",
+                        "unit": "m",
+                        "vars": ["ZLINK"],
+                    },
+                    {
+                        "type_res": self.typ_res,
+                        "id": "gate_width",
+                        "name": "Width (Fusible)",
+                        "unit": "m",
+                        "vars": ["WIDTHLINK"],
+                    },
+                    {
+                        "type_res": self.typ_res,
+                        "id": "reg_var",
+                        "name": "Variable of regulation",
+                        "unit": "",
+                        "vars": ["REGVAR"],
+                    },
+                    {
+                        "type_res": self.typ_res,
+                        "id": "gate_area",
+                        "name": "Opening area (culvert)",
+                        "unit": "m2",
+                        "vars": ["CSECLINK"],
+                    },
+                ]
             elif self.typ_graph in ["weirs"]:
-                self.lst_graph = [{"type_res": self.typ_res, "id": 'gate_move',
-                                   "name": 'Gate movement', "unit": 'm',
-                                   "vars": ['ZSTR']}, ]
-                lst_add = {'REGVAR': {"type_res": self.typ_res, "id": 'reg_var',
-                                      "name": 'Variable of regulation', "unit": '',
-                                      "vars": ['REGVAR']},
-                           'STAT_EFF': {"type_res": self.typ_res, "id": 'stat_var',
-                                        "name": 'Weir Erasure Status', "unit": '',
-                                        "vars": ['STAT_EFF']}}
-                for var in ['REGVAR', 'STAT_EFF']:
-                    sql = (f"SELECT  var FROM {self.mdb.SCHEMA}.results_by_pk "
-                           f"WHERE id_runs={self.cur_scen} AND "
-                           f"var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='weirs' AND var='{var}') "
-                           "LIMIT 1;")
-                    rows = self.mdb.run_query(sql, fetch=True)
+                self.lst_graph = [
+                    {
+                        "type_res": self.typ_res,
+                        "id": "gate_move",
+                        "name": "Gate movement",
+                        "unit": "m",
+                        "vars": ["ZSTR"],
+                    },
+                ]
+                lst_add = {
+                    "REGVAR": {
+                        "type_res": self.typ_res,
+                        "id": "reg_var",
+                        "name": "Variable of regulation",
+                        "unit": "",
+                        "vars": ["REGVAR"],
+                    },
+                    "STAT_EFF": {
+                        "type_res": self.typ_res,
+                        "id": "stat_var",
+                        "name": "Weir Erasure Status",
+                        "unit": "",
+                        "vars": ["STAT_EFF"],
+                    },
+                }
+                for var in ["REGVAR", "STAT_EFF"]:
+                    sql = (
+                        "SELECT var FROM {schema}.results_by_pk "
+                        "WHERE id_runs = %s AND var IN ("
+                        "SELECT id FROM {schema}.results_var WHERE type_res = 'weirs' AND var = %s"
+                        ") LIMIT 1;"
+                    )
+                    rows = self.mdb.run_query(
+                        sql, fetch=True, params=[self.cur_scen, var], schema=True
+                    )
                     if rows:
                         self.lst_graph.append(lst_add[var])
-
 
             elif self.typ_graph in ["hydro", "hydro_pk"]:
                 self.get_lst_graph_opt()
@@ -256,8 +292,10 @@ class CurveSelectorWidget(QWidget):
         self.cb_det.clear()
         if self.typ_graph in ["struct", "weirs", "link_fg"]:
             if self.typ_res in self.info_graph.keys():
-                lstpk = [self.info_graph[self.typ_res]["pknum"][id_config]
-                         for id_config in self.info_graph[self.typ_res]["pknum"]]
+                lstpk = [
+                    self.info_graph[self.typ_res]["pknum"][id_config]
+                    for id_config in self.info_graph[self.typ_res]["pknum"]
+                ]
 
                 table_map = {
                     "struct": ("profiles", "abscissa"),
@@ -269,7 +307,7 @@ class CurveSelectorWidget(QWidget):
                 info = self.mdb.select(
                     table,
                     where=f"{var_test} IN {list_sql(lstpk, 'float')}",
-                    list_var=[var_test, "name"]
+                    list_var=[var_test, "name"],
                 )
                 for pknum in lstpk:
                     if pknum in info[var_test]:
@@ -293,10 +331,8 @@ class CurveSelectorWidget(QWidget):
         elif self.typ_graph == "hydro_pk":
             self.init_date = None
 
-            sql = "SELECT init_date FROM {0}.runs WHERE id = {1} ".format(
-                self.mgis.mdb.SCHEMA, self.cur_scen
-            )
-            info = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT init_date FROM {schema}.runs WHERE id = %s"
+            info = self.mdb.run_query(sql, fetch=True, params=[self.cur_scen], schema=True)
             if info:
                 self.init_date = info[0][0]
 
@@ -309,15 +345,20 @@ class CurveSelectorWidget(QWidget):
                 self.cb_det.addItem(aff, time_)
 
         elif self.typ_graph in ["hydro_basin", "hydro_link"]:
-            table, num = "{}s".format(self.typ_res), "{}num".format(self.typ_res)
+            table = "{}s".format(self.typ_res)
             if self.typ_res in self.info_graph.keys():
-                sql = "SELECT DISTINCT name, {3}, gid FROM  {0}.{2} " "WHERE {3} IN {1} ".format(
-                    self.mgis.mdb.SCHEMA,
-                    list_sql(self.info_graph[self.typ_res]["pknum"], "float"),
-                    table,
-                    num,
-                )
-                rows = self.mdb.run_query(sql, fetch=True)
+                ids = self.info_graph[self.typ_res]["pknum"]
+                if self.typ_res == "basin":
+                    sql = (
+                        "SELECT DISTINCT name, basinnum, gid FROM {schema}.basins "
+                        "WHERE basinnum = ANY(%s)"
+                    )
+                else:
+                    sql = (
+                        "SELECT DISTINCT name, linknum, gid FROM {schema}.links "
+                        "WHERE linknum = ANY(%s)"
+                    )
+                rows = self.mdb.run_query(sql, fetch=True, params=[ids], schema=True)
                 for row in rows:
                     self.cb_det.addItem(row[0], row[1])
 
@@ -364,32 +405,28 @@ class CurveSelectorWidget(QWidget):
         self.param_graph["t"] = self.cur_t
         # delete  CSECLINK if it's not a culvert
         if self.typ_graph in ["link_fg"]:
-            info = self.mdb.select(
-                "links",
-                where=f"gid={self.cur_pknum}",
-                list_var=['type']
-            )
-            meth_mob = '2'
+            info = self.mdb.select("links", where=f"gid={self.cur_pknum}", list_var=["type"])
+            meth_mob = "2"
             if self.typ_res in self.info_graph:
-                if 'method_mob' in self.info_graph[self.typ_res]:
+                if "method_mob" in self.info_graph[self.typ_res]:
                     try:
-                        meth_mob = self.info_graph[self.typ_res]['method_mob'][f'{self.cur_pknum}']
+                        meth_mob = self.info_graph[self.typ_res]["method_mob"][f"{self.cur_pknum}"]
                     except KeyError:
                         pass
             # affiche ou non la variablee
             if info:
                 index = self.cb_graph.findText(self.lst_graph[3]["name"])
                 # Delete CSsection( if it's not culvert)
-                if info['type'][0] != 4 and index != -1:
+                if info["type"][0] != 4 and index != -1:
                     self.cb_graph.removeItem(index)
-                elif info['type'][0] == 4 and index == -1:
+                elif info["type"][0] == 4 and index == -1:
                     self.cb_graph.addItem(self.lst_graph[3]["name"], self.lst_graph[3]["id"])
                 # Delete WIDTH( if the methode 3)
 
                 index2 = self.cb_graph.findText(self.lst_graph[1]["name"])
-                if meth_mob != '3' and index2 != -1:
+                if meth_mob != "3" and index2 != -1:
                     self.cb_graph.removeItem(index2)
-                elif meth_mob == '3' and index2 == -1:
+                elif meth_mob == "3" and index2 == -1:
                     self.cb_graph.addItem(self.lst_graph[1]["name"], self.lst_graph[1]["id"])
 
         if (self.cb_graph.currentIndex() != -1) and (self.cb_det.currentIndex() != -1):
@@ -403,11 +440,8 @@ class CurveSelectorWidget(QWidget):
         update info graphic
         :return:
         """
-        sql = (
-            "SELECT type_res, var, val FROM {0}.runs_graph WHERE "
-            "id_runs = {1} ORDER BY id".format(self.mdb.SCHEMA, self.cur_scen)
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT type_res, var, val FROM {schema}.runs_graph " "WHERE id_runs = %s ORDER BY id"
+        rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_scen], schema=True)
         self.info_graph.clear()
         for i, row in enumerate(rows):
             if row[0] in self.info_graph.keys():
@@ -464,13 +498,10 @@ class CurveSelectorWidget(QWidget):
             for typ_res in list_typ_res:
                 if typ_res in self.info_graph.keys():
                     list_vars.extend(self.info_graph[typ_res]["var"])
-        sql = "SELECT * FROM {0}.results_var WHERE id in {1}".format(
-            self.mdb.SCHEMA, list_sql(list_vars)
-        )
-        # else:
-        #     sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res in {1}".format(self.mdb.SCHEMA, list_sql(self.list_typ_res))
-
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = []
+        if list_vars:
+            sql = "SELECT * FROM {schema}.results_var WHERE id = ANY(%s)"
+            rows = self.mdb.run_query(sql, fetch=True, params=[list_vars], schema=True)
         if not rows:
             self.mgis.add_info("No data")
         else:
@@ -500,14 +531,16 @@ class CurveSelectorWidget(QWidget):
         """
         if self.typ_res in self.info_graph.keys():
             if self.cur_scen:
-                sql = "SELECT * FROM {0}.results_var " "WHERE id in {1}".format(
-                    self.mdb.SCHEMA, list_sql(self.info_graph[self.typ_res]["var"])
+                sql = "SELECT * FROM {schema}.results_var WHERE id = ANY(%s)"
+                rows = self.mdb.run_query(
+                    sql,
+                    fetch=True,
+                    params=[self.info_graph[self.typ_res]["var"]],
+                    schema=True,
                 )
             else:
-                sql = "SELECT DISTINCT * FROM {0}.results_var WHERE type_res = '{1}'".format(
-                    self.mdb.SCHEMA, self.typ_res
-                )
-            rows = self.mdb.run_query(sql, fetch=True)
+                sql = "SELECT DISTINCT * FROM {schema}.results_var WHERE type_res = %s"
+                rows = self.mdb.run_query(sql, fetch=True, params=[self.typ_res], schema=True)
 
             for rws in rows:
                 self.lst_graph.append(
@@ -541,15 +574,15 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
     """
 
     def __init__(
-            self,
-            mgis=None,
-            row=None,
-            typ_graph=None,
-            typ_res=None,
-            x_var=None,
-            dict_run=None,
-            cur_pknum=None,
-            cur_branch=None,
+        self,
+        mgis=None,
+        row=None,
+        typ_graph=None,
+        typ_res=None,
+        x_var=None,
+        dict_run=None,
+        cur_pknum=None,
+        cur_branch=None,
     ):
         CurveSelectorWidget.__init__(
             self, mgis, "slide", row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch
@@ -589,15 +622,15 @@ class SlideCurveSelectorWidget(CurveSelectorWidget):
 
 class CompareCurveSelectorWidget(CurveSelectorWidget):
     def __init__(
-            self,
-            mgis=None,
-            row=None,
-            typ_graph=None,
-            typ_res=None,
-            x_var=None,
-            dict_run=None,
-            cur_pknum=None,
-            cur_branch=None,
+        self,
+        mgis=None,
+        row=None,
+        typ_graph=None,
+        typ_res=None,
+        x_var=None,
+        dict_run=None,
+        cur_pknum=None,
+        cur_branch=None,
     ):
         CurveSelectorWidget.__init__(
             self, mgis, "compare", row, typ_graph, typ_res, x_var, dict_run, cur_pknum, cur_branch

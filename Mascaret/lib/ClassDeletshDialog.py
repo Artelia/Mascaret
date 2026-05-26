@@ -16,18 +16,17 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtWidgets import QDialog, QProgressBar, QTreeWidgetItem
+from qgis.PyQt.uic import loadUi
 
 from ..ui.custom_control import ClassWarningBox, _qt_is_checked
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassDeletshDialog(QDialog):
     """
@@ -64,9 +63,8 @@ class ClassDeletshDialog(QDialog):
             for model in self.liste_model:
                 self.parent[model] = QTreeWidgetItem(self.tree)
                 self.parent[model].setText(0, model)
-                self.parent[model].setFlags(self.parent[model].flags() | qt_tris | qt_item_check )
-                self.parent[model].setCheckState(0,  qt_ucheck)
-
+                self.parent[model].setFlags(self.parent[model].flags() | qt_tris | qt_item_check)
+                self.parent[model].setCheckState(0, qt_ucheck)
 
         else:
             self.ui.b_delete.setDisabled(True)

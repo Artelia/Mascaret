@@ -20,12 +20,13 @@ email                :
 import json
 import os
 
-try :
+try:
     from ..ClassMessage import ClassMessage
     from ..Function import str2bool, data_to_float, data_to_int
-except:
+except ImportError:
     from ClassMessage import ClassMessage
     from Function import str2bool, data_to_float, data_to_int
+
 
 class ClassLinkFGParam(object):
     """
@@ -43,175 +44,242 @@ class ClassLinkFGParam(object):
         self.list_actif = []
         self.lst_param = {
             # LINK CASIER
-            "name": {"desc": "nom du link", "desc_en": "name of the link", 'typ': 'str'},
-            "level0": {"desc": "cote de radier", "desc_en": "bottom elevation", 'typ': 'float'},
-            "nature": {"desc": "Type casier-bief=1 ou casier-casier=2",
-                       "desc_en": "Type basin-branch=1 ou basin-basin=2", 'typ': 'float'},
-            "crosssection0": {"desc": "Aire initial", "desc_en": "Initial cross sectino", 'typ': 'float'},
-            "abscissa": {"desc": "pk du link", "desc_en": "chainage of the link", 'typ': 'float'},
-            "branchnum": {"desc": "branch", "desc_en": "branch", 'typ': 'int'},
-            "basinstart": {"desc": "Casier Initial", "desc_en": "Initial basin", 'typ': 'int'},
-            "basinend": {"desc": "Casier Final", "desc_en": "Final basin", 'typ': 'int'},
-            "method_mob": {
-                "desc": "mehtode utilisé : (0 ou NULL) ignore, meth_tempo(1), meth_regul(2), meth_fus(3)",
-                "desc_en": "method used: (0 or NULL) ignore, meth_tempo(1), meth_regul(2), meth_fus(3)",
-                "default": "2", 'typ': 'str'
+            "name": {"desc": "nom du link", "desc_en": "name of the link", "typ": "str"},
+            "level0": {"desc": "cote de radier", "desc_en": "bottom elevation", "typ": "float"},
+            "nature": {
+                "desc": "Type casier-bief=1 ou casier-casier=2",
+                "desc_en": "Type basin-branch=1 ou basin-basin=2",
+                "typ": "float",
             },
-            "type": {"desc": "type de link, 1:weir, 4:culvert", "desc_en": "type of link, 1:weir, 4:culvert",
-                     'typ': 'int'},
+            "crosssection0": {
+                "desc": "Aire initial",
+                "desc_en": "Initial cross sectino",
+                "typ": "float",
+            },
+            "abscissa": {"desc": "pk du link", "desc_en": "chainage of the link", "typ": "float"},
+            "branchnum": {"desc": "branch", "desc_en": "branch", "typ": "int"},
+            "basinstart": {"desc": "Casier Initial", "desc_en": "Initial basin", "typ": "int"},
+            "basinend": {"desc": "Casier Final", "desc_en": "Final basin", "typ": "int"},
+            "method_mob": {
+                "desc": "mehtode utilisé : (0 ou NULL) ignore, meth_tempo(1), "
+                "meth_regul(2), meth_fus(3)",
+                "desc_en": "method used: (0 or NULL) ignore, meth_tempo(1), "
+                "meth_regul(2), meth_fus(3)",
+                "default": "2",
+                "typ": "str",
+            },
+            "type": {
+                "desc": "type de link, 1:weir, 4:culvert",
+                "desc_en": "type of link, 1:weir, 4:culvert",
+                "typ": "int",
+            },
             # methode de régulation
             "DIRFG": {
                 "desc": "direction si D cote monte et section diminue si U seul section diminue",
-                "desc_en": "direction: if D, level rises and section decreases; if U, only section decreases",
-                'typ': 'str'
+                "desc_en": "direction: if D, level rises and section decreases; "
+                "if U, only section decreases",
+                "typ": "str",
             },
             "VELOFGOPEN": {
                 "desc": "vitesse d'ouverture m/s de la vanne",
-                "desc_en": "opening speed of the gate (m/s)", 'typ': 'float'
+                "desc_en": "opening speed of the gate (m/s)",
+                "typ": "float",
             },
             "VELOFGCLOSE": {
                 "desc": "vitesse de fermeture m/s de la vanne",
-                "desc_en": "closing speed of the gate (m/s)", 'typ': 'float'
+                "desc_en": "closing speed of the gate (m/s)",
+                "typ": "float",
             },
             "ZMAXFG": {
                 "desc": "valeur Z limite max d'ouverture",
-                "desc_en": "maximum Z limit for opening", 'typ': 'float'
+                "desc_en": "maximum Z limit for opening",
+                "typ": "float",
             },
             "ZINITREG": {
                 "desc": "cote initial de la vanne (compris entre ZMAXFG et cote de radier)",
-                "desc_en": "initial gate level (between ZMAXFG and bottom level)", 'typ': 'float'
+                "desc_en": "initial gate level (between ZMAXFG and bottom level)",
+                "typ": "float",
             },
             "VREG": {
                 "desc": "Variable regulation Z ou Q",
-                "desc_en": "Regulation variable Z or Q", 'typ': 'str'
+                "desc_en": "Regulation variable Z or Q",
+                "typ": "str",
             },
             "USEBASIN": {
                 "desc": "Utilise le casier comme point de regulatinon",
-                "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'
+                "desc_en": "Uses the basin as a regulation point",
+                "typ": "bool",
             },
             "NUMBASINREG": {
-                "desc": "num basin", "desc_en": "basin number", "default": '', 'typ': 'int'
+                "desc": "num basin",
+                "desc_en": "basin number",
+                "default": "",
+                "typ": "int",
             },
-            "PK": {
-                "desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'
-            },
+            "PK": {"desc": "PK de la régulation", "desc_en": "Regulation chainage", "typ": "float"},
             "VREGCLOS": {
-                "desc": "valeur fermeture de la vanne", "desc_en": "gate closing value", 'typ': 'float'
+                "desc": "valeur fermeture de la vanne",
+                "desc_en": "gate closing value",
+                "typ": "float",
             },
             "VREGOPEN": {
-                "desc": "valeur d'ouverture de la vanne", "desc_en": "gate opening value", 'typ': 'float'
+                "desc": "valeur d'ouverture de la vanne",
+                "desc_en": "gate opening value",
+                "typ": "float",
             },
             "CRITDTREG": {
-                "desc": "critère NDTREG ou DTREG", "desc_en": "criterion NDTREG or DTREG", 'typ': 'str'
+                "desc": "critère NDTREG ou DTREG",
+                "desc_en": "criterion NDTREG or DTREG",
+                "typ": "str",
             },
             "NDTREG": {
                 "desc": "Tout les N pas temps pour l'application",
-                "desc_en": "Every N time steps for application", 'typ': 'int'
+                "desc_en": "Every N time steps for application",
+                "typ": "int",
             },
             "DTREG": {
                 "desc": "Si =0 pas de temps  du calcul, sinn celui indiqué (en s)",
-                "desc_en": "If 0, default time step; otherwise, specified value (s)", 'typ': 'float'
+                "desc_en": "If 0, default time step; otherwise, specified value (s)",
+                "typ": "float",
             },
             "ZINCRFG": {
-                "desc": "max d'incrementation", "desc_en": "maximum increment", 'typ': 'float'
+                "desc": "max d'incrementation",
+                "desc_en": "maximum increment",
+                "typ": "float",
             },
             "TOLREG": {
                 "desc": "Tolerance sur les variale de regulation",
-                "desc_en": "Tolerance on regulation variables", 'typ': 'float'
+                "desc_en": "Tolerance on regulation variables",
+                "typ": "float",
             },
             "MAINTFIRST": {
                 "desc": "Maintenir le niveau initial jusqu'à la première ouverture",
-                "desc_en": "Hold Initial level until first openings", 'typ': 'bool'
+                "desc_en": "Hold Initial level until first openings",
+                "typ": "bool",
             },
             "VBREAKREG": {
-                "desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'
+                "desc": "Valeur de rupture ouvrage",
+                "desc_en": "Break value of structure",
+                "typ": "float",
             },
             "BPERMREG": {
                 "desc": "True Si la rupture est non permanent",
-                "desc_en": "True If break isn't permanent", 'typ': 'bool'
+                "desc_en": "True If break isn't permanent",
+                "typ": "bool",
             },
             "ZFINALREG": {
                 "desc": "Cote final weirs après rupture",
-                "desc_en": "Final weir level after break", 'typ': 'float'
+                "desc_en": "Final weir level after break",
+                "typ": "float",
             },
             "USEBASINT": {
                 "desc": "Utilise le casier comme point de regulatinon",
-                "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'
+                "desc_en": "Uses the basin as a regulation point",
+                "typ": "bool",
             },
             "NUMBASINT": {
-                "desc": "Start or end basin", "desc_en": "Start or end basin", 'typ': 'int'
+                "desc": "Start or end basin",
+                "desc_en": "Start or end basin",
+                "typ": "int",
             },
-            "WRITEREG": {"desc": "Nombre pas de temps pour l'ecriture",
-                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
+            "WRITEREG": {
+                "desc": "Nombre pas de temps pour l'ecriture",
+                "desc_en": "Number of time steps for writing",
+                "typ": "int",
+            },
             # meth_tempo
             "TIMEZ": {
-                "desc": "Valeur Temps en s", "desc_en": "Time value in seconds", 'typ': 'float'
+                "desc": "Valeur Temps en s",
+                "desc_en": "Time value in seconds",
+                "typ": "float",
             },
             "VALUEZ": {
-                "desc": "Valeur associé à TIME", "desc_en": "Value associated with TIME", 'typ': 'float'
+                "desc": "Valeur associé à TIME",
+                "desc_en": "Value associated with TIME",
+                "typ": "float",
             },
             "VBREAKT": {
-                "desc": "Valeur de rupture ouvrage", "desc_en": "Break value of structure", 'typ': 'float'
+                "desc": "Valeur de rupture ouvrage",
+                "desc_en": "Break value of structure",
+                "typ": "float",
             },
             "BPERMT": {
                 "desc": "True Si la rupture est non permanent",
-                "desc_en": "True If break isn't permanent", 'typ': 'bool'
+                "desc_en": "True If break isn't permanent",
+                "typ": "bool",
             },
             "ZFINALT": {
                 "desc": "Cote final weirs après rupture",
-                "desc_en": "Final weir level after break", 'typ': 'float'
+                "desc_en": "Final weir level after break",
+                "typ": "float",
             },
-            "WRITET": {"desc": "Nombre pas de temps pour l'ecriture",
-                       "desc_en": "Number of time steps for writing", 'typ': 'int'},
+            "WRITET": {
+                "desc": "Nombre pas de temps pour l'ecriture",
+                "desc_en": "Number of time steps for writing",
+                "typ": "int",
+            },
             # meth_fusible
             "METHBREAK": {
                 "desc": "méthode de rupture à un temps donnée time ou valeur régulation regul"
-                        " meth_time(1), meth_val(2)",
+                " meth_time(1), meth_val(2)",
                 "desc_en": "break method at a given time or regulation value"
-                           " meth_time(1), meth_val(2)", 'typ': 'str'
+                " meth_time(1), meth_val(2)",
+                "typ": "str",
             },
             "TIMEFUS": {
-                "desc": "Valeur Temps fusible en s", "desc_en": "Fuse time value in seconds", 'typ': 'float'
+                "desc": "Valeur Temps fusible en s",
+                "desc_en": "Fuse time value in seconds",
+                "typ": "float",
             },
             "WIDTHFUS": {
-                "desc": "Largeur associé à TIME", "desc_en": "Width associated with TIME", 'typ': 'float'
+                "desc": "Largeur associé à TIME",
+                "desc_en": "Width associated with TIME",
+                "typ": "float",
             },
             "VFUS": {
                 "desc": "Variable regulation Z ou Q seuil fusible",
-                "desc_en": "Regulation variable Z or Q fuse threshold", 'typ': 'str'
+                "desc_en": "Regulation variable Z or Q fuse threshold",
+                "typ": "str",
             },
             "VBREAKFUS": {
-                "desc": "Valeur de rupture seuil", "desc_en": "Threshold break value", 'typ': 'float'
+                "desc": "Valeur de rupture seuil",
+                "desc_en": "Threshold break value",
+                "typ": "float",
             },
             "TBREAKFUS": {
-                "desc": "Temps de rupture seuil", "desc_en": "Threshold break time", 'typ': 'float'
+                "desc": "Temps de rupture seuil",
+                "desc_en": "Threshold break time",
+                "typ": "float",
             },
             "ZFINALFUS": {
-                "desc": "Cote final weirs", "desc_en": "Final weir level", 'typ': 'float'
+                "desc": "Cote final weirs",
+                "desc_en": "Final weir level",
+                "typ": "float",
             },
             "USEBASINFUS": {
                 "desc": "Utilise le casier comme point de regulatinon",
-                "desc_en": "Uses the basin as a regulation point", 'typ': 'bool'
+                "desc_en": "Uses the basin as a regulation point",
+                "typ": "bool",
             },
             "NUMBASINFUS": {
-                "desc": "Start or end basin", "desc_en": "Start or end basin", 'typ': 'int'
+                "desc": "Start or end basin",
+                "desc_en": "Start or end basin",
+                "typ": "int",
             },
             "PKFUS": {
-                "desc": "PK de la régulation", "desc_en": "Regulation chainage", 'typ': 'float'
+                "desc": "PK de la régulation",
+                "desc_en": "Regulation chainage",
+                "typ": "float",
             },
-            "WRITEFUS": {"desc": "Nombre pas de temps pour l'ecriture",
-                         "desc_en": "Number of time steps for writing", 'typ': 'int'},
+            "WRITEFUS": {
+                "desc": "Nombre pas de temps pour l'ecriture",
+                "desc_en": "Number of time steps for writing",
+                "typ": "int",
+            },
         }
 
-        self.dmeth = {
-            "meth_time": str(1),
-            "meth_regul": str(2),
-            "meth_fus": str(3)
-        }
-        self.dmeth_fus = {
-            "meth_time": str(1),
-            "meth_val": str(2)
-        }
+        self.dmeth = {"meth_time": str(1), "meth_regul": str(2), "meth_fus": str(3)}
+        self.dmeth_fus = {"meth_time": str(1), "meth_val": str(2)}
         self.mess = ClassMessage()
 
     def get_param(self, parent=None, file_name="links_cli_fg.obj"):
@@ -234,10 +302,10 @@ class ClassLinkFGParam(object):
 
         if complet:
             txt = "Import configuration links mobile"
-            self.mess.add_mess('import_lk_fg', 'info', txt)
+            self.mess.add_mess("import_lk_fg", "info", txt)
         else:
             txt = "Error when the links mobile import"
-            self.mess.add_mess('import_lk_fg', 'warning', txt)
+            self.mess.add_mess("import_lk_fg", "warning", txt)
 
         return self.check_param()
 
@@ -251,7 +319,7 @@ class ClassLinkFGParam(object):
         """
         if not parent:
             txt = "Error No parent"
-            self.mess.add_mess('export_lk_fg', 'critic', txt)
+            self.mess.add_mess("export_lk_fg", "critic", txt)
             return False
 
         complet = self.fill_param_to_db(parent.mdb)
@@ -259,9 +327,9 @@ class ClassLinkFGParam(object):
             return False
 
         if not self.check_param():
-            txt = self.mess.get_mess('chk_lk_fg')
+            txt = self.mess.get_mess("chk_lk_fg")
             if txt:
-                parent.box.info(txt, 'Error')
+                parent.box.info(txt, "Error")
             return False
 
         self.export_cl(file_name)
@@ -278,37 +346,54 @@ class ClassLinkFGParam(object):
         :return:(bool) True if parameters are successfully fetched, otherwise False.
 
         """
-        casiers = db.select("basins", "active ORDER BY basinnum ", list_var=['basinnum'])
-        links = db.select("links", "active ORDER BY linknum ", list_var=['linknum'])
-        conv_casier = {str(basinnum): int(id_cas_mas) for id_cas_mas, basinnum in enumerate(casiers['basinnum'])}
-        conv_links = {str(linknum): int(id_lk_mas) for id_lk_mas, linknum in enumerate(links['linknum'])}
+        casiers = db.select("basins", "active ORDER BY basinnum ", list_var=["basinnum"])
+        links = db.select("links", "active ORDER BY linknum ", list_var=["linknum"])
+        conv_casier = {
+            str(basinnum): int(id_cas_mas)
+            for id_cas_mas, basinnum in enumerate(casiers["basinnum"])
+        }
+        conv_links = {
+            str(linknum): int(id_lk_mas) for id_lk_mas, linknum in enumerate(links["linknum"])
+        }
         # Get base Variable
         lst_var = [
-            "gid", "linknum", "name", "level", "nature", "crosssection", "width", "abscissa",
-            "method_mob", "branchnum", "type", "basinstart", "basinend"
+            "gid",
+            "linknum",
+            "name",
+            "level",
+            "nature",
+            "crosssection",
+            "width",
+            "abscissa",
+            "method_mob",
+            "branchnum",
+            "type",
+            "basinstart",
+            "basinend",
         ]
         sql = (
-            "SELECT {fields} "
+            "SELECT gid, linknum, name, level, nature, crosssection, width, abscissa, "
+            "method_mob, branchnum, type, basinstart, basinend "
             "FROM {schema}.links "
             "WHERE active AND type in (4,1) AND active_mob "
             "ORDER BY gid;"
-        ).format(schema=db.SCHEMA, fields=", ".join(lst_var))
-        rows = db.run_query(sql, fetch=True)
+        )
+        rows = db.run_query(sql, fetch=True, schema=True)
         if rows is None:
             self.param_fg = {}
             txt = "Error retrieving links from database"
-            self.mess.add_mess('impt_lk_fg1', 'warning', txt)
+            self.mess.add_mess("impt_lk_fg1", "warning", txt)
             return False
         if len(rows) == 0:
             self.param_fg = {}
             return True
         # varible conversion
-        conv_var = {'level': "level0", "crosssection": "CSection0", "width": "width0"}
+        conv_var = {"level": "level0", "crosssection": "CSection0", "width": "width0"}
 
         for row in rows:
             id_link = row[0]
             if id_link not in self.param_fg:
-                self.param_fg[id_link] = {'id_mas': conv_links[str(row[1])]}
+                self.param_fg[id_link] = {"id_mas": conv_links[str(row[1])]}
                 self.list_actif.append(id_link)
             for pos, var in enumerate(lst_var[2:]):
                 if var in conv_var:
@@ -316,21 +401,20 @@ class ClassLinkFGParam(object):
                 self.param_fg[id_link][var] = row[pos + 2]
         # Get mobility-specific values
         lst_var = ["id_links", "name_var", "value"]
-        id_list = ", ".join(str(v) for v in self.list_actif)
         sql = (
-            "SELECT {fields} FROM {schema}.links_mob_val "
-            "WHERE id_links in ({ids}) ORDER BY id_links;"
-        ).format(schema=db.SCHEMA, fields=", ".join(lst_var), ids=id_list)
-        rows = db.run_query(sql, fetch=True)
+            "SELECT id_links, name_var, value FROM {schema}.links_mob_val "
+            "WHERE id_links = ANY(%s) ORDER BY id_links;"
+        )
+        rows = db.run_query(sql, fetch=True, params=[self.list_actif], schema=True)
         if rows is None:
             self.param_fg = {}
             txt = "Error reading database links_mob_val"
-            self.mess.add_mess('impt_lk_fg2', 'warning', txt)
+            self.mess.add_mess("impt_lk_fg2", "warning", txt)
             return False
         if len(rows) == 0:
             self.param_fg = {}
             txt = "links_mob_val not consistent with link"
-            self.mess.add_mess('impt_lk_fg3', 'warning', txt)
+            self.mess.add_mess("impt_lk_fg3", "warning", txt)
             return False
 
         var_tab = ["TIMEZ", "VALUEZ", "TIMEFUS", "WIDTHFUS"]
@@ -343,8 +427,8 @@ class ClassLinkFGParam(object):
                 continue
             # Get mobile variable
             if var in self.lst_param:
-                self.param_fg[id_link][var] = self.typ_to_val(self.lst_param[var]['typ'], value)
-                if 'NUMBASIN' in var:
+                self.param_fg[id_link][var] = self.typ_to_val(self.lst_param[var]["typ"], value)
+                if "NUMBASIN" in var:
                     try:
                         self.param_fg[id_link][var] = conv_casier[str(self.param_fg[id_link][var])]
                     except KeyError:
@@ -356,21 +440,16 @@ class ClassLinkFGParam(object):
         if len(lst_id_tab) > 0:
             lst_var = ["id_links", "name_var", "value", "id_order"]
             sql = (
-                "SELECT {fields} FROM {schema}.links_mob_val "
-                "WHERE id_links in ({ids}) AND name_var in ({vars}) "
+                "SELECT id_links, name_var, value, id_order FROM {schema}.links_mob_val "
+                "WHERE id_links = ANY(%s) AND name_var = ANY(%s) "
                 "ORDER BY id_links, id_order;"
-            ).format(
-                schema=db.SCHEMA,
-                fields=", ".join(lst_var),
-                ids=", ".join(str(v) for v in lst_id_tab),
-                vars=", ".join(f"'{v}'" for v in var_tab)
             )
-            rows = db.run_query(sql, fetch=True)
+            rows = db.run_query(sql, fetch=True, params=[lst_id_tab, var_tab], schema=True)
             if not (rows is None or len(rows) == 0):
                 for row in rows:
                     id_link, var, value, _ = row
                     if var in var_tab:
-                        self.param_fg[id_link][var].append(self.typ_to_val('float', value))
+                        self.param_fg[id_link][var].append(self.typ_to_val("float", value))
 
         return True
 
@@ -385,11 +464,11 @@ class ClassLinkFGParam(object):
         """
         if not val:
             return val
-        if typ == 'bool':
+        if typ == "bool":
             return str2bool(val)
-        if typ == 'int':
+        if typ == "int":
             return data_to_int(val)
-        if typ == 'float':
+        if typ == "float":
             return data_to_float(val)
         return val
 
@@ -413,7 +492,7 @@ class ClassLinkFGParam(object):
                     txt += f"  - {var} : {self.lst_param[var]['desc_en']}\n"
                 except KeyError:
                     txt += f"  - {var} : \n"
-            self.mess.add_mess('chk_lk_fg', 'critic', txt)
+            self.mess.add_mess("chk_lk_fg", "critic", txt)
             return False
         return True
 
@@ -426,17 +505,23 @@ class ClassLinkFGParam(object):
         :return: (bool) True if the regulation parameters are valid, False otherwise.
         """
         if test["method_mob"] == 2:
-            if test["DIRFG"] == 'D' and test["VREGOPEN"] <= test["VREGCLOS"]:
-                txt = (f"The opening level minus tolerance is lower than the closing level plus tolerance. "
-                       f"It should always be higher in this case.\n "
-                       f"The issue is for link {num}.")
-                self.mess.add_mess('chk_lk_reg', 'critic', txt)
+            if test["DIRFG"] == "D" and test["VREGOPEN"] <= test["VREGCLOS"]:
+                txt = (
+                    f"The opening level minus tolerance is lower than "
+                    f"the closing level plus tolerance. "
+                    f"It should always be higher in this case.\n "
+                    f"The issue is for link {num}."
+                )
+                self.mess.add_mess("chk_lk_reg", "critic", txt)
                 return False
-            elif test["DIRFG"] == 'U' and test["VREGOPEN"] >= test["VREGCLOS"]:
-                txt = (f"The opening level plus tolerance is greater than the closing level minus tolerance. "
-                       f"It should always be lower in this case.\n "
-                       f"The issue is for link {num}.")
-                self.mess.add_mess('chk_lk_reg', 'critic', txt)
+            elif test["DIRFG"] == "U" and test["VREGOPEN"] >= test["VREGCLOS"]:
+                txt = (
+                    f"The opening level plus tolerance is greater than "
+                    f"the closing level minus tolerance. "
+                    f"It should always be lower in this case.\n "
+                    f"The issue is for link {num}."
+                )
+                self.mess.add_mess("chk_lk_reg", "critic", txt)
                 return False
         return True
 
@@ -460,19 +545,56 @@ class ClassLinkFGParam(object):
 
         :return:(dict) Dictionary of list of required variables.
         """
-        lst_com = ["name", "level0", "nature", "CSection0", "width0", "abscissa", "branchnum",
-                   "basinstart", "basinend", "method_mob"]
-        lst_reg = ["DIRFG", "VELOFGOPEN", "VELOFGCLOSE", "ZMAXFG", "ZINITREG", "VREG", "USEBASIN", "NUMBASINREG",
-                   "PK", "VREGCLOS", "VREGOPEN", "CRITDTREG", "NDTREG", "DTREG", "ZINCRFG",
-                   "VBREAKREG", "ZFINALREG"]
+        lst_com = [
+            "name",
+            "level0",
+            "nature",
+            "CSection0",
+            "width0",
+            "abscissa",
+            "branchnum",
+            "basinstart",
+            "basinend",
+            "method_mob",
+        ]
+        lst_reg = [
+            "DIRFG",
+            "VELOFGOPEN",
+            "VELOFGCLOSE",
+            "ZMAXFG",
+            "ZINITREG",
+            "VREG",
+            "USEBASIN",
+            "NUMBASINREG",
+            "PK",
+            "VREGCLOS",
+            "VREGOPEN",
+            "CRITDTREG",
+            "NDTREG",
+            "DTREG",
+            "ZINCRFG",
+            "VBREAKREG",
+            "ZFINALREG",
+        ]
         lst_time = ["TIMEZ", "VALUEZ", "VBREAKT", "ZFINALT"]
-        lst_fus = ["METHBREAK", "TIMEFUS", "WIDTHFUS", "VFUS", "VBREAKFUS", "TBREAKFUS", "ZFINALFUS", "USEBASINFUS",
-                   "NUMBASINFUS", "PKFUS"]
+        lst_fus = [
+            "METHBREAK",
+            "TIMEFUS",
+            "WIDTHFUS",
+            "VFUS",
+            "VBREAKFUS",
+            "TBREAKFUS",
+            "ZFINALFUS",
+            "USEBASINFUS",
+            "NUMBASINFUS",
+            "PKFUS",
+        ]
 
-        dlist = {self.dmeth["meth_time"]: lst_com + lst_time,
-                 self.dmeth["meth_regul"]: lst_com + lst_reg,
-                 self.dmeth["meth_fus"]: lst_com + lst_fus
-                 }
+        dlist = {
+            self.dmeth["meth_time"]: lst_com + lst_time,
+            self.dmeth["meth_regul"]: lst_com + lst_reg,
+            self.dmeth["meth_fus"]: lst_com + lst_fus,
+        }
         return dlist
 
     def export_cl(self, name="links_cli_fg.obj"):
@@ -508,8 +630,11 @@ class ClassLinkFGParam(object):
         :return: True if there are active links, otherwise False.
         """
         if db:
-            sql = f"SELECT EXISTS (SELECT 1 FROM {db.SCHEMA}.links WHERE active_mob = TRUE and active= TRUE );"
-            row = db.run_query(sql, fetch=True)
+            sql = (
+                "SELECT EXISTS (SELECT 1 FROM {schema}.links "
+                "WHERE active_mob = TRUE and active = TRUE);"
+            )
+            row = db.run_query(sql, fetch=True, schema=True)
             return bool(row and row[0][0])
         else:
             return bool(self.param_fg)

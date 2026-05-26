@@ -20,6 +20,7 @@ email                :
 import json
 import os
 from datetime import datetime
+from psycopg2 import sql
 
 
 def list_sql(liste):
@@ -49,7 +50,7 @@ class ClassUpdate302:
         self.fill_init_date_runs()
 
     def create_var_result(self):
-        self.mdb.execute("DELETE FROM {0}.results_var".format(self.mdb.SCHEMA))
+        self.mdb.execute("DELETE FROM {schema}.results_var", schema=True)
         dossier = os.path.join(self.mgis.masplugPath, "sql")
         self.mdb.insert_var_to_result_var(dossier)
 
@@ -61,20 +62,21 @@ class ClassUpdate302:
 
         try:
             rows = self.mdb.run_query(
-                "SELECT DISTINCT type_res FROM {0}.results_var".format(self.mdb.SCHEMA), fetch=True
+                "SELECT DISTINCT type_res FROM {schema}.results_var", fetch=True, schema=True
             )
 
             lst_typ_res = [r[0] for r in rows]
             rows = self.mdb.run_query(
-                "SELECT id, run, scenario FROM {0}.runs".format(self.mdb.SCHEMA), fetch=True
+                "SELECT id, run, scenario FROM {schema}.runs", fetch=True, schema=True
             )
             dict_runs = {r[0]: {"run": r[1], "scen": r[2]} for r in rows}
             for typ_res in lst_typ_res:
                 rows = self.mdb.run_query(
-                    "SELECT DISTINCT id_runs FROM {0}.results_old WHERE var in "
-                    "(SELECT id FROM {0}.results_var WHERE type_res = '{1}') "
-                    "".format(self.mdb.SCHEMA, typ_res),
+                    "SELECT DISTINCT id_runs FROM {schema}.results_old WHERE var in "
+                    "(SELECT id FROM {schema}.results_var WHERE type_res = %s)",
                     fetch=True,
+                    schema=True,
+                    params=(typ_res,),
                 )
                 lst_exist = [r[0] for r in rows]
                 for run in dict_runs.keys():
@@ -82,7 +84,7 @@ class ClassUpdate302:
                         self.convert_result(run, typ_res)
 
             rows = self.mdb.run_query(
-                "SELECT DISTINCT id_runs FROM {0}.results_sect".format(self.mdb.SCHEMA), fetch=True
+                "SELECT DISTINCT id_runs FROM {schema}.results_sect", fetch=True, schema=True
             )
             lst_exist = [r[0] for r in rows]
             for run in dict_runs.keys():
@@ -93,56 +95,62 @@ class ClassUpdate302:
             for id_runs in dict_runs.keys():
                 if id_runs not in lst_exist:
                     sql = (
-                        "SELECT DISTINCT var FROM {0}.results_old WHERE "
-                        "id_runs ={1} ORDER BY var"
+                        "SELECT DISTINCT var FROM {schema}.results_old WHERE "
+                        "id_runs = %s ORDER BY var"
                     )
-                    rows = self.mdb.run_query(sql.format(self.mdb.SCHEMA, id_runs), fetch=True)
+                    rows = self.mdb.run_query(sql, fetch=True, schema=True, params=(id_runs,))
                     lst_var = [var[0] for var in rows]
 
                     sql = (
                         "SELECT DISTINCT ON (type_res) id, type_res FROM  "
-                        "{0}.results_var "
-                        "WHERE id IN {1} ORDER BY type_res"
+                        "{schema}.results_var "
+                        "WHERE id = ANY(%s) ORDER BY type_res"
                     )
-                    rows = self.mdb.run_query(
-                        sql.format(self.mdb.SCHEMA, list_sql(lst_var)), fetch=True
-                    )
+                    rows = self.mdb.run_query(sql, fetch=True, schema=True, params=(lst_var,))
                     lst_typvar = [var[1] for var in rows]
                     lst_var_select = [var[0] for var in rows]
                     list_value = []
                     # comput Zmax if there is Z
-                    sql = "SELECT id FROM  {0}.results_var WHERE var='Z';" "".format(
-                        self.mdb.SCHEMA
-                    )
-                    id_z = self.mdb.run_query(sql, fetch=True)
+                    sql = "SELECT id FROM {schema}.results_var WHERE var='Z';"
+                    id_z = self.mdb.run_query(sql, fetch=True, schema=True)
 
                     for id_var, type_res in enumerate(lst_typvar):
                         sql = (
-                            "SELECT id FROM  {0}.results_var WHERE id "
-                            "IN {1} AND type_res = '{2}' "
-                            "ORDER BY type_res".format(self.mdb.SCHEMA, list_sql(lst_var), type_res)
+                            "SELECT id FROM {schema}.results_var WHERE id "
+                            "= ANY(%s) AND type_res = %s "
+                            "ORDER BY type_res"
                         )
-                        rows = self.mdb.run_query(sql, fetch=True)
+                        rows = self.mdb.run_query(
+                            sql, fetch=True, schema=True, params=(lst_var, type_res)
+                        )
                         lst_var2 = [var[0] for var in rows]
                         list_value.append([id_runs, type_res, "var", json.dumps(lst_var2)])
 
                         sql = (
-                            "SELECT DISTINCT time FROM {0}.results_old "
-                            "WHERE id_runs ={1} "
-                            "AND var = {2} ORDER BY time"
-                            "".format(self.mdb.SCHEMA, id_runs, lst_var_select[id_var])
+                            "SELECT DISTINCT time FROM {schema}.results_old "
+                            "WHERE id_runs = %s "
+                            "AND var = %s ORDER BY time"
                         )
-                        rows = self.mdb.run_query(sql, fetch=True)
+                        rows = self.mdb.run_query(
+                            sql,
+                            fetch=True,
+                            schema=True,
+                            params=(id_runs, lst_var_select[id_var]),
+                        )
                         lst_time = [var[0] for var in rows]
                         list_value.append([id_runs, type_res, "time", json.dumps(lst_time)])
 
                         sql = (
-                            "SELECT DISTINCT pknum FROM {0}.results_old "
-                            "WHERE id_runs ={1} "
-                            "AND var = {2} ORDER BY pknum"
-                            "".format(self.mdb.SCHEMA, id_runs, lst_var_select[id_var])
+                            "SELECT DISTINCT pknum FROM {schema}.results_old "
+                            "WHERE id_runs = %s "
+                            "AND var = %s ORDER BY pknum"
                         )
-                        rows = self.mdb.run_query(sql, fetch=True)
+                        rows = self.mdb.run_query(
+                            sql,
+                            fetch=True,
+                            schema=True,
+                            params=(id_runs, lst_var_select[id_var]),
+                        )
                         lst_pknum = [var[0] for var in rows]
                         list_value.append([id_runs, type_res, "pknum", json.dumps(lst_pknum)])
 
@@ -153,25 +161,28 @@ class ClassUpdate302:
                                     if id_z[0][0] in lst_var:
                                         sql = (
                                             "SELECT MAX(val) FROM "
-                                            "{0}.results_old "
-                                            "WHERE var = {2} "
-                                            "AND id_runs={1} AND "
-                                            "pknum ={3};".format(
-                                                self.mdb.SCHEMA, id_runs, id_z[0][0], pknum
-                                            )
+                                            "{schema}.results_old "
+                                            "WHERE var = %s "
+                                            "AND id_runs = %s AND "
+                                            "pknum = %s;"
                                         )
-                                        rows = self.mdb.run_query(sql, fetch=True)
+                                        rows = self.mdb.run_query(
+                                            sql,
+                                            fetch=True,
+                                            schema=True,
+                                            params=(id_z[0][0], id_runs, pknum),
+                                        )
                                         dico_zmax[pknum] = rows[0][0]
                                 list_value.append([id_runs, "opt", "zmax", json.dumps(dico_zmax)])
                             except Exception:
                                 pass
                     sql = (
                         "INSERT INTO "
-                        "{0}.runs_graph(id_runs, type_res,var,val) "
-                        "VALUES (%s,%s,%s, %s); \n".format(self.mdb.SCHEMA)
+                        "{schema}.runs_graph(id_runs, type_res,var,val) "
+                        "VALUES (%s,%s,%s, %s); \n"
                     )
 
-                    self.mdb.run_query(sql, many=True, list_many=list_value)
+                    self.mdb.run_query(sql, many=True, list_many=list_value, schema=True)
         except Exception as e:
             self.mgis.add_info("Error convert_all_result : {}".format(str(e)))
             return False
@@ -194,10 +205,8 @@ class ClassUpdate302:
                     try:
                         date = datetime.strptime(init_date, "%Y-%m-%d %H:%M")
                         init_date = "{:%Y-%m-%d %H:%M:00}".format(date)
-                        sql = "UPDATE {0}.runs SET init_date ='{1}' " "WHERE id ={2}".format(
-                            self.mdb.SCHEMA, init_date, id
-                        )
-                        self.mdb.run_query(sql)
+                        sql = "UPDATE {schema}.runs SET init_date = %s WHERE id = %s"
+                        self.mdb.run_query(sql, schema=True, params=(init_date, id))
                     except ValueError:
                         pass
             return True
@@ -232,32 +241,38 @@ class ClassUpdate302:
             col_pknum = None
 
         row = self.mdb.run_query(
-            "SELECT run, scenario FROM {0}.runs WHERE id = {1}".format(self.mdb.SCHEMA, id_run),
+            "SELECT run, scenario FROM {schema}.runs WHERE id = %s",
             fetch=True,
+            schema=True,
+            params=(id_run,),
         )
         run_run, run_scen = row[0]
 
         rows = self.mdb.run_query(
             "SELECT column_name FROM information_schema.columns WHERE "
-            "table_schema = '{0}' AND table_name = '{1}' "
+            "table_schema = %s AND table_name = %s "
             "AND ordinal_position > ("
             "SELECT ordinal_position FROM information_schema.columns "
-            "WHERE table_schema = '{0}' AND table_name = '{1}' "
-            "AND column_name = '{2}')".format(self.mdb.SCHEMA, tab_src, col_pknum),
+            "WHERE table_schema = %s AND table_name = %s "
+            "AND column_name = %s)",
             fetch=True,
+            params=(self.mdb.SCHEMA, tab_src, self.mdb.SCHEMA, tab_src, col_pknum),
         )
 
         lst_var_exist = [r[0] for r in rows]
         self.mdb.execute(
-            "DELETE FROM {0}.results_old WHERE results_old.id_runs = {1} AND "
-            "results_old.var IN (SELECT id FROM {0}.results_var "
-            "WHERE type_res = '{2}')".format(self.mdb.SCHEMA, id_run, tab_src)
+            "DELETE FROM {schema}.results_old WHERE results_old.id_runs = %s AND "
+            "results_old.var IN (SELECT id FROM {schema}.results_var "
+            "WHERE type_res = %s)",
+            schema=True,
+            params=(id_run, tab_src),
         )
 
         rows = self.mdb.run_query(
-            "SELECT id, var FROM {0}.results_var "
-            "WHERE type_res = '{1}' ORDER BY id".format(self.mdb.SCHEMA, typ_res),
+            "SELECT id, var FROM {schema}.results_var " "WHERE type_res = %s ORDER BY id",
             fetch=True,
+            schema=True,
+            params=(typ_res,),
         )
         if typ_res.split("_")[0] == "tracer":
             lst_var = [[row[0], "c{}".format(r + 1)] for r, row in enumerate(rows)]
@@ -266,23 +281,25 @@ class ClassUpdate302:
 
         for id_var, nm_var in lst_var:
             if nm_var.lower() in lst_var_exist:
-                sql = (
-                    "INSERT INTO {0}.results_old ("
-                    "SELECT {5}, {3}.t, {3}.{4}, {1}, {3}.{2} "
-                    "FROM {0}.{3} WHERE "
-                    "{3}.{2} is Not Null AND {3}.run = '{6}' "
-                    "AND {3}.scenario = '{7}')".format(
-                        self.mdb.SCHEMA,
-                        id_var,
-                        nm_var.lower(),
-                        tab_src,
-                        col_pknum,
-                        id_run,
-                        run_run,
-                        run_scen,
-                    )
+                qry = sql.SQL(
+                    """
+                    INSERT INTO {schema}.results_old
+                    SELECT {id_run}, {tab}.t, {tab}.{col_pk}, {id_var}, {tab}.{nm_var}
+                    FROM {schema}.{tab}
+                    WHERE {tab}.{nm_var} IS NOT NULL
+                    AND {tab}.run = %s
+                    AND {tab}.scenario = %s
+                """
+                ).format(
+                    schema=sql.Identifier(self.schema_id),
+                    tab=sql.Identifier(tab_src),
+                    col_pk=sql.Identifier(col_pknum),
+                    nm_var=sql.Identifier(nm_var.lower()),
+                    id_var=sql.SQL(str(id_var)),  # ⚠️ seulement si entier sûr
+                    id_run=sql.SQL(str(id_run)),
                 )
-                self.mdb.execute(sql)
+
+                self.mdb.run_query(qry, params=(run_run, run_scen))
 
     def fill_result_sect(self, id_run):
         """
@@ -290,15 +307,16 @@ class ClassUpdate302:
         :param id_run: run index
         :return:
         """
-        info = self.mdb.select(
-            "resultats",
-            where="(run, scenario) = (SELECT run, scenario "
-                  "FROM {}.runs WHERE id= {})".format(self.mdb.SCHEMA, id_run),
-            order="t",
-            list_var=["pk", "branche", "section"],
+        rows = self.mdb.run_query(
+            "SELECT pk, branche, section FROM {schema}.resultats "
+            "WHERE (run, scenario) = "
+            "(SELECT run, scenario FROM {schema}.runs WHERE id = %s) "
+            "ORDER BY t",
+            fetch=True,
+            schema=True,
+            params=(id_run,),
         )
-        lst_id = [id_run for i in range(len(info["pk"]))]
-        lst_insert = list(set(zip(lst_id, info["pk"], info["branche"], info["section"])))
+        lst_insert = list(set((id_run, row[0], row[1], row[2]) for row in rows))
         col_sect = ["id_runs", "pk", "branch", "section"]
         if len(lst_insert) > 0:
             self.mdb.insert_res("results_sect", lst_insert, col_sect)

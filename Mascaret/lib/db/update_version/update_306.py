@@ -18,6 +18,7 @@ email                :
  ***************************************************************************/
 """
 from lib.db import MasObject as Maso
+from psycopg2 import sql
 
 
 class ClassUpdate306:
@@ -33,34 +34,48 @@ class ClassUpdate306:
         self.add_trigger_update_306()
 
     def update_tab_306(self):
+
+        update_stmt = {
+            "branchs": 
+                "UPDATE {schema}.branchs SET active = TRUE WHERE active IS NULL;",
+            "profiles": 
+                "UPDATE {schema}.profiles SET active = TRUE WHERE active IS NULL;",
+            "tracer_lateral_inflows":
+                "UPDATE {schema}.tracer_lateral_inflows SET active WHERE active IS NULL;",
+            "lateral_weirs":
+                "UPDATE {schema}.lateral_weirs SET active = TRUE WHERE active IS NULL;",
+            "lateral_inflows":
+                "UPDATE {schema}.lateral_inflows SET active = TRUE WHERE active IS NULL;",
+            "hydraulic_head":
+                "UPDATE {schema}.hydraulic_head SET active = TRUE WHERE active IS NULL;",
+            "weirs": 
+                "UPDATE {schema}.weirs SET active = TRUE WHERE active IS NULL;",
+            "extremities": 
+                "UPDATE {schema}.extremities SET active = TRUE WHERE active IS NULL;",
+            "links": 
+                "UPDATE {schema}.links SET active = TRUE WHERE active IS NULL;",
+            "basins": 
+                "UPDATE {schema}.basins SET active = TRUE WHERE active IS NULL;",
+            "outputs": 
+                "UPDATE {schema}.outputs SET active = TRUE WHERE active IS NULL;",
+            "flood_marks": 
+                "UPDATE {schema}.flood_marks SET active = TRUE WHERE active IS NULL;",
+            "laws": 
+                "UPDATE {schema}.laws SET active = TRUE WHERE active IS NULL;",
+        }
         try:
-            list_tab = [
-                "branchs",
-                "profiles",
-                "tracer_lateral_inflows",
-                "lateral_weirs",
-                "lateral_inflows",
-                "hydraulic_head",
-                "weirs",
-                "extremities",
-                "links",
-                "basins",
-                "outputs",
-                "flood_marks",
-                "laws",
-            ]
+            list_tab = list(update_stmt.keys())
             txt = ""
             for tab in list_tab:
-                txt += "ALTER TABLE {0}.{1} ALTER COLUMN active " "SET DEFAULT TRUE;".format(
-                    self.mdb.SCHEMA, tab
-                )
+                tab_id = sql.Identifier(tab)
+                txt += sql.SQL(
+                    "ALTER TABLE {schema}.{0} ALTER COLUMN active SET DEFAULT TRUE;"
+                ).format(tab_id)
                 txt += "\n"
-                txt += "UPDATE {0}.{1} SET active = TRUE WHERE " "active IS NULL;".format(
-                    self.mdb.SCHEMA, tab
-                )
+                txt += update_stmt[tab]
                 txt += "\n"
-                txt += "ALTER TABLE {0}.{1} ALTER COLUMN " "active SET NOT NULL;".format(
-                    self.mdb.SCHEMA, tab
+                txt += sql.SQL("ALTER TABLE {schema}.{0} ALTER COLUMN active SET NOT NULL;").format(
+                    tab_id
                 )
                 txt += "\n"
                 return True
@@ -80,31 +95,25 @@ class ClassUpdate306:
             self.update_fct_calc_abs()
             self.mdb.add_fct_for_visu()
 
-            qry = "DROP TRIGGER IF EXISTS branchs_chstate_active " "ON {}.branchs;\n".format(
-                self.mdb.SCHEMA
-            )
-            qry += "DROP TRIGGER IF EXISTS basins_chstate_active " "ON {}.basins;\n".format(
-                self.mdb.SCHEMA
-            )
+            qry = "DROP TRIGGER IF EXISTS branchs_chstate_active ON {schema}.branchs;\n"
+            qry += "DROP TRIGGER IF EXISTS basins_chstate_active ON {schema}.basins;\n"
             qry += (
-                "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse "
-                "ON {}.flood_marks;\n".format(self.mdb.SCHEMA)
+                "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse " "ON {schema}.flood_marks;\n"
             )
             qry += (
                 "DROP TRIGGER IF EXISTS flood_marks_calcul_abscisse_flood "
-                "ON {}.flood_marks;\n".format(self.mdb.SCHEMA)
+                "ON {schema}.flood_marks;\n"
             )
             qry += (
                 "DROP TRIGGER IF EXISTS flood_marks_delete_point_flood "
-                "ON {}.flood_marks;\n".format(self.mdb.SCHEMA)
+                "ON {schema}.flood_marks;\n"
             )
             qry += "\n"
             cl = Maso.class_fct_psql()
             qry += cl.pg_chstate_branch()
             qry += "\n"
             qry += (
-                "CREATE TRIGGER branchs_chstate_active\n"
-                " AFTER UPDATE\n  ON {0}.branchs\n".format(self.mdb.SCHEMA)
+                "CREATE TRIGGER branchs_chstate_active\n" " AFTER UPDATE\n  ON {schema}.branchs\n"
             )
             qry += (
                 " FOR EACH ROW\n"
@@ -114,10 +123,7 @@ class ClassUpdate306:
             qry += "\n"
             qry += cl.pg_chstate_basin()
             qry += "\n"
-            qry += (
-                "CREATE TRIGGER basins_chstate_active\n"
-                " AFTER UPDATE\n  ON {0}.basins\n".format(self.mdb.SCHEMA)
-            )
+            qry += "CREATE TRIGGER basins_chstate_active\n" " AFTER UPDATE\n  ON {schema}.basins\n"
             qry += (
                 " FOR EACH ROW\n"
                 "WHEN (OLD.active IS DISTINCT FROM NEW.active)\n"
@@ -130,7 +136,7 @@ class ClassUpdate306:
             qry += "\n"
             qry += cl.pg_calcul_abscisse_flood()
             qry += "\n"
-            self.mdb.run_query(qry)
+            self.mdb.run_query(qry, schema=True)
 
             return True
         except Exception as e:
@@ -167,7 +173,7 @@ class ClassUpdate306:
             cl.pg_all_point(self.mdb.SCHEMA),
         ]
         qry = ""
-        for sql in lfct:
-            qry += sql()
+        for sqlf in lfct:
+            qry += sqlf()
             qry += "\n"
         self.mdb.run_query(qry)

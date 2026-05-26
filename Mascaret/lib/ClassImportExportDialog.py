@@ -2,18 +2,25 @@ import json
 import os
 from datetime import datetime
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QDir, Qt, qVersion
+from qgis.PyQt.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QInputDialog,
+    QLabel,
+    QMessageBox,
+    QTreeWidgetItem,
+)
+from qgis.PyQt.uic import loadUi
+from qgis.core import QgsApplication, QgsTask
+from qgis.utils import Qgis, QgsMessageLog, iface
 
 from .Function import read_version
 from .db.Check_tab import CheckTab
 from ..ui.custom_control import _qt_is_checked
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassDlgExport(QDialog):
     """
@@ -41,7 +48,7 @@ class ClassDlgExport(QDialog):
         if QT_VERSION > 5:
             qt_tris = Qt.ItemFlag.ItemIsAutoTristate
             qt_item_check = Qt.ItemFlag.ItemIsUserCheckable
-            qt_ucheck =Qt.CheckState.Unchecked
+            qt_ucheck = Qt.CheckState.Unchecked
 
         else:
             qt_tris = Qt.ItemIsAutoTristate
@@ -52,14 +59,14 @@ class ClassDlgExport(QDialog):
         self.cond_com = "comments" in liste_col
         self.b_cancel.clicked.connect(self.annule)
         if not self.mdb.check_schema_into_db():
-            qbox = QMessageBox.warning(self, "Warning", "\t No data in  database")
+            QMessageBox.warning(self, "Warning", "\t No data in  database")
             self.b_export.hide()
             return
         dico = self.mdb.select("runs", "", "date")
 
         if self.cond_com:
             for run, scen, date, comments in zip(
-                    dico["run"], dico["scenario"], dico["date"], dico["comments"]
+                dico["run"], dico["scenario"], dico["date"], dico["comments"]
             ):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
@@ -79,9 +86,9 @@ class ClassDlgExport(QDialog):
             for run in self.listeRuns:
                 self.parent[run] = QTreeWidgetItem(self.tw_runs)
                 self.parent[run].setText(0, run)
-                item_flag =  self.parent[run]
+                item_flag = self.parent[run]
 
-                item_flag.setFlags(item_flag.flags() |  qt_tris| qt_item_check)
+                item_flag.setFlags(item_flag.flags() | qt_tris | qt_item_check)
 
                 lbl = QLabel("")
                 self.tw_runs.setItemWidget(self.parent[run], 2, lbl)
@@ -91,7 +98,7 @@ class ClassDlgExport(QDialog):
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
-                        item_flag =  self.child[run][scen]
+                        item_flag = self.child[run][scen]
                         item_flag.setFlags(item_flag.flags() | qt_item_check)
                         item_flag.setCheckState(0, qt_ucheck)
 
@@ -531,12 +538,16 @@ class ClassDlgImport(QDialog):
                         if not self.checkdict["exist_schema"]:
                             bool_import = True
                         else:
-                            txt = f'the name {newname} exists yet'
-                            QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
+                            txt = f"the name {newname} exists yet"
+                            QMessageBox.critical(
+                                None, "Error", "Import isn't possible.\n {}".format(txt)
+                            )
                             return
                     else:
-                        txt = 'the name is empty.'
-                        QMessageBox.critical(None, "Error", "Import isn't possible.\n {}".format(txt))
+                        txt = "the name is empty."
+                        QMessageBox.critical(
+                            None, "Error", "Import isn't possible.\n {}".format(txt)
+                        )
                         return
                 else:
                     QMessageBox.warning(None, "Warning", "Import is canceled.\n {}".format(txt))
@@ -545,6 +556,7 @@ class ClassDlgImport(QDialog):
         if bool_import:
             self.metadict["jsfile"] = self.jsfile
             self.metadict["psqlfile"] = psqlfile
+            self.mdb.remove_group_layer("Mas_{}".format(self.metadict["schema_name"]))
             # self.mdb.import_model(self.metadict)
             self.mgis.task_imp = QgsTask.fromFunction(
                 "Import Schema", self.task_import, on_finished=self.completed, tup=None
@@ -604,9 +616,8 @@ class CloneTask(QgsTask):
         QgsMessageLog.logMessage(
             'Started task "{}"'.format("clone"), self.message_category, Qgis.Info
         )
-        # 3rd element '' because keep data
-        qry = "SELECT clone_schema('{}','{}','');".format(self.src, self.dest)
-        err = self.mdb.run_query(qry)
+        qry = "SELECT clone_schema(%s, %s, '')"
+        err = self.mdb.run_query(qry, params=(self.src, self.dest))
         self.err = not err
         self.finished()
         return not err

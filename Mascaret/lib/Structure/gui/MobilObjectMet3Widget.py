@@ -19,13 +19,18 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QT_VERSION, QVariant, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QButtonGroup,
+    QDoubleSpinBox,
+    QFileDialog,
+    QItemEditorFactory,
+    QShortcut,
+    QStyledItemDelegate,
+    QWidget,
+)
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ...Function import data_to_float
@@ -49,43 +54,68 @@ class ClassMobilObjectMet3Widget(QWidget):
         self.filling_tab = False
         self.graph = None
 
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      "ui/structures/ui_mobil_object_met3.ui"),
-                         self)
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_mobil_object_met3.ui"), self
+        )
 
-        if self.typ_obj == 'weir':
-            self.obj_table = 'weirs'
-            self.mob_table = 'weirs_mob_val'
-            self.mob_table_id = 'id_weirs'
+        if self.typ_obj == "weir":
+            self.obj_table = "weirs"
+            self.mob_table = "weirs_mob_val"
+            self.mob_table_id = "id_weirs"
             self.ui.tit_break.hide()
             self.ui.line_break.hide()
             self.ui.grp_break.hide()
-        elif self.typ_obj == 'link':
-            self.obj_table = 'links'
-            self.mob_table = 'links_mob_val'
-            self.mob_table_id = 'id_links'
+        elif self.typ_obj == "link":
+            self.obj_table = "links"
+            self.mob_table = "links_mob_val"
+            self.mob_table_id = "id_links"
 
         self.d_var = {
-            "METHBREAK": {"ctrl": self.ui.cb_break_met, "cc": self.ui.cc_method,
-                          "vdef": '1', "typ": str},
-            "TBREAKFUS": {"ctrl": self.ui.sb_break_time, "cc": None,
-                          "vdef": 0., "typ": float},
-            "UNITTBREAKFUS": {"ctrl": self.ui.cb_unit_break_time, "cc": None,
-                              "vdef": 1, "typ": int},
-            "VFUS": {"ctrl": self.ui.cb_var_break, "cc": self.ui.cc_break_var,
-                     "vdef": 'Z', "typ": str},
-            "USEBASINFUS": {"ctrl": self.ui.cb_typ_control, "cc": self.ui.cc_control,
-                            "vdef": False, "typ": to_bool},
-            "NUMBASINFUS": {"ctrl": self.ui.cb_basin, "cc": self.ui.cc_control,
-                            "vdef": 0, "typ": int},
-            "PKFUS": {"ctrl": self.ui.sb_abscissa, "cc": self.ui.cc_control,
-                      "vdef": 0., "typ": float},
-            "VBREAKFUS": {"ctrl": self.ui.sb_break_lvl, "cc": None,
-                          "vdef": 0., "typ": float},
-            "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": None,
-                          "vdef": 0., "typ": float},
-            "WRITEFUS": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
-                         "vdef": 1, "typ": int},
+            "METHBREAK": {
+                "ctrl": self.ui.cb_break_met,
+                "cc": self.ui.cc_method,
+                "vdef": "1",
+                "typ": str,
+            },
+            "TBREAKFUS": {"ctrl": self.ui.sb_break_time, "cc": None, "vdef": 0.0, "typ": float},
+            "UNITTBREAKFUS": {
+                "ctrl": self.ui.cb_unit_break_time,
+                "cc": None,
+                "vdef": 1,
+                "typ": int,
+            },
+            "VFUS": {
+                "ctrl": self.ui.cb_var_break,
+                "cc": self.ui.cc_break_var,
+                "vdef": "Z",
+                "typ": str,
+            },
+            "USEBASINFUS": {
+                "ctrl": self.ui.cb_typ_control,
+                "cc": self.ui.cc_control,
+                "vdef": False,
+                "typ": to_bool,
+            },
+            "NUMBASINFUS": {
+                "ctrl": self.ui.cb_basin,
+                "cc": self.ui.cc_control,
+                "vdef": 0,
+                "typ": int,
+            },
+            "PKFUS": {
+                "ctrl": self.ui.sb_abscissa,
+                "cc": self.ui.cc_control,
+                "vdef": 0.0,
+                "typ": float,
+            },
+            "VBREAKFUS": {"ctrl": self.ui.sb_break_lvl, "cc": None, "vdef": 0.0, "typ": float},
+            "ZFINALFUS": {"ctrl": self.ui.sb_after_lvl, "cc": None, "vdef": 0.0, "typ": float},
+            "WRITEFUS": {
+                "ctrl": self.ui.sb_step_write,
+                "cc": self.ui.cc_write,
+                "vdef": 1,
+                "typ": int,
+            },
         }
 
         self.bg_time = QButtonGroup()
@@ -127,19 +157,16 @@ class ClassMobilObjectMet3Widget(QWidget):
         Initialize the user interface.
         :return: None
         """
-        fill_qcombobox(self.ui.cb_break_met, [["1", "Break at a time"],
-                                              ["2", "Break at a value"]])
+        fill_qcombobox(self.ui.cb_break_met, [["1", "Break at a time"], ["2", "Break at a value"]])
 
-        fill_qcombobox(self.ui.cb_unit_break_time, [[1, "Seconds"],
-                                                    [60, "Minutes"],
-                                                    [3600, "Hours"],
-                                                    [86400, "Days"]])
+        fill_qcombobox(
+            self.ui.cb_unit_break_time,
+            [[1, "Seconds"], [60, "Minutes"], [3600, "Hours"], [86400, "Days"]],
+        )
 
-        fill_qcombobox(self.ui.cb_var_break, [["Z", "Water level"],
-                                              ["Q", "Flow rate"]])
+        fill_qcombobox(self.ui.cb_var_break, [["Z", "Water level"], ["Q", "Flow rate"]])
 
-        fill_qcombobox(self.ui.cb_typ_control, [[False, "Abscissa"],
-                                                [True, "Basin"]])
+        fill_qcombobox(self.ui.cb_typ_control, [[False, "Abscissa"], [True, "Basin"]])
 
         mdl = self.create_tab_model()
         self.ui.tab_sets.setModel(mdl)
@@ -261,23 +288,31 @@ class ClassMobilObjectMet3Widget(QWidget):
         """
         self.cur_obj = object_id
 
-        if self.typ_obj == 'link':
-            sql = "SELECT type, nature, COALESCE(abscissa, 0.) as absc, COALESCE(links.level, 0.) as lvl, " \
-                  "basinstart, bas_sta.name, basinend , bas_end.name " \
-                  "FROM ({0}.{1} " \
-                  "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.basinnum) " \
-                  "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.basinnum " \
-                  "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
-            rows = self.mdb.run_query(sql, fetch=True)
+        if self.typ_obj == "link":
+            sql = (
+                "SELECT type, nature, COALESCE(abscissa, 0.) as absc, "
+                "COALESCE(links.level, 0.) as lvl, "
+                "basinstart, bas_sta.name, basinend, bas_end.name "
+                "FROM ({schema}.links "
+                "LEFT JOIN {schema}.basins as bas_sta on basinstart = bas_sta.basinnum) "
+                "LEFT JOIN {schema}.basins as bas_end on basinend = bas_end.basinnum "
+                "WHERE links.gid = %s"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj], schema=True)
             typ_link, nat_link, cur_abs, cur_z, b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]
 
-            if str(nat_link) != '2':
+            if str(nat_link) != "2":
                 fill_qcombobox(self.ui.cb_basin, [[b_sta_id, b_sta_name]])
                 self.d_var["USEBASINFUS"]["vdef"] = False
                 self.ui.cb_typ_control.show()
             else:
-                fill_qcombobox(self.ui.cb_basin, [[b_sta_id, "Start basin ({})".format(b_sta_name)],
-                                                  [b_end_id, "End basin ({})".format(b_end_name)]])
+                fill_qcombobox(
+                    self.ui.cb_basin,
+                    [
+                        [b_sta_id, "Start basin ({})".format(b_sta_name)],
+                        [b_end_id, "End basin ({})".format(b_end_name)],
+                    ],
+                )
                 self.d_var["USEBASINFUS"]["vdef"] = True
                 self.ui.cb_typ_control.hide()
 
@@ -320,14 +355,20 @@ class ClassMobilObjectMet3Widget(QWidget):
 
         if self.cur_obj:
             l_var = list(self.d_var.keys())
-            txt_var = "('{}')".format("', '".join(l_var))
 
             d_rec = dict()
-            sql = "SELECT name_var, id_order, value FROM {0}.{1} WHERE {2} = {3} " \
-                  "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
-                                               self.mob_table_id, self.cur_obj, txt_var)
-            rows = self.mdb.run_query(sql, fetch=True)
-            for (nm_var, rang_var, value) in rows:
+            if self.typ_obj == "weir":
+                sql = (
+                    "SELECT name_var, id_order, value FROM {schema}.weirs_mob_val "
+                    "WHERE id_weirs = %s AND name_var = ANY(%s)"
+                )
+            else:
+                sql = (
+                    "SELECT name_var, id_order, value FROM {schema}.links_mob_val "
+                    "WHERE id_links = %s AND name_var = ANY(%s)"
+                )
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj, l_var], schema=True)
+            for nm_var, rang_var, value in rows:
                 d_rec[nm_var] = {"def": rang_var, "val": value}
 
             for nm_prm, saved_prm in d_rec.items():
@@ -384,15 +425,18 @@ class ClassMobilObjectMet3Widget(QWidget):
             mdl = self.ui.tab_sets.model()
             c = 0
             for var in ["TIMEFUS", "WIDTHFUS"]:
-                sql = "SELECT cast(value as float) FROM {0}.{1} " \
-                      "WHERE {2} = {3} AND name_var = '{4}' " \
-                      "ORDER BY id_order".format(self.mdb.SCHEMA,
-                                                 self.mob_table,
-                                                 self.mob_table_id,
-                                                 self.cur_obj,
-                                                 var)
+                if self.typ_obj == "weir":
+                    sql = (
+                        "SELECT cast(value as float) FROM {schema}.weirs_mob_val "
+                        "WHERE id_weirs = %s AND name_var = %s ORDER BY id_order"
+                    )
+                else:
+                    sql = (
+                        "SELECT cast(value as float) FROM {schema}.links_mob_val "
+                        "WHERE id_links = %s AND name_var = %s ORDER BY id_order"
+                    )
 
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj, var], schema=True)
 
                 if var == "TIMEFUS":
                     mdl.insertRows(0, len(rows))
@@ -419,20 +463,29 @@ class ClassMobilObjectMet3Widget(QWidget):
         try:
             l_var = list(self.d_var.keys())
             l_var.extend(["TIMEFUS", "WIDTHFUS"])
-            txt_var = "('{}')".format("', '".join(l_var))
-
-            sql = "DELETE FROM {0}.{1} WHERE {2} = {3} " \
-                  "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
-                                               self.mob_table_id, self.cur_obj, txt_var)
-
-            self.mdb.execute(sql)
+            if self.typ_obj == "weir":
+                self.mdb.delete(
+                    "weirs_mob_val",
+                    where="id_weirs = %s AND name_var = ANY(%s)",
+                    params=[self.cur_obj, l_var],
+                )
+            else:
+                self.mdb.delete(
+                    "links_mob_val",
+                    where="id_links = %s AND name_var = ANY(%s)",
+                    params=[self.cur_obj, l_var],
+                )
 
             recs = []
             for row in range(self.ui.tab_sets.model().rowCount()):
-                recs.append([self.cur_obj, row, "TIMEFUS", self.ui.tab_sets.model().item(row, 0).data(0)])
-                recs.append([self.cur_obj, row, "WIDTHFUS", self.ui.tab_sets.model().item(row, 4).data(0)])
+                recs.append(
+                    [self.cur_obj, row, "TIMEFUS", self.ui.tab_sets.model().item(row, 0).data(0)]
+                )
+                recs.append(
+                    [self.cur_obj, row, "WIDTHFUS", self.ui.tab_sets.model().item(row, 4).data(0)]
+                )
 
-            if self.typ_obj == 'link':
+            if self.typ_obj == "link":
                 for nm_var, prm in self.d_var.items():
                     idx_time = 0
                     if prm["cc"]:
@@ -446,12 +499,18 @@ class ClassMobilObjectMet3Widget(QWidget):
 
                     recs.append([self.cur_obj, idx_time, nm_var, val])
 
-            sql = "INSERT INTO {0}.{1} ({2}, id_order, name_var, value) " \
-                  "VALUES (%s, %s, %s, cast(%s as text))".format(self.mdb.SCHEMA,
-                                                                 self.mob_table,
-                                                                 self.mob_table_id)
+            if self.typ_obj == "weir":
+                sql = (
+                    "INSERT INTO {schema}.weirs_mob_val (id_weirs, id_order, name_var, value) "
+                    "VALUES (%s, %s, %s, cast(%s as text))"
+                )
+            else:
+                sql = (
+                    "INSERT INTO {schema}.links_mob_val (id_links, id_order, name_var, value) "
+                    "VALUES (%s, %s, %s, cast(%s as text))"
+                )
 
-            self.mdb.run_query(sql, many=True, list_many=recs)
+            self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
             self.clear_table()
             self.widget_closed.emit()
 
@@ -473,7 +532,7 @@ class ClassMobilObjectMet3Widget(QWidget):
         :param v (int): Index of the selected time unit
         :return: None
         """
-        v =  self.bg_time.id(vbt)
+        v = self.bg_time.id(vbt)
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
@@ -734,7 +793,7 @@ class GraphMobSing(GraphCommon):
         self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
-        self.courbe, = self.axes.plot([], [], zorder=100, label="Width (m)")
+        (self.courbe,) = self.axes.plot([], [], zorder=100, label="Width (m)")
         self.courbes.append(self.courbe)
 
         self.fig.canvas.mpl_connect("pick_event", self.onpick)

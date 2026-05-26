@@ -25,20 +25,33 @@ from datetime import timedelta
 import numpy as np
 from matplotlib.dates import date2num
 from pandas import pivot_table, DataFrame
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QDate, QDateTime, QTime, QVariant, Qt, qVersion
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QButtonGroup,
+    QComboBox,
+    QDateTimeEdit,
+    QDialog,
+    QDialogButtonBox,
+    QDoubleSpinBox,
+    QFileDialog,
+    QFormLayout,
+    QItemEditorFactory,
+    QLabel,
+    QMessageBox,
+    QShortcut,
+    QStyledItemDelegate,
+    QTreeWidgetItem,
+)
+from qgis.PyQt.uic import loadUi
+from qgis.utils import QApplication
 
 # from .table_WQ import table_WQ
 from .Function import data_to_float, data_to_date, del_2space, del_symbol
 from .Graphic.GraphHydro import GraphHydroLaw
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 dico_typ_law = {
     1: {
@@ -274,11 +287,11 @@ class ClassHydroLawsDialog(QDialog):
 
         for id_type, elem in dico_typ_law.items():
             sql = (
-                "SELECT id, name, geom_obj, active, comment, starttime FROM {0}.law_config "
-                "WHERE id_law_type = '{1}' "
-                "ORDER BY name".format(self.mdb.SCHEMA, id_type)
+                "SELECT id, name, geom_obj, active, comment, starttime FROM {schema}.law_config "
+                "WHERE id_law_type = %s "
+                "ORDER BY name"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, schema=True, params=[id_type])
             if rows:
                 typ_itm = QTreeWidgetItem()
                 typ_itm.setFlags(qt_itm_ena)
@@ -292,12 +305,16 @@ class ClassHydroLawsDialog(QDialog):
                     law_itm.setData(0, 32, int(row[0]))
                     law_itm.setText(0, row[1])
                     law_itm.setData(1, 32, row[5])
-                    law_itm.setText(1, str(row[2])) if row[2] is not None else law_itm.setText(
-                        1, ""
+                    (
+                        law_itm.setText(1, str(row[2]))
+                        if row[2] is not None
+                        else law_itm.setText(1, "")
                     )
                     law_itm.setText(2, str(row[3]))
-                    law_itm.setText(3, str(row[4])) if row[4] is not None else law_itm.setText(
-                        3, ""
+                    (
+                        law_itm.setText(3, str(row[4]))
+                        if row[4] is not None
+                        else law_itm.setText(3, "")
                     )
                     typ_itm.addChild(law_itm)
 
@@ -424,20 +441,24 @@ class ClassHydroLawsDialog(QDialog):
                 ok_bt = QMessageBox.Ok
                 cancel_bt = QMessageBox.Cancel
             if (
-                    QMessageBox.question(
-                        self,
-                        "Law Settings",
-                        "Delete {} ?".format(name_law),
-                        cancel_bt | ok_bt,
-                    )
+                QMessageBox.question(
+                    self,
+                    "Law Settings",
+                    "Delete {} ?".format(name_law),
+                    cancel_bt | ok_bt,
+                )
             ) == ok_bt:
                 self.mgis.add_info("Deletion of {} Hydro Law".format(name_law))
                 self.mdb.execute(
-                    "DELETE FROM {0}.law_values WHERE id_law = {1}".format(self.mdb.SCHEMA, id_law)
+                    "DELETE FROM {schema}.law_values WHERE id_law = %s",
+                    schema=True,
+                    params=[id_law],
                 )
+
                 self.mdb.execute(
-                    "DELETE FROM {0}.law_config WHERE id = {1}".format(self.mdb.SCHEMA, id_law)
+                    "DELETE FROM {schema}.law_config WHERE id = %s", schema=True, params=[id_law]
                 )
+
                 self.fill_tree_laws()
 
     ######################################################################
@@ -475,17 +496,20 @@ class ClassHydroLawsDialog(QDialog):
             self.txt_comm.setText("")
         else:
             sql = (
-                "SELECT name, geom_obj, starttime, endtime, active, comment FROM {0}.law_config "
-                "WHERE id = '{1}' ORDER BY name".format(self.mdb.SCHEMA, self.cur_law)
+                "SELECT name, geom_obj, starttime, endtime, active, comment "
+                "FROM {schema}.law_config "
+                "WHERE id = %s ORDER BY name"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, schema=True, fetch=True, params=[self.cur_law])
             row = rows[0]
             self.txt_name.setText(str(row[0])) if row[0] else self.txt_name.setText("")
             self.update_cb_geom(row[1])
             self.cc_date_ref.setChecked(True) if row[2] else self.cc_date_ref.setChecked(False)
             self.de_start.setDateTime(row[2]) if row[2] else self.de_start.setDateTime(cur_date)
-            self.de_end.setDateTime(row[3]) if row[3] else self.de_end.setDateTime(
-                cur_date.addDays(1)
+            (
+                self.de_end.setDateTime(row[3])
+                if row[3]
+                else self.de_end.setDateTime(cur_date.addDays(1))
             )
             self.cc_act.setChecked(True) if row[4] else self.cc_act.setChecked(False)
             self.txt_comm.setText(str(row[5])) if row[5] else self.txt_comm.setText("")
@@ -519,28 +543,62 @@ class ClassHydroLawsDialog(QDialog):
             "lateral_weirs": {"pref": "Lat. Weir - ", "rang": 4},
         }
 
-        sql = "SELECT '' as id_obj, 'None' as name_obj, 0 as rg"
-        for table, val in self.param_law["geom"].items():
-            if not val:
-                pass
-            elif val:
-                sql += " UNION SELECT name, '{2}' || name, {3} FROM {0}.{1}".format(
-                    self.mdb.SCHEMA, table, param_table[table]["pref"], param_table[table]["rang"]
-                )
-            else:
-                sql += (
-                    " UNION SELECT name, '{3}' || name, {4} FROM {0}.{1} "
-                    "WHERE type IN ({2})".format(
-                        self.mdb.SCHEMA,
-                        table,
-                        ", ".join([str(v) for v in val]),
-                        param_table[table]["pref"],
-                        param_table[table]["rang"],
-                    )
-                )
-        sql += " ORDER BY rg, name_obj"
+        # Whitelist stricte des tables autorisées
+        table_sql = {
+            "extremities": "{schema}.extremities",
+            "weirs": "{schema}.weirs",
+            "lateral_inflows": "{schema}.lateral_inflows",
+            "lateral_weirs": "{schema}.lateral_weirs",
+        }
 
-        rows = self.mdb.run_query(sql, fetch=True)
+        parts = ["SELECT '' as id_obj, 'None' as name_obj, 0 as rg"]
+        params = []
+
+        for table, val in self.param_law["geom"].items():
+            if table not in table_sql:
+                continue
+
+            pref = param_table[table]["pref"]
+            rang = param_table[table]["rang"]
+
+            if val is True:
+                if table == "extremities":
+                    parts.append("SELECT name, %s || name, %s FROM {schema}.extremities")
+                elif table == "weirs":
+                    parts.append("SELECT name, %s || name, %s FROM {schema}.weirs")
+                elif table == "lateral_inflows":
+                    parts.append("SELECT name, %s || name, %s FROM {schema}.lateral_inflows")
+                else:
+                    parts.append("SELECT name, %s || name, %s FROM {schema}.lateral_weirs")
+                params.extend([pref, rang])
+
+            elif isinstance(val, (list, tuple, set)) and len(val) > 0:
+                type_vals = [int(v) for v in val]
+                if table == "extremities":
+                    parts.append(
+                        "SELECT name, %s || name, %s FROM {schema}.extremities WHERE type = ANY(%s)"
+                    )
+                elif table == "weirs":
+                    parts.append(
+                        "SELECT name, %s || name, %s FROM {schema}.weirs WHERE type = ANY(%s)"
+                    )
+                elif table == "lateral_inflows":
+                    parts.append(
+                        "SELECT name, %s || name, %s FROM {schema}.lateral_inflows "
+                        "WHERE type = ANY(%s)"
+                    )
+                else:
+                    parts.append(
+                        "SELECT name, %s || name, %s FROM {schema}.lateral_weirs "
+                        "WHERE type = ANY(%s)"
+                    )
+                params.extend([pref, rang, type_vals])
+
+            else:
+                continue
+
+        sql = " UNION ".join(parts) + " ORDER BY rg, name_obj"
+        rows = self.mdb.run_query(sql, fetch=True, schema=True, params=params)
 
         self.cb_geom.clear()
         for row in rows:
@@ -565,10 +623,12 @@ class ClassHydroLawsDialog(QDialog):
             c = 0
             for var in self.list_var:
                 sql = (
-                    "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = {2} "
-                    "ORDER BY id_order".format(self.mdb.SCHEMA, self.cur_law, var[0])
+                    "SELECT value FROM {schema}.law_values WHERE id_law = %s AND id_var = %s "
+                    "ORDER BY id_order"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(
+                    sql, fetch=True, schema=True, params=[self.cur_law, var[0]]
+                )
 
                 if c == 0:
                     model.insertRows(0, len(rows))
@@ -635,10 +695,10 @@ class ClassHydroLawsDialog(QDialog):
             cur_c = 0
 
             sql = (
-                "SELECT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 2 "
-                "ORDER BY id_order".format(self.mdb.SCHEMA, self.cur_law)
+                "SELECT value FROM {schema}.law_values WHERE id_law = %s AND id_var = %s "
+                "ORDER BY id_order"
             )
-            recs = self.mdb.run_query(sql, fetch=True)
+            recs = self.mdb.run_query(sql, fetch=True, schema=True, params=[self.cur_law, 2])
             for rec in recs:
                 cur_c += 1
                 itm = QStandardItem()
@@ -662,7 +722,7 @@ class ClassHydroLawsDialog(QDialog):
             qt_disr = Qt.ItemDataRole.DisplayRole
         else:
             qt_hori = Qt.Horizontal
-            qt_vert = Qt.Vertical  # 2
+            qt_vert = Qt.Vertical
             qt_disr = Qt.DisplayRole
         self.list_q, self.list_z_av = [], []
         model = QStandardItemModel()
@@ -675,17 +735,21 @@ class ClassHydroLawsDialog(QDialog):
         model.setItem(0, 0, itm)
 
         rows = self.mdb.run_query(
-            "SELECT DISTINCT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 0 "
-            "ORDER BY value".format(self.mdb.SCHEMA, self.cur_law),
+            "SELECT DISTINCT value FROM {schema}.law_values WHERE id_law = %s AND id_var = %s "
+            "ORDER BY value",
             fetch=True,
+            schema=True,
+            params=[self.cur_law, 0],
         )
         self.list_q = [r[0] for r in rows]
         n_q = len(self.list_q)
 
         rows = self.mdb.run_query(
-            "SELECT DISTINCT value FROM {0}.law_values WHERE id_law = {1} AND id_var = 1 "
-            "ORDER BY value".format(self.mdb.SCHEMA, self.cur_law),
+            "SELECT DISTINCT value FROM {schema}.law_values WHERE id_law = %s AND id_var = %s "
+            "ORDER BY value",
             fetch=True,
+            schema=True,
+            params=[self.cur_law, 1],
         )
         self.list_z_av = [r[0] for r in rows]
         n_z_av = len(self.list_z_av)
@@ -1143,7 +1207,7 @@ class ClassHydroLawsDialog(QDialog):
             QMessageBox.warning(None, "WARNING", "No data !")
             return
         lst_var = dico_typ_law[self.cur_typ]["var"]
-        nom= self.txt_name.text() if self.txt_name.text() else None
+        nom = self.txt_name.text() if self.txt_name.text() else None
         tab = {}
         if self.cur_typ != 6:
             col = list(range(self.tab_sets.model().columnCount()))
@@ -1153,11 +1217,9 @@ class ClassHydroLawsDialog(QDialog):
                 recs = []
                 for r in range(nb_row):
                     recs.append(self.tab_sets.model().item(r, c).data(0))
-                tab[lst_var[id_var]["code"]]= recs
+                tab[lst_var[id_var]["code"]] = recs
         else:
-            tab.update({lst_var[0]["code"] : [],
-                        lst_var[1]["code"]: [],
-                        lst_var[2]["code"]: []})
+            tab.update({lst_var[0]["code"]: [], lst_var[1]["code"]: [], lst_var[2]["code"]: []})
             for r in range(1, nb_row):
                 for c in range(1, self.tab_sets.model().columnCount()):
                     tab[lst_var[0]["code"]].append(self.tab_sets.model().item(r, 0).data(0))
@@ -1524,9 +1586,9 @@ class ClassHydroLawsDialog(QDialog):
         action when start date change
         :return:
         """
-        date, time = self.de_start.date().toString(
-            "dd-MM-yyyy"
-        ), self.de_start.time().toString("HH:mm:ss")
+        date, time = self.de_start.date().toString("dd-MM-yyyy"), self.de_start.time().toString(
+            "HH:mm:ss"
+        )
         date_str = "'{} {}'".format(date, time)
         self.date_start = data_to_date(date_str)
 
@@ -1589,81 +1651,54 @@ class ClassHydroLawsDialog(QDialog):
             return
 
         rows = self.mdb.run_query(
-            "SELECT * FROM {0}.law_config WHERE name = '{1}' "
-            "AND id <> {2}".format(self.mdb.SCHEMA, name_law, self.cur_law),
+            "SELECT * FROM {schema}.law_config WHERE name = %s AND id <> %s",
             fetch=True,
+            schema=True,
+            params=[name_law, self.cur_law],
         )
         if rows:
-            QMessageBox.warning(
-                self, "Error", "Law Name '{}' already exists !".format(name_law)
-            )
+            QMessageBox.warning(self, "Error", "Law Name '{}' already exists !".format(name_law))
             return
 
-        name_law = "'{}'".format(name_law)
-        geom_obj = (
-            "'{}'".format(self.cb_geom.currentData())
-            if self.cb_geom.currentIndex() != 0
-            else "Null"
-        )
-        comment = "'{}'".format(self.txt_comm.text()) if self.txt_comm.text() else "Null"
+        geom_obj = self.cb_geom.currentData() if self.cb_geom.currentIndex() != 0 else None
+        comment = self.txt_comm.text() if self.txt_comm.text() else None
         is_act = self.cc_act.isChecked()
 
         if self.cc_date_ref.isChecked():
-            date_start = "'{} {}'".format(
-                self.de_start.date().toString("yyyy-MM-dd"),
-                self.de_start.time().toString("HH:mm:ss"),
-            )
-            date_end = "'{} {}'".format(
-                self.de_end.date().toString("yyyy-MM-dd"), self.de_end.time().toString("HH:mm:ss")
-            )
+            date_start = self.de_start.dateTime().toPyDateTime()
+            date_end = self.de_end.dateTime().toPyDateTime()
         else:
-            date_start, date_end = "Null", "Null"
+            date_start, date_end = None, None
 
         if self.cur_law == -1:
             self.mgis.add_info("Addition of {} Hydro Law".format(name_law))
-            self.mdb.execute(
-                "INSERT INTO {0}.law_config (name, geom_obj, starttime, endtime, id_law_type, active, comment) "
-                "VALUES ({1}, {2}, {3}, {4}, {5}, {6}, {7})".format(
-                    self.mdb.SCHEMA,
-                    name_law,
-                    geom_obj,
-                    date_start,
-                    date_end,
-                    self.cur_typ,
-                    is_act,
-                    comment,
-                )
+            self.mdb.run_query(
+                "INSERT INTO {schema}.law_config "
+                "(name, geom_obj, starttime, endtime, id_law_type, active, comment) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                schema=True,
+                params=[name_law, geom_obj, date_start, date_end, self.cur_typ, is_act, comment],
             )
             res = self.mdb.run_query(
-                "SELECT Max(id) FROM {0}.law_config".format(self.mdb.SCHEMA), fetch=True
+                "SELECT Max(id) FROM {schema}.law_config",
+                fetch=True,
+                schema=True,
             )
             self.cur_law = res[0][0]
         else:
             self.mgis.add_info("Editing of {} ".format(name_law), dbg=True)
-            self.mdb.execute(
-                "UPDATE {0}.law_config SET name = {1}, geom_obj = {2}, starttime = {3}, endtime = {4}, "
-                "active = {5}, comment = {6} WHERE id = {7}".format(
-                    self.mdb.SCHEMA,
-                    name_law,
-                    geom_obj,
-                    date_start,
-                    date_end,
-                    is_act,
-                    comment,
-                    self.cur_law,
-                )
+            self.mdb.run_query(
+                "UPDATE {schema}.law_config SET name = %s, geom_obj = %s, "
+                "starttime = %s, endtime = %s, "
+                "active = %s, comment = %s WHERE id = %s",
+                schema=True,
+                params=[name_law, geom_obj, date_start, date_end, is_act, comment, self.cur_law],
             )
-            self.mdb.execute(
-                "DELETE FROM {0}.law_values WHERE id_law = {1}".format(
-                    self.mdb.SCHEMA, self.cur_law
-                )
+            self.mdb.run_query(
+                "DELETE FROM {schema}.law_values WHERE id_law = %s",
+                schema=True,
+                params=[self.cur_law],
             )
-
-        # if is_act and self.cb_geom.currentIndex() != 0:
-        #     self.mdb.execute(
-        #         "UPDATE {0}.law_config SET active = {1} WHERE geom_obj = {2} "
-        #         "AND id <> {3}".format(self.mdb.SCHEMA, False, geom_obj,
-        #                                self.cur_law))
 
         if self.cur_typ != 6:
             col = list(range(self.tab_sets.model().columnCount()))
@@ -1673,9 +1708,7 @@ class ClassHydroLawsDialog(QDialog):
             recs = []
             for id_var, c in enumerate(col):
                 for r in range(self.tab_sets.model().rowCount()):
-                    recs.append(
-                        [self.cur_law, id_var, r, self.tab_sets.model().item(r, c).data(0)]
-                    )
+                    recs.append([self.cur_law, id_var, r, self.tab_sets.model().item(r, c).data(0)])
         else:
             recs = []
             rg = 0
@@ -1687,9 +1720,9 @@ class ClassHydroLawsDialog(QDialog):
                     rg += 1
 
         self.mdb.run_query(
-            "INSERT INTO {0}.law_values (id_law, id_var, id_order, value) VALUES (%s, %s, %s, %s)".format(
-                self.mdb.SCHEMA
-            ),
+            "INSERT INTO {schema}.law_values (id_law, id_var, id_order, value) "
+            "VALUES (%s, %s, %s, %s)",
+            schema=True,
             many=True,
             list_many=recs,
         )
@@ -1786,7 +1819,7 @@ class ClassHydroLawCreateDialog(QDialog):
         for id_type, elem in dico_typ_law.items():
             self.cb_type.addItem(elem["name"], id_type)
 
-        self.btn_box = QDialogButtonBox(qt_ok |qt_cancel,parent=self)
+        self.btn_box = QDialogButtonBox(qt_ok | qt_cancel, parent=self)
 
         self.btn_box.accepted.connect(self.accept)
         self.btn_box.rejected.connect(self.reject)
@@ -1807,4 +1840,4 @@ class QStandardItemGray(QStandardItem):
             if QT_VERSION > 5:
                 self.setFlags(Qt.ItemFlag.ItemIsEnabled)
             else:
-                self.setFlags(Qt.ItemIsEnabled ) #QT5
+                self.setFlags(Qt.ItemIsEnabled)  # QT5

@@ -119,7 +119,8 @@ class ClassExtractAssim:
                         ) * 3600
                 else:
                     raise FileNotFoundError(
-                        f'[ ERROR ] File {str(code_obs) + ".loi"} is not found in Observation folder.'
+                        f'[ ERROR ] File {str(code_obs) + ".loi"} is not found '
+                        "in Observation folder."
                     )
                 if index_obs not in self.dict_obs:
                     self.dict_obs[index_obs] = {
@@ -164,7 +165,8 @@ class ClassExtractAssim:
         :param valZ: Z values (order of dict_zone keys)
         :param valQ: Discharge values (order of dict_zone keys)
         :param time: Current time
-        :param num_zone: number of zone to store. By default valZ and valQ contain values for all zones
+        :param num_zone: number of zone to store. By default valZ and valQ contain values
+        for all zones
         :return:
         """
         if num_zone:

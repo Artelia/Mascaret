@@ -16,19 +16,18 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 import os
 from datetime import datetime
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtWidgets import QDialog, QLabel, QProgressBar, QTreeWidgetItem
+from qgis.PyQt.uic import loadUi
 
 from ..ui.custom_control import ClassWarningBox, _qt_is_checked
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassDeletrunDialog(QDialog):
     """
@@ -68,11 +67,13 @@ class ClassDeletrunDialog(QDialog):
         liste_col = self.mdb.list_columns("runs")
         self.cond_com = "comments" in liste_col
 
-        dico = self.mdb.select("runs", "", "date")
-
+        dico = self.mdb.select("runs", order="date")
+        if not dico:
+            self.mgis.add_info("No run in database", box=True)
+            return
         if self.cond_com:
             for run, scen, date, comments in zip(
-                    dico["run"], dico["scenario"], dico["date"], dico["comments"]
+                dico["run"], dico["scenario"], dico["date"], dico["comments"]
             ):
                 if run not in self.listeRuns:
                     self.listeRuns.append(run)
@@ -94,7 +95,7 @@ class ClassDeletrunDialog(QDialog):
             for run in self.listeRuns:
                 self.parent[run] = QTreeWidgetItem(self.tree)
                 self.parent[run].setText(0, run)
-                item_flag =  self.parent[run]
+                item_flag = self.parent[run]
                 item_flag.setFlags(item_flag.flags() | qt_tris | qt_item_check)
 
                 lbl = QLabel("")
@@ -106,8 +107,8 @@ class ClassDeletrunDialog(QDialog):
                     for scen, date, comments in self.listeScen[run]:
                         self.child[run][scen] = QTreeWidgetItem(self.parent[run])
                         item_flag = self.child[run][scen]
-                        item_flag.setFlags(item_flag.flags()  | qt_item_check)
-                        item_flag.setCheckState(0,  qt_ucheck)
+                        item_flag.setFlags(item_flag.flags() | qt_item_check)
+                        item_flag.setCheckState(0, qt_ucheck)
                         self.child[run][scen].setText(0, scen)
                         lbl = QLabel("{:%d/%m/%Y %H:%M}".format(date))
                         self.tree.setItemWidget(self.child[run][scen], 1, lbl)
@@ -145,12 +146,18 @@ class ClassDeletrunDialog(QDialog):
                 selection[run] = []
                 if self.cond_com:
                     for scen, date, comments in self.listeScen[run]:
-                        if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
-                            selection[run].append("'{}'".format(scen))
+                        if _qt_is_checked(
+                            self.child[run][scen],
+                            check_level="partial_or_full",
+                        ):
+                            selection[run].append(scen)
                 else:
                     for scen, date in self.listeScen[run]:
-                        if _qt_is_checked(self.child[run][scen], check_level="partial_or_full"):
-                            selection[run].append("'{}'".format(scen))
+                        if _qt_is_checked(
+                            self.child[run][scen],
+                            check_level="partial_or_full",
+                        ):
+                            selection[run].append(scen)
 
         self.close()
 
@@ -165,8 +172,12 @@ class ClassDeletrunDialog(QDialog):
 
         if ok:
             for i, (run, scenarios) in enumerate(selection.items()):
-                sql = "run = '{0}' AND scenario IN ({1})".format(run, ",".join(scenarios))
-                self.mdb.delete("runs", sql)
+                scenarios_clean = [scen.strip("'") for scen in scenarios]
+                if not scenarios_clean:
+                    continue
+
+                sql = "DELETE FROM {schema}.runs WHERE run = %s AND scenario = ANY(%s::text[])"
+                self.mdb.run_query(sql, schema=True, params=(run, scenarios_clean))
                 self.delete_useless_data()
                 self.mgis.add_info("Deletion of scenarii is done")
                 progress.setValue(round(i / n * 100))
@@ -180,36 +191,51 @@ class ClassDeletrunDialog(QDialog):
     def delete_useless_data(self):
         # delete var transport_pur
         sql = (
-            "DELETE FROM {0}.results_var WHERE id IN ("
-            "SELECT DISTINCT var FROM {0}.results "
-            "WHERE id_runs NOT IN (SELECT id FROM {0}.runs ) "
-            "and type_res= 'tracer_TRANSPORT_PUR');"
+            "DELETE FROM {schema}.results_var WHERE id IN ("
+            "SELECT DISTINCT var FROM {schema}.results "
+            "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs) "
+            "AND type_res = %s)"
         )
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        self.mdb.run_query(sql, schema=True, params=["tracer_TRANSPORT_PUR"])
 
-        # delete results_by_pk
-        sql = "DELETE  FROM {0}.results_by_pk WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = (
+            "DELETE FROM {schema}.results_by_pk "
+            "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
 
-        # delete results_sect
-        sql = "DELETE  FROM {0}.results_sect WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = (
+            "DELETE FROM {schema}.results_sect "
+            "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
 
-        # delete run_graph
-        sql = "DELETE  FROM {0}.runs_graph WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = (
+            "DELETE FROM {schema}.runs_graph " "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
 
-        # delete run_plani
-        sql = "DELETE  FROM {0}.runs_plani  WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = (
+            "DELETE FROM {schema}.runs_plani " "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
 
-        # delete assim
-        sql = "DELETE  FROM {0}.assim_res  WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-        sql = "DELETE  FROM {0}.assim_res_ks  WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
-        sql = "DELETE  FROM {0}.assim_res_law  WHERE id_runs not in (SELECT id FROM {0}.runs);"
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+        sql = (
+            "DELETE FROM {schema}.assim_res " "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
+
+        sql = (
+            "DELETE FROM {schema}.assim_res_ks "
+            "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
+
+        sql = (
+            "DELETE FROM {schema}.assim_res_law "
+            "WHERE id_runs NOT IN (SELECT id FROM {schema}.runs)"
+        )
+        self.mdb.run_query(sql, schema=True)
 
         lst_tables = [
             "results_sect",
@@ -221,7 +247,6 @@ class ClassDeletrunDialog(QDialog):
             "assim_res_ks",
             "assim_res_law",
             "runs",
-
         ]
 
         # full=True (strong gain to size data and heavy in time

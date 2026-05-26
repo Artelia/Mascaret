@@ -19,18 +19,21 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QVariant, Qt, qVersion
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QDialog,
+    QDoubleSpinBox,
+    QItemEditorFactory,
+    QStyledItemDelegate,
+)
+from qgis.PyQt.uic import loadUi
 
 from .ClassTableWQ import ClassTableWQ
 from ..Function import data_to_float
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassPhysicalParamDialog(QDialog):
     def __init__(self, mgis, mod):
@@ -72,10 +75,12 @@ class ClassPhysicalParamDialog(QDialog):
         for idcol, ncol in enumerate(["ID", "Sigle", "Parameter", "Value"]):
             model.setHeaderData(idcol, qt_hori, ncol, qt_disr)
 
-        sql = "SELECT id, sigle, text, value FROM {0}.tracer_physic WHERE type = '{1}' ORDER BY id".format(
-            self.mdb.SCHEMA, self.cur_wq_mod
+        rows = self.mdb.run_query(
+            "SELECT id, sigle, text, value FROM {schema}.tracer_physic WHERE type = %s ORDER BY id",
+            fetch=True,
+            params=[self.cur_wq_mod],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
         model.insertRows(0, len(rows))
         for r, row in enumerate(rows):
             for c, val in enumerate(row):
@@ -83,8 +88,8 @@ class ClassPhysicalParamDialog(QDialog):
                 itm.setData(val, 0)
                 if c == 3:
                     itm.setData(data_to_float(val), 0)
-                    itm.setFlags(qt_itm_ena | qt_itm_sel| qt_itm_ed)
-                    itm.setTextAlignment( qt_alig_right | qt_alig_vcentre)
+                    itm.setFlags(qt_itm_ena | qt_itm_sel | qt_itm_ed)
+                    itm.setTextAlignment(qt_alig_right | qt_alig_vcentre)
                 else:
                     itm.setData(val, 0)
                     itm.setFlags(qt_itm_ena)
@@ -105,7 +110,8 @@ class ClassPhysicalParamDialog(QDialog):
 
 class ItemEditorFactory(QItemEditorFactory):
     # http://doc.qt.io/qt-5/qstyleditemdelegate.html#subclassing-qstyleditemdelegate
-    # It is possible for a custom delegate to provide editors without the use of an editor item factory.
+    # It is possible for a custom delegate to provide editors
+    # without the use of an editor item factory.
     # In this case, the following virtual functions must be reimplemented:
     def __init__(self):
         QItemEditorFactory.__init__(self)

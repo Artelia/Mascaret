@@ -16,19 +16,22 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtWidgets import (
+    QFileDialog,
+    QTabWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QWidget,
+)
+from qgis.PyQt.uic import loadUi
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ScoreResallWidget(QWidget):
     def __init__(self, windmain):
@@ -170,7 +173,7 @@ class ScoreResallWidget(QWidget):
                                 item = QTableWidgetItem("{:e}".format(val))
                             else:
                                 item = QTableWidgetItem("{:.3f}".format(val))
-                            item.setTextAlignment( qt_alig_hcentre |  qt_alig_vcentre)
+                            item.setTextAlignment(qt_alig_hcentre | qt_alig_vcentre)
                             item.setFlags(qt_itm_ena)
                             col = columns.index(tmp)
                             self.child[err_typ][err].setItem(row, col, item)

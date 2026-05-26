@@ -18,20 +18,17 @@ email                :
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import Qt, qVersion
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphInitConc
 from .Init_conc import InitConcDialog
-from ...ui.custom_control import _qt_is_checked
+from ...ui.custom_control import _qt_is_checked, get_qt_checked, get_qt_unchecked
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassTracerInitDialog:
     def __init__(self, obj):
@@ -61,24 +58,22 @@ class ClassTracerInitDialog:
         self.graph_home.init_mdl(self.tbwq.dico_wq_mod[self.cur_wq_mod])
         self.fill_lst_conf()
 
-    def fill_lst_conf(self, id=None):
+    def fill_lst_conf(self, id_=None):
         """fill list configuration"""
-        if QT_VERSION > 5:
-            qt_check = Qt.CheckState.Checked
-            qt_ucheck = Qt.CheckState.Unchecked
-        else:
-            qt_check = Qt.Checked
-            qt_ucheck = Qt.Unchecked
+        qt_check = get_qt_checked()
+        qt_ucheck = get_qt_unchecked()
 
         model = QStandardItemModel()
         model.setColumnCount(2)
         self.ui.lst_laws.setModel(model)
         self.ui.lst_laws.setModelColumn(1)
         self.ui.lst_laws.selectionModel().selectionChanged.connect(self.change_cur_law)
-        sql = "SELECT * FROM {0}.init_conc_config WHERE type = {1} ORDER BY name".format(
-            self.mdb.SCHEMA, self.cur_wq_mod
+        rows = self.mdb.run_query(
+            "SELECT * FROM {schema}.init_conc_config WHERE type = %s ORDER BY name",
+            fetch=True,
+            params=[self.cur_wq_mod],
+            schema=True,
         )
-        rows = self.mdb.run_query(sql, fetch=True)
 
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
@@ -95,7 +90,7 @@ class ClassTracerInitDialog:
 
         self.ui.lst_laws.model().itemChanged.connect(self.sel_config_def)
 
-        if id:
+        if id_:
             for r in range(self.ui.lst_laws.model().rowCount()):
                 if str(self.ui.lst_laws.model().item(r, 0).text()) == str(id):
                     self.ui.lst_laws.setCurrentIndex(self.ui.lst_laws.model().item(r, 1).index())
@@ -107,12 +102,16 @@ class ClassTracerInitDialog:
     def change_cur_law(self):
         self.ui.cb_bief_home.clear()
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            config = int(self.ui.lst_laws.model().item(l, 0).text())
-            sql = "SELECT distinct bief FROM {0}.init_conc_wq WHERE id_config = {1} ORDER BY bief".format(
-                self.mdb.SCHEMA, config
+            line = self.ui.lst_laws.selectedIndexes()[0].row()
+            config = int(self.ui.lst_laws.model().item(line, 0).text())
+
+            lst_bief = self.mdb.run_query(
+                "SELECT DISTINCT bief FROM {schema}.init_conc_wq "
+                "WHERE id_config = %s ORDER BY bief",
+                fetch=True,
+                params=[config],
+                schema=True,
             )
-            lst_bief = self.mdb.run_query(sql, fetch=True)
             if len(lst_bief) > 0:
                 for bief in lst_bief:
                     self.ui.cb_bief_home.addItem("Bief {}".format(bief[0]), bief[0])
@@ -124,34 +123,33 @@ class ClassTracerInitDialog:
 
     def display_graph_home(self):
         if self.ui.lst_laws.selectedIndexes() and self.ui.cb_bief_home.currentIndex() != -1:
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            config = int(self.ui.lst_laws.model().item(l, 0).text())
+            line = self.ui.lst_laws.selectedIndexes()[0].row()
+            config = int(self.ui.lst_laws.model().item(line, 0).text())
             bief = self.ui.cb_bief_home.itemData(self.ui.cb_bief_home.currentIndex())
             self.graph_home.init_graph(config, bief)
         else:
             self.graph_home.init_graph(None, None)
 
     def sel_config_def(self, itm):
-        if QT_VERSION > 5:
-            qt_ucheck = Qt.CheckState.Unchecked
-        else:
-            qt_ucheck = Qt.Unchecked
+        qt_ucheck = get_qt_unchecked()
         self.ui.lst_laws.model().blockSignals(True)
         for r in range(self.ui.lst_laws.model().rowCount()):
             if r != itm.row():
                 self.ui.lst_laws.model().item(r, 1).setCheckState(qt_ucheck)
         self.ui.lst_laws.model().blockSignals(False)
 
-        sql = "UPDATE {0}.init_conc_config SET active = 'f' WHERE type = {1}".format(
-            self.mdb.SCHEMA, self.cur_wq_mod
+        self.mdb.run_query(
+            "UPDATE {schema}.init_conc_config SET active = %s WHERE type = %s",
+            params=[False, self.cur_wq_mod],
+            schema=True,
         )
-        self.mdb.run_query(sql)
-        if _qt_is_checked(itm, check_level="full") :
-            id = str(self.ui.lst_laws.model().item(itm.row(), 0).text())
-            sql = "UPDATE {0}.init_conc_config SET active = 't' WHERE id = {1}".format(
-                self.mdb.SCHEMA, id
+        if _qt_is_checked(itm, check_level="full"):
+            law_id = int(self.ui.lst_laws.model().item(itm.row(), 0).text())
+            self.mdb.run_query(
+                "UPDATE {schema}.init_conc_config SET active = %s WHERE id = %s",
+                params=[True, law_id],
+                schema=True,
             )
-            self.mdb.run_query(sql)
 
     def new_law(self):
         self.cur_wq_law = -1
@@ -169,10 +167,10 @@ class ClassTracerInitDialog:
 
     def edit_law(self):
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            self.cur_wq_law = int(self.ui.lst_laws.model().item(l, 0).text())
+            line = self.ui.lst_laws.selectedIndexes()[0].row()
+            self.cur_wq_law = int(self.ui.lst_laws.model().item(line, 0).text())
             dlg = InitConcDialog(
-                self.paramTr, self.cur_wq_law, self.ui.lst_laws.model().item(l, 1).text()
+                self.paramTr, self.cur_wq_law, self.ui.lst_laws.model().item(line, 1).text()
             )
             if QT_VERSION > 5:
                 dlg.setWindowModality(Qt.WindowModality.ApplicationModal)
@@ -183,14 +181,13 @@ class ClassTracerInitDialog:
             if ret:
                 self.fill_lst_conf(dlg.cur_wq_law)
 
-
     def delete_law(self):
         # charger les informations
         # changer de page
         if self.ui.lst_laws.selectedIndexes():
-            l = self.ui.lst_laws.selectedIndexes()[0].row()
-            id_law = self.ui.lst_laws.model().item(l, 0).text()
-            name_law = self.ui.lst_laws.model().item(l, 1).text()
+            line = self.ui.lst_laws.selectedIndexes()[0].row()
+            id_law = self.ui.lst_laws.model().item(line, 0).text()
+            name_law = self.ui.lst_laws.model().item(line, 1).text()
             if QT_VERSION > 5:
                 ok_button = QMessageBox.StandardButton.Ok
                 cancel_button = QMessageBox.StandardButton.Cancel
@@ -198,22 +195,14 @@ class ClassTracerInitDialog:
                 ok_button = QMessageBox.Ok
                 cancel_button = QMessageBox.Cancel
             if (
-                    QMessageBox.question(
-                        self.paramTr,
-                        "Tracer Initial Concentration",
-                        "Delete {} ?".format(name_law),
-                        cancel_button | ok_button,
-                    )
+                QMessageBox.question(
+                    self.paramTr,
+                    "Tracer Initial Concentration",
+                    "Delete {} ?".format(name_law),
+                    cancel_button | ok_button,
+                )
             ) == ok_button:
                 self.mgis.add_info("Deletion of {} Tracer Laws".format(name_law), dbg=True)
-                self.mdb.execute(
-                    "DELETE FROM {0}.init_conc_wq WHERE id_config = {1}".format(
-                        self.mdb.SCHEMA, id_law
-                    )
-                )
-                self.mdb.execute(
-                    "DELETE FROM {0}.init_conc_config WHERE id = {1}".format(
-                        self.mdb.SCHEMA, id_law
-                    )
-                )
+                self.mdb.delete("init_conc_wq", where="id_config = %s", params=[int(id_law)])
+                self.mdb.delete("init_conc_config", where="id = %s", params=[int(id_law)])
                 self.fill_lst_conf()

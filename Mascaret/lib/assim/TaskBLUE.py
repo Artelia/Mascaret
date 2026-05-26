@@ -30,6 +30,7 @@ import shutil
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal, QObject
+from ..python_exec import resolve_python_executable
 
 
 MESSAGE_CATEGORY = "TaskBlue"
@@ -64,8 +65,10 @@ class TaskBLUE(QgsTask):
         :param base_folder: Base directory containing scenario folders.
         :param ctrl_type: Control type ('ctrlKS' or 'ctrlLaw').
         :param scens: List of scenario identifiers to process.
-        :param del_inter_assim: ``True`` to delete intermediate assimilation folders after completion.
-        :param max_workers: Maximum number of concurrent worker threads. Auto-calculated if None.
+        :param del_inter_assim: ``True`` to delete intermediate assimilation folders
+        after completion.
+        :param max_workers: Maximum number of concurrent worker threads.
+        Auto-calculated if None.
         :return: None.
         """
 
@@ -165,15 +168,18 @@ class TaskBLUE(QgsTask):
             "path_run": path_scen,
         }
 
+        if not os.path.isdir(path_scen):
+            results["error"] = f"Process failed because the folder is not found: {path_scen}"
+            results["execution_time"] = time.time() - results["start_time"]
+            return results
+
         try:
-            script_dir = os.path.dirname(__file__)
-            os.chdir(script_dir)
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            py_exec = resolve_python_executable()
+            run_kwargs = self.creat_kwargs(script_dir)
             process = subprocess.run(
-                ["python", "ClassBLUE.py", path_scen, self.ctrl_type, str(int(self.debug))],
-                shell=True,
-                text=True,
-                check=True,
-                capture_output=True,
+                [py_exec, "ClassBLUE.py", path_scen, self.ctrl_type, str(int(self.debug))],
+                **run_kwargs,
             )
             results.update(
                 {
@@ -210,7 +216,8 @@ class TaskBLUE(QgsTask):
         # Create the thread pool executor
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         self.on_message(
-            f"Starting {self.total_models} models with {self.max_workers} parallel workers (threads)"
+            f"Starting {self.total_models} models with {self.max_workers} "
+            "parallel workers (threads)"
         )
         # Submit the initial workers
         for _ in range(min(self.max_workers, self.total_models)):
@@ -321,5 +328,51 @@ class TaskBLUE(QgsTask):
         """
         percentage = (completed / total) * 100 if total > 0 else 0
         QgsMessageLog.logMessage(
-            f"Progress: {completed}/{total} models ({percentage:.1f}%)", MESSAGE_CATEGORY, Qgis.Info
+            f"Progress: {completed}/{total} models ({percentage:.1f}%)",
+            MESSAGE_CATEGORY,
+            Qgis.Info,
         )
+
+    def creat_kwargs(self, script_dir):
+        """
+        Create a dictionary of keyword arguments for subprocess.run
+        with secure and cross-platform configuration.
+
+        Parameters
+        ----------
+        script_dir : str
+            Working directory where the subprocess will be executed.
+
+        Returns
+        -------
+        dict
+            Dictionary of keyword arguments ready to be passed to subprocess.run.
+        """
+
+        run_kwargs = {
+            "cwd": script_dir,  # Working directory for the subprocess
+            "text": True,  # Return stdout/stderr as strings instead of bytes
+            "check": True,  # Raise CalledProcessError if the command fails
+            "capture_output": True,  # Capture stdout and stderr
+            "shell": False,  # IMPORTANT: avoid shell=True (prevents B602 vulnerability)
+            "stdin": subprocess.DEVNULL,  # Prevent any blocking interactive input
+        }
+
+        if os.name == "nt":
+            # Windows-specific configuration
+            # Hide the console window when running the subprocess
+            run_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            # Additional startup configuration to suppress the window display
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            run_kwargs["startupinfo"] = startupinfo
+
+        else:
+            # POSIX systems (Linux, macOS)
+            # Start the process in a new session (detached from the terminal)
+            run_kwargs["start_new_session"] = True
+
+        return run_kwargs

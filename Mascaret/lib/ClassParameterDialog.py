@@ -18,13 +18,18 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import ast
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDoubleSpinBox,
+    QRadioButton,
+    QSpinBox,
+)
+from qgis.PyQt.uic import loadUi
 
 
 class ClassParameterDialog(QDialog):
@@ -68,8 +73,11 @@ class ClassParameterDialog(QDialog):
         self.combo = {
             "code": {1: "Steady", 2: "Unsteady", 3: "Transcritical"},
             "compositionLits": {0: "Aucun", 1: "Debord", 2: "fond/berge"},
-            "option": {1: "Sections de calcul", 2: "couche Points de sortie",
-                       3: "couche profils + amont/aval singularite"},
+            "option": {
+                1: "Sections de calcul",
+                2: "couche Points de sortie",
+                3: "couche profils + amont/aval singularite",
+            },
             "postProcesseur": {1: "Rubens", 2: "Opthyca"},
             "critereArret": {
                 1: "Temps maximum",
@@ -230,18 +238,30 @@ class ClassParameterDialog(QDialog):
     def create_dico_para(self):
         self.par = {}
         # requete pour recuperer les parametres dans la base
-        sql = "SELECT parametre, {0}, libelle, gui, gui_type FROM {1}.{2};"
+        kernel_column = {
+            "steady": "steady",
+            "unsteady": "unsteady",
+            "transcritical": "transcritical",
+        }.get(self.kernel)
+        if kernel_column is None:
+            raise ValueError("Unsupported kernel '{}'".format(self.kernel))
 
-        rows = self.mdb.run_query(
-            sql.format(self.kernel, self.mdb.SCHEMA, "parametres"), fetch=True
-        )
+        if kernel_column == "steady":
+            sql = "SELECT parametre, steady, libelle, gui, gui_type FROM {schema}.parametres;"
+        elif kernel_column == "unsteady":
+            sql = "SELECT parametre, unsteady, libelle, gui, gui_type FROM {schema}.parametres;"
+        else:
+            sql = (
+                "SELECT parametre, transcritical, libelle, gui, gui_type FROM {schema}.parametres;"
+            )
+        rows = self.mdb.run_query(sql, fetch=True, schema=True)
         for param, valeur, libelle, gui, gui_type in rows:
             if gui_type == "parameters":
                 if param == "variablesStockees":
                     # valeurs = list(map(eval, valeur.title().split()))
                     valeurs = []
                     for var1 in valeur.title().split():
-                        valeurs.append(eval(var1))
+                        valeurs.append(ast.literal_eval(var1))
 
                     for var, val, lib in zip(self.variables, valeurs, self.libel_var):
                         self.par[var] = {
@@ -254,8 +274,8 @@ class ClassParameterDialog(QDialog):
                 else:
                     self.par[param] = {}
                     try:
-                        self.par[param]["val"] = eval(valeur.title())
-                    except:
+                        self.par[param]["val"] = ast.literal_eval(valeur.title())
+                    except (ValueError, SyntaxError):
                         self.par[param]["val"] = valeur
 
                     self.par[param]["libelle"] = libelle
@@ -292,9 +312,9 @@ class ClassParameterDialog(QDialog):
                 if param in self.exclusion[self.kernel]:
                     obj.hide()
                     if (
-                            isinstance(obj, QSpinBox)
-                            or isinstance(obj, QDoubleSpinBox)
-                            or isinstance(obj, QComboBox)
+                        isinstance(obj, QSpinBox)
+                        or isinstance(obj, QDoubleSpinBox)
+                        or isinstance(obj, QComboBox)
                     ):
                         getattr(self.ui, "label_" + param).hide()
 
@@ -337,33 +357,25 @@ class ClassParameterDialog(QDialog):
                     elif isinstance(obj, QComboBox):
                         val = obj.currentIndex()
                         if (
-                                param == "option"
-                                or param == "critereArret"
-                                or param == "postProcesseur"
+                            param == "option"
+                            or param == "critereArret"
+                            or param == "postProcesseur"
                         ):
                             val = val + 1
                         elif param == "compositionLits":
                             val = val
                     else:
                         val = obj.value()
+                    self.mdb.update_scalar("parametres", self.kernel, "parametre", val, param)
 
-                    sql = """   UPDATE {0}.parametres
-                                   SET {1}='{2}'
-                                   WHERE parametre='{3}'
-                             """
-                    self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, val, param))
-                    #
         liste = []
         for var2 in self.variables:
             for param, obj in var:
                 if var2 == param:
                     liste.append(str(obj.isChecked()).lower())
 
-        sql = """   UPDATE {0}.parametres
-                       SET {1}='{2}'
-                       WHERE parametre='variablesStockees'
-                 """
-
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA, self.kernel, " ".join(liste)))
+        self.mdb.update_scalar(
+            "parametres", self.kernel, "parametre", " ".join(liste), "variablesStockees"
+        )
 
         self.close()

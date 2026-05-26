@@ -42,11 +42,11 @@ class ClassUpdate620:
         self.mgis.add_info("*** Update 6.2.0  ***")
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         if "weirs_mob_val" in tabs:
-            sql = f"ALTER TABLE {self.mdb.SCHEMA}.weirs_mob_val RENAME TO weirs_mob_val_old;"
-            self.mdb.execute(sql)
+            sql = "ALTER TABLE {schema}.weirs_mob_val RENAME TO weirs_mob_val_old;"
+            self.mdb.execute(sql, schema=True)
         if "links_mob_val" in tabs:
-            sql = f"ALTER TABLE {self.mdb.SCHEMA}.links_mob_val RENAME TO links_mob_val_old;"
-            self.mdb.execute(sql)
+            sql = "ALTER TABLE {schema}.links_mob_val RENAME TO links_mob_val_old;"
+            self.mdb.execute(sql, schema=True)
 
         tabs = self.mdb.list_tables(self.mdb.SCHEMA)
         lst_add_tab = ["links_mob_val", "weirs_mob_val"]
@@ -124,41 +124,47 @@ class ClassUpdate620:
 
         if valide:
             lst_alt = [
-                "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  zbreak DOUBLE PRECISION DEFAULT 10000;",
-                "ALTER TABLE {0}.struct_config ADD COLUMN IF NOT EXISTS  erase_flag boolean NOT NULL  DEFAULT FALSE;",
-                "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS method_mob text;",
-                "ALTER TABLE {0}.links ADD COLUMN IF NOT EXISTS active_mob BOOLEAN;",
-                "ALTER TABLE {0}.weirs ADD COLUMN IF NOT EXISTS erase_flag boolean NOT NULL  DEFAULT FALSE;",
+                "ALTER TABLE {schema}.struct_config ADD COLUMN "
+                "IF NOT EXISTS zbreak DOUBLE PRECISION DEFAULT 10000;",
+                "ALTER TABLE {schema}.struct_config ADD COLUMN "
+                "IF NOT EXISTS erase_flag boolean NOT NULL DEFAULT FALSE;",
+                "ALTER TABLE {schema}.links ADD COLUMN " "IF NOT EXISTS method_mob text;",
+                "ALTER TABLE {schema}.links ADD COLUMN " "IF NOT EXISTS active_mob BOOLEAN;",
+                "ALTER TABLE {schema}.weirs ADD COLUMN "
+                "IF NOT EXISTS erase_flag boolean NOT NULL DEFAULT FALSE;",
             ]
             # Alter colonne value en text
             for sql in lst_alt:
-                self.mdb.execute(sql.format(self.mdb.SCHEMA))
+                self.mdb.execute(sql, schema=True)
         # update resultats existant pour link_mob
         if valide:
-            sql = f"""SELECT idrunpkvar,  pknum FROM {self.mdb.SCHEMA}.results_by_pk WHERE  pknum IN (
-            	            SELECT linknum  FROM {self.mdb.SCHEMA}.links WHERE gid in (
-            	                SELECT DISTINCT id_links FROM {self.mdb.SCHEMA}.links_mob_val)) 
-            	            AND var IN (SELECT id FROM {self.mdb.SCHEMA}.results_var WHERE type_res='link_fg'
-            	            );"""
-            vars = self.mdb.run_query(sql, fetch=True)
+            sql = """SELECT idrunpkvar, pknum FROM {schema}.results_by_pk WHERE pknum IN (
+                        SELECT linknum FROM {schema}.links WHERE gid in (
+                            SELECT DISTINCT id_links FROM {schema}.links_mob_val))
+                        AND var IN (SELECT id FROM {schema}.results_var WHERE type_res=%s);
+                    """
+            vars = self.mdb.run_query(sql, fetch=True, schema=True, params=("link_fg",))
             var2 = list(set([int(var[1]) for var in vars]))
-            if var2 :
+            if var2:
                 links = self.mdb.select(
                     "links",
                     where=f"""linknum in ({",".join([f"'{id}'" for id in var2])})""",
                     order="linknum ",
-                    list_var=["gid,linknum"],verbose=True
+                    list_var=["gid,linknum"]
                 )
                 if links and vars:
                     conv_links = {
-                        int(linknum): int(gid) for gid, linknum in zip(links["gid"], links["linknum"])
+                        int(linknum): int(gid)
+                        for gid, linknum in zip(links["gid"], links["linknum"])
                     }
                     tab_up = {var[0]: {"pknum": conv_links[int(var[1])]} for var in vars}
                     self.mdb.update("results_by_pk", tab_up, var="idrunpkvar")
 
-                    sql = f"""SELECT id, var, val FROM {self.mdb.SCHEMA}.runs_graph 
-                            WHERE type_res='link_fg' and var in ('pknum','time');"""
-                    vars = self.mdb.run_query(sql, fetch=True)
+                    sql = """SELECT id, var, val FROM {schema}.runs_graph 
+                            WHERE type_res=%s and var in (%s,%s);"""
+                    vars = self.mdb.run_query(
+                        sql, fetch=True, schema=True, params=("link_fg", "pknum", "time")
+                    )
                     tab_up = {}
                     for idx, nvar, val in vars:
                         nval = {}
@@ -259,10 +265,11 @@ class ClassUpdate620:
                         dtarget["name_var"].append(f"'{nvarf}'")
             err = False
             if f"{typ}" == "weirs" and len(d_zbas) > 0:
-                ok = self.cht.box.yes_no_q(
+                self.cht.box.yes_no_q(
                     "WARNING:\n "
                     "Please note, there are mobile weirs of the regulation type. "
-                    "The update will change the value of z_crest of the weirs to that of ZBAS or zbottom "
+                    "The update will change the value of z_crest of "
+                    "the weirs to that of ZBAS or zbottom "
                     "indicated as the displacement limit.\n"
                 )
 
@@ -276,8 +283,8 @@ class ClassUpdate620:
                 self.mgis.add_info(f"Convert the {typ}_mob_val - ERROR")
                 valide = False
                 self.cht.del_tab(f"{typ}_mob_val")
-                sql = f"ALTER TABLE {self.mdb.SCHEMA}.{typ}_mob_val_old RENAME TO {typ}_mob_val;"
-                self.mdb.execute(sql)
+                sql = f"ALTER TABLE {{schema}}.{typ}_mob_val_old RENAME TO {typ}_mob_val;"
+                self.mdb.execute(sql, schema=True)
             else:
                 self.cht.del_tab(f"{typ}_mob_val_old")
                 valide = True

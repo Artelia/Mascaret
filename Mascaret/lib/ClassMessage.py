@@ -18,7 +18,7 @@ email                :
  ***************************************************************************/
 """
 import os
-import pickle
+import json
 
 
 class ClassMessage:
@@ -27,7 +27,7 @@ class ClassMessage:
     def __init__(self):
         self.derror = {}
         # self.derror[code_err] = {'type':'type', 'message': txt}
-        self.type_mes = ['debug', 'info', 'warning', 'critic']
+        self.type_mes = ["debug", "info", "warning", "critic"]
 
     def clear_derror(self):
         self.derror = {}
@@ -41,7 +41,7 @@ class ClassMessage:
         """
         if len(self.derror.keys()) > 0:
             for name_obj, obj in self.derror.items():
-                if obj['type'] == 'critic':
+                if obj["type"] == "critic":
                     return True
         return False
 
@@ -74,7 +74,7 @@ class ClassMessage:
         """
         if code_err in self.derror:
             return self.derror[code_err]["message"]
-        return ''
+        return ""
 
     def get_type(self, code_err):
         """
@@ -86,19 +86,19 @@ class ClassMessage:
         """
         if code_err in self.derror:
             return self.derror[code_err]["type"]
-        return ''
+        return ""
 
     def message(self):
-        txt = ''
+        txt = ""
         for key, item in self.derror.items():
-            if item['type'] == 'debug':
-                txt += item['message'] + '\n'
-            elif item['type'] == 'info':
-                txt += item['message'] + '\n'
-            elif item['type'] == 'warning':
-                txt += '** Warning ** : ' + item['message'] + '\n'
-            elif item['type'] == 'critic':
-                txt += '** Error ** : \n' + item['message'] + '\n'
+            if item["type"] == "debug":
+                txt += item["message"] + "\n"
+            elif item["type"] == "info":
+                txt += item["message"] + "\n"
+            elif item["type"] == "warning":
+                txt += "** Warning ** : " + item["message"] + "\n"
+            elif item["type"] == "critic":
+                txt += "** Error ** : \n" + item["message"] + "\n"
         return txt
 
     def mess_fill_other_obj(self, obj_ori):
@@ -113,10 +113,22 @@ class ClassMessage:
                 fill[key] = item
         return fill
 
-    def export_obj(self, rep=''):
-        with open(os.path.join(rep, 'derror.pkl'), 'wb') as file:
-            pickle.dump(self.derror, file)
+    def export_obj(self, rep=""):
+        with open(os.path.join(rep, "derror.json"), "w", encoding="utf-8") as file:
+            json.dump(self.derror, file, ensure_ascii=False, indent=2)
 
-    def load_obj(self, rep=''):
-        with open(os.path.join(rep, 'derror.pkl'), 'rb') as file:
-            self.derror = pickle.load(file)
+    def load_obj(self, rep=""):
+        json_path = os.path.join(rep, "derror.json")
+        pkl_path = os.path.join(rep, "derror.pkl")
+
+        if os.path.isfile(json_path):
+            with open(json_path, "r", encoding="utf-8") as file:
+                self.derror = json.load(file)
+            return
+
+        if os.path.isfile(pkl_path):
+            raise ValueError(
+                "Legacy pickle file is not loaded for security reasons. Use derror.json instead."
+            )
+
+        self.derror = {}

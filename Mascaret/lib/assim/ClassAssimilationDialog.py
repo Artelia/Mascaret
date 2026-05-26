@@ -20,7 +20,7 @@ email                :
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, qVersion
+from qgis.PyQt.QtCore import qVersion
 from qgis.PyQt.QtGui import QColor, QIcon
 
 from qgis.core import QgsApplication, QgsWkbTypes
@@ -31,7 +31,6 @@ from .ClassAssimKsWidget import ClassAssimKsWidget
 from .ClassAssimLawWidget import ClassAssimLawWidget
 
 QT_VERSION = [int(v) for v in qVersion().split(".")][0]
-
 
 FORM_CLASS, BASE = uic.loadUiType(
     os.path.join(os.path.join(os.path.dirname(__file__), "..", "..", "ui/ui_assimilation.ui"))
@@ -60,6 +59,8 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
 
         self.rb_format = QgsWkbTypes.LineGeometry
         self.rb = QgsRubberBand(iface.mapCanvas(), self.rb_format)
+        self.rb_color_default = QColor("magenta")
+        self.rb_color_obs = QColor("cyan")
 
         self.wgt_ks = ClassAssimKsWidget(mgis, iface)
         self.lay_ks.addWidget(self.wgt_ks)
@@ -78,61 +79,59 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         self.mgis.main_graph()
 
     def tab_changed(self):
-        """Handle tab change between Ks and Law assimilation interfaces.
-
-        Resets and reconfigures rubber band geometry type and display.
-        :return: None. Updates UI and map representation.
-        """
-        self.rb.reset(self.rb_format)
-        self.rb = None
-        self.iface.mapCanvas().refresh()
-        if QT_VERSION > 5:
-            qt_magenta = Qt.GlobalColor.magenta
-        else:
-            qt_magenta = Qt.magenta
+        """Handle tab change between Ks and Law assimilation interfaces."""
+        self._reset_rb()
         if self.tab_assim.currentIndex() == 0:
             self.cur_wgt = "ks"
-            self.rb_format = QgsWkbTypes.LineGeometry
-            self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
-            self.rb.setColor(qt_magenta)
-            self.rb.setFillColor(QColor("transparent"))
-            self.rb.setWidth(8)
         else:
             self.cur_wgt = "law"
-            self.rb_format = QgsWkbTypes.PointGeometry
-            self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
-            self.rb.setColor(qt_magenta)
-            self.rb.setFillColor(QColor("transparent"))
-            self.rb.setWidth(16)
-
         self.display_map_rb()
 
+    def _rb_width_from_geom_type(self, geom_type):
+        """Return rubber band width by geometry type."""
+        if geom_type == QgsWkbTypes.PointGeometry:
+            return 16
+        if geom_type == QgsWkbTypes.LineGeometry:
+            return 8
+        return 4
+
+    def _reset_rb(self):
+        """Reset and clear current rubber band."""
+        if self.rb is not None:
+            self.rb.reset(self.rb_format)
+        self.iface.mapCanvas().refresh()
+
     def display_map_rb(self):
-        """Update rubber band display on map for current selected entity.
+        """Update rubber band display on map for current selected entity."""
+        self._reset_rb()
 
-        Refreshes rubber band visualization to show the geometry of the currently
-        selected Ks zone or law, if display is enabled.
-        :return: None. Updates map display.
-        """
-        self.rb.reset(self.rb_format)
-        rb_visible = False
-        rb_geom = None
         if self.cur_wgt == "ks":
-            wgt = self.wgt_ks
-            rb_visible = wgt.bt_disp_zone.isChecked()
-            rb_geom = wgt.d_zone_ks[wgt.cur_zone_ks]["geom"]
-            rb_geom_crs = wgt.d_zone_ks[wgt.cur_zone_ks].get("crs", None)
-        elif self.cur_wgt == "law":
-            wgt = self.wgt_law
-            rb_visible = wgt.bt_disp_law.isChecked()
-            if wgt.d_laws[wgt.cur_perturb_var].get(wgt.cur_law, None):
-                rb_geom = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law]["geom"]
-                rb_geom_crs = wgt.d_laws[wgt.cur_perturb_var][wgt.cur_law].get("crs", None)
+            rb_data = self.wgt_ks.get_current_rb_data()
+        else:
+            rb_data = self.wgt_law.get_current_rb_data()
 
-        if rb_visible and rb_geom:
-            geom_to_display = reproject_geom_to_project(rb_geom, rb_geom_crs)
-            self.rb.addGeometry(geom_to_display)
-            self.rb.show()
+        if not rb_data:
+            return
+
+        rb_geom = rb_data.get("geom")
+        rb_geom_crs = rb_data.get("crs")
+        if rb_geom is None:
+            return
+
+        geom_to_display = reproject_geom_to_project(rb_geom, rb_geom_crs)
+        geom_type = QgsWkbTypes.geometryType(geom_to_display.wkbType())
+        if geom_type == QgsWkbTypes.UnknownGeometry:
+            geom_type = QgsWkbTypes.LineGeometry
+
+        self.rb_format = geom_type
+        self.rb = QgsRubberBand(self.iface.mapCanvas(), self.rb_format)
+        self.rb.setColor(
+            self.rb_color_obs if rb_data.get("is_observation") else self.rb_color_default
+        )
+        self.rb.setFillColor(QColor("transparent"))
+        self.rb.setWidth(self._rb_width_from_geom_type(geom_type))
+        self.rb.addGeometry(geom_to_display)
+        self.rb.show()
 
     def closeEvent(self, event):
         """Handle dialog close event.
@@ -141,6 +140,7 @@ class ClassAssimilationDialog(BASE, FORM_CLASS):
         :param event: Close event object.
         :return: None. Performs cleanup before closing.
         """
-        self.rb.reset(self.rb_format)
+        if self.rb is not None:
+            self.rb.reset(self.rb_format)
         if self.wgt_ks.bt_sel_zone.isChecked():
             self.wgt_ks.bt_sel_zone.click()

@@ -69,7 +69,7 @@ class ClassFloodGate:
             name = self.masc.get("Model.Weir.Name", i=i)
             if name.replace("_init", "") in list(link_name_id.keys()):
                 id_config = str(link_name_id[name])
-                if  not self.param_fg.get(str(link_name_id[name])):
+                if not self.param_fg.get(str(link_name_id[name])):
                     id_config = link_name_id[name]
                 # self.param_fg[id_config]['NUMGRAPH'] = numgraph
                 self.param_fg[id_config]["NUMGRAPH"] = i
@@ -83,8 +83,10 @@ class ClassFloodGate:
         self.results_fg_mv = {}
         tini = self.masc.get("Model.InitTime")
         for id_config in self.param_fg.keys():
-            self.results_fg_mv[id_config] = {"TIME": [tini],
-                                             "ZSTR": [self.param_fg[id_config]["ZOLD"]]}
+            self.results_fg_mv[id_config] = {
+                "TIME": [tini],
+                "ZSTR": [self.param_fg[id_config]["ZOLD"]],
+            }
 
     def info_init_poly(self):
         """Get information of polygones"""
@@ -100,9 +102,7 @@ class ClassFloodGate:
             zmin = min(list_miny)
             zmax = max(list_maxy)
 
-            param.update({"MINZ0": zmin,
-                          "MAXZ0": zmax
-                          })
+            param.update({"MINZ0": zmin, "MAXZ0": zmax})
             if param["DIRFG"] == "D":
                 param["ZOLD"] = zmin
             elif param["DIRFG"] == "U":
@@ -240,11 +240,11 @@ class ClassFloodGate:
             # dzf = min(param_fg['ZINCRFG'], dz_velo)
             znew = 99.0
             if (param_fg["DIRFG"] == "D" and state == 1) or (
-                    param_fg["DIRFG"] == "U" and state == 2
+                param_fg["DIRFG"] == "U" and state == 2
             ):
                 znew = param_fg["ZOLD"] + dzf
             elif (param_fg["DIRFG"] == "D" and state == 2) or (
-                    param_fg["DIRFG"] == "U" and state == 1
+                param_fg["DIRFG"] == "U" and state == 1
             ):
                 znew = param_fg["ZOLD"] - dzf
             # check Znew
@@ -255,7 +255,7 @@ class ClassFloodGate:
                 znew = param_fg["MAXZ0"]
                 param_fg["ZRESI"] = 0
             if (param_fg["DIRFG"] == "D" and znew >= param_fg["ZMAXFG"]) or (
-                    param_fg["DIRFG"] == "U" and znew <= param_fg["ZMAXFG"]
+                param_fg["DIRFG"] == "U" and znew <= param_fg["ZMAXFG"]
             ):
                 znew = param_fg["ZMAXFG"]
                 param_fg["ZRESI"] = 0

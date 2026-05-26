@@ -19,12 +19,8 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.uic import loadUi
 
 from ..ClassTableStructure import ClassTableStructure, update_etat_struct
 
@@ -44,8 +40,8 @@ class ClassStructureCreateDialog(QDialog):
         self.b_ok.accepted.connect(self.accept_page)
         self.b_ok.rejected.connect(self.reject_page)
 
-        sql = "SELECT gid, name FROM {0}.profiles ORDER BY gid".format(self.mdb.SCHEMA)
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT gid, name FROM {schema}.profiles ORDER BY gid"
+        rows = self.mdb.run_query(sql, fetch=True, schema=True)
         for row in rows:
             self.cb_profil.addItem(row[1], row[0])
 
@@ -88,18 +84,22 @@ class ClassStructureCreateDialog(QDialog):
             return
 
         sql = (
-            "INSERT INTO {0}.struct_config (name, comment, type, id_prof_ori, active, abscissa, branchnum) "
-            "VALUES ('{1}', '{2}', '{3}', {4}, FALSE,{5} ,{6})".format(
-                self.mdb.SCHEMA,
+            "INSERT INTO {schema}.struct_config "
+            "(name, comment, type, id_prof_ori, active, abscissa, branchnum) "
+            "VALUES (%s, %s, %s, %s, FALSE, %s, %s)"
+        )
+        self.mdb.run_query(
+            sql,
+            params=[
                 self.name,
                 self.comment,
                 self.type,
                 self.id_profil,
                 feature["abscissa"][0],
                 feature["branchnum"][0],
-            )
+            ],
+            schema=True,
         )
-        self.mdb.run_query(sql)
         self.id_struct = self.mdb.select_max("id", "struct_config")
 
         colonnes = ["id_config", "id_order", "x", "z"]

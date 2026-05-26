@@ -127,7 +127,7 @@ def compress_run_file(dossier_file_masc, rep, typ_compress="zip", mgis=None):
     """
 
     try:
-        tar_local = shutil.make_archive(
+        shutil.make_archive(
             os.path.join(rep, os.path.basename(dossier_file_masc)),
             typ_compress,
             os.path.dirname(dossier_file_masc),

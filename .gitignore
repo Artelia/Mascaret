@@ -1,6 +1,7 @@
 # file type
 *.pyc
 *.phy
+log_*
 
 #Mascaret Plugin folder
 Mascaret/mascaret/*

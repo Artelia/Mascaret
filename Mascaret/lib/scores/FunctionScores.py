@@ -16,7 +16,7 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 import numpy as np
 
 

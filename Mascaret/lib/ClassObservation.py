@@ -24,30 +24,34 @@ import os
 import traceback
 
 import pandas as pd
+import numpy as np
 from matplotlib.dates import date2num
 from qgis.PyQt.QtCore import Qt, QDateTime, QVariant, qVersion
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor,QPalette
-from qgis.PyQt.QtWidgets import (QApplication,
-                                 QDialog,
-                                 QFileDialog,
-                                 QMessageBox,
-                                 QComboBox,
-                                 QLineEdit,
-                                 QLabel,
-                                 QDialogButtonBox,
-                                 QShortcut,
-                                 QAbstractItemView,
-                                 QItemEditorFactory,
-                                 QFormLayout,
-                                 QDoubleSpinBox,
-                                 QStyledItemDelegate,
-                                 QStyle )
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QColor, QPalette
+from qgis.PyQt.QtWidgets import (
+    QApplication,
+    QDialog,
+    QFileDialog,
+    QMessageBox,
+    QComboBox,
+    QLineEdit,
+    QLabel,
+    QDialogButtonBox,
+    QShortcut,
+    QAbstractItemView,
+    QItemEditorFactory,
+    QFormLayout,
+    QDoubleSpinBox,
+    QStyledItemDelegate,
+    QStyle,
+)
 
 from qgis.PyQt.uic import loadUi
 from .Graphic.GraphCommon import GraphCommon
 from ..ui.custom_control import ClassWarningBox
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassEventObsDialog(QDialog):
     def __init__(self, mgis):
@@ -125,13 +129,16 @@ class ClassEventObsDialog(QDialog):
             qt_alig_hcentre = Qt.AlignHCenter
         sql = (
             "SELECT DISTINCT sta.code, not cnt_h isNull as h, not cnt_q isNull as q "
-            "FROM ({0}.observations as sta LEFT JOIN (SELECT code, count(*) as cnt_h FROM {0}.observations "
+            "FROM ({schema}.observations as sta LEFT JOIN "
+            "(SELECT code, count(*) as cnt_h FROM {schema}.observations "
             "WHERE type = 'H' GROUP BY code) as sta_h ON sta.code = sta_h.code) "
-            "LEFT JOIN (SELECT code, count(*) as cnt_q FROM {0}.observations "
+            "LEFT JOIN (SELECT code, count(*) as cnt_q FROM {schema}.observations "
             "WHERE type = 'Q' GROUP BY code) as sta_q ON sta.code = sta_q.code "
-            "ORDER BY sta.code".format(self.mdb.SCHEMA)
+            "ORDER BY sta.code"
         )
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, schema=True)
+        if rows is None:
+            rows = []
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
                 new_itm = QStandardItem()
@@ -140,7 +147,7 @@ class ClassEventObsDialog(QDialog):
 
                     txt = str(row[j]).strip()
                 else:
-                    new_itm.setTextAlignment(qt_alig_hcentre |qt_alig_vcentre)
+                    new_itm.setTextAlignment(qt_alig_hcentre | qt_alig_vcentre)
                     if row[j] is True:
                         txt = "X"
                     else:
@@ -175,10 +182,8 @@ class ClassEventObsDialog(QDialog):
         self.ui.cb_var.blockSignals(True)
         self.ui.cb_var.clear()
         if self.cur_station:
-            sql = "SELECT DISTINCT type FROM {0}.observations WHERE code = '{1}' ORDER BY type".format(
-                self.mdb.SCHEMA, self.cur_station
-            )
-            rows = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT DISTINCT type FROM {schema}.observations WHERE code = %s ORDER BY type"
+            rows = self.mdb.run_query(sql, fetch=True, schema=True, params=[self.cur_station])
             for row in rows:
                 self.ui.cb_var.addItem(row[0])
         self.ui.cb_var.setCurrentText(cur_var)
@@ -254,11 +259,11 @@ class ClassEventObsDialog(QDialog):
             sql = (
                 "SELECT UNNEST(date) as date, "
                 "UNNEST(valeur) as valeur, UNNEST(comment) as comment "
-                "FROM {0}.observations "
-                "WHERE code = '{1}' AND type = '{2}' "
-                "ORDER BY date".format(self.mdb.SCHEMA, cur_station, cur_var)
+                "FROM {schema}.observations "
+                "WHERE code = %s AND type = %s "
+                "ORDER BY date"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, schema=True, params=[cur_station, cur_var])
             for r, row in enumerate(rows):
                 for c, val in enumerate(row):
                     itm = QStandardItem()
@@ -299,7 +304,7 @@ class ClassEventObsDialog(QDialog):
 
         # recs data frame
         dbls = None
-        if succes :
+        if succes:
             duplic = recs[recs.duplicated(subset=["code", "type", "date"])]
             if len(duplic):
                 txt_lst = [
@@ -316,36 +321,55 @@ class ClassEventObsDialog(QDialog):
                     "Check the files (the first 5) : \n"
                     "{0}".format("\n".join(txt_lst))
                 )
-                ok = QMessageBox.warning(None, "WARNING:", msg)
+                QMessageBox.warning(None, "WARNING:", msg)
                 return
 
             sql = """
-                    DROP TABLE  IF EXISTS {0}.tmp_observations;
-                    CREATE TABLE IF NOT EXISTS {0}.tmp_observations  AS SELECT DISTINCT code,type,
+                    DROP TABLE  IF EXISTS {schema}.tmp_observations;
+                    CREATE TABLE IF NOT EXISTS {schema}.tmp_observations  AS 
+                    SELECT DISTINCT code,type,
                     UNNEST(comment) as comment, UNNEST(valeur) as valeur ,UNNEST(date) as date  
-                    FROM {0}.observations  WITH NO DATA;
-                    ALTER TABLE {0}.tmp_observations
+                    FROM {schema}.observations  WITH NO DATA;
+                    ALTER TABLE {schema}.tmp_observations
                     ADD CONSTRAINT constraint_obs UNIQUE (code,type,date);
                 """
-            self.mdb.execute(sql.format(self.mdb.SCHEMA))
+            self.mdb.execute(sql, schema=True)
             recs = recs.drop(columns=["fichier"])
-            sql = "INSERT INTO {0}.tmp_observations ({2}) " "VALUES ({1})".format(
-                self.mdb.SCHEMA, "{}, {}, {}, {}, {}", ",".join(recs.columns.tolist())
+            recs = recs[["code", "date", "type", "comment", "valeur"]]
+
+            rows_to_insert = []
+            for rec in recs.itertuples(index=False, name=None):
+                clean_row = []
+                for val in rec:
+                    if isinstance(val, str) and len(val) >= 2 and val[0] == "'" and val[-1] == "'":
+                        clean_row.append(val[1:-1])
+                    else:
+                        clean_row.append(val)
+                rows_to_insert.append(tuple(clean_row))
+
+            sql = (
+                "INSERT INTO {schema}.tmp_observations "
+                "(code, date, type, comment, valeur) "
+                "VALUES (%s, %s, %s, %s, %s)"
             )
-            for rec in recs.values.tolist():
-                try:
-                    self.mdb.execute(sql.format(*rec))
-                except Exception:
-                    msg = "Incorrect format for observations"
-                    ok = QMessageBox.warning(None, "WARNING:", msg)
-                    return
+            err = self.mdb.run_query(
+                sql,
+                schema=True,
+                many=True,
+                list_many=rows_to_insert,
+            )
+            if err:
+                msg = "Incorrect format for observations"
+                QMessageBox.warning(None, "WARNING:", msg)
+                return
 
             # check if type and code existant
             dbls = self.mdb.run_query(
-                "SELECT DISTINCT code, type FROM {0}.observations As obs WHERE EXISTS "
-                "(SELECT 1 FROM {0}.tmp_observations AS tmp WHERE obs.code = tmp.code "
-                " AND obs.type = tmp.type)".format(self.mdb.SCHEMA),
+                "SELECT DISTINCT code, type FROM {schema}.observations As obs WHERE EXISTS "
+                "(SELECT 1 FROM {schema}.tmp_observations AS tmp WHERE obs.code = tmp.code "
+                " AND obs.type = tmp.type)",
                 fetch=True,
+                schema=True,
             )
         else:
             return
@@ -360,7 +384,7 @@ class ClassEventObsDialog(QDialog):
                     break
 
             txt_mess = (
-                    "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
+                "Duplicates exist for these configurations (the first 5) : \n" + txt_sta + "\n"
             )
             dlg = ClassObsDuplicDialog(self.mgis, txt_mess)
             if QT_VERSION > 5:
@@ -372,67 +396,68 @@ class ClassEventObsDialog(QDialog):
             typ_s = dlg.type_save
 
             sql_tab = """
-                    DROP TABLE  IF EXISTS {0}.obs_ref;
-                    CREATE TABLE {0}.obs_ref AS  SELECT  code,type,UNNEST(comment) as comment, 
+                    DROP TABLE  IF EXISTS {schema}.obs_ref;
+                    CREATE TABLE {schema}.obs_ref AS  SELECT  code,type,UNNEST(comment) as comment, 
                         UNNEST(valeur) as valeur ,UNNEST(date) as date  
-                        FROM {0}.observations WHERE (code,type) 
-                        in (SELECT code,type FROM {0}.tmp_observations) 
+                        FROM {schema}.observations WHERE (code,type) 
+                        in (SELECT code,type FROM {schema}.tmp_observations) 
                         order by code, date;
                 """
             sql_over = """
-                    INSERT INTO {0}.tmp_observations (code, type, comment, valeur, date)
+                    INSERT INTO {schema}.tmp_observations (code, type, comment, valeur, date)
                         SELECT ref.code, ref.type, ref.comment, ref.valeur, ref.date
-                        FROM {0}.obs_ref ref
+                        FROM {schema}.obs_ref ref
                         ON CONFLICT (code, type, date) DO NOTHING;
                 """
             sql_no = """
-                     INSERT INTO {0}.tmp_observations (code, type, comment, valeur, date)
+                     INSERT INTO {schema}.tmp_observations (code, type, comment, valeur, date)
                         SELECT ref.code, ref.type, ref.comment, ref.valeur, ref.date
-                        FROM {0}.obs_ref ref ON CONFLICT (code, type, date) 
+                        FROM {schema}.obs_ref ref ON CONFLICT (code, type, date) 
                         DO UPDATE SET (comment,valeur) = (EXCLUDED.comment, EXCLUDED.valeur);
                 """
             sqldp = """
-                        DELETE FROM {0}.obs_ref WHERE
+                        DELETE FROM {schema}.obs_ref WHERE
                             (code,type,date) in (
                                 SELECT ref.code,ref.type, ref.date 
-                                FROM {0}.obs_ref ref, 
+                                FROM {schema}.obs_ref ref, 
                                 (SELECT code, type, MIN(date) as mindate, 
-                                MAX(date) as maxdate FROM {0}.tmp_observations 
+                                MAX(date) as maxdate FROM {schema}.tmp_observations 
                                 GROUP BY code,type) tmp
                                 WHERE ref.code = tmp.code  and ref.type =tmp.type 
                                 and ref.date >= tmp.mindate AND date <= tmp.maxdate);
                         """
-            self.mdb.run_query(sql_tab.format(self.mdb.SCHEMA))
+            self.mdb.run_query(sql_tab, schema=True)
             if typ_s == "no_overw":
-                self.mdb.run_query(sql_no.format(self.mdb.SCHEMA))
+                self.mdb.run_query(sql_no, schema=True)
             elif typ_s == "overw":
-                self.mdb.run_query(sql_over.format(self.mdb.SCHEMA))
+                self.mdb.run_query(sql_over, schema=True)
             elif typ_s == "plage_overw":
-                self.mdb.run_query(sqldp.format(self.mdb.SCHEMA))
-                self.mdb.run_query(sql_over.format(self.mdb.SCHEMA))
+                self.mdb.run_query(sqldp, schema=True)
+                self.mdb.run_query(sql_over, schema=True)
             elif typ_s == "replace":
                 pass
             else:
                 return
             # integration table observation
             self.mdb.run_query(
-                "DELETE FROM {0}.observations WHERE (code, type) IN "
-                "(SELECT DISTINCT code,type FROM {0}.tmp_observations);"
-                "".format(self.mdb.SCHEMA)
+                "DELETE FROM {schema}.observations WHERE (code, type) IN "
+                "(SELECT DISTINCT code,type FROM {schema}.tmp_observations);"
+                "",
+                schema=True,
             )
-            self.mdb.execute("DROP TABLE IF EXISTS {0}.obs_ref;".format(self.mdb.SCHEMA))
-        sql_insert = """INSERT INTO {0}.observations(code, type, comment, valeur, date) 
+            self.mdb.execute("DROP TABLE IF EXISTS {schema}.obs_ref;", schema=True)
+        sql_insert = """INSERT INTO {schema}.observations(code, type, comment, valeur, date) 
                              SELECT code,type,  
                              array_agg(comment ORDER BY date), 
                              array_agg(valeur ORDER BY date), 
                              array_agg(date ORDER BY date) 
-                             FROM {0}.tmp_observations GROUP BY code,type;
+                             FROM {schema}.tmp_observations GROUP BY code,type;
                        """
 
-        self.mdb.run_query(sql_insert.format(self.mdb.SCHEMA))
+        self.mdb.run_query(sql_insert, schema=True)
 
         # nettoyage table tempo
-        self.mdb.execute("DROP TABLE IF EXISTS {0}.tmp_observations;".format(self.mdb.SCHEMA))
+        self.mdb.execute("DROP TABLE IF EXISTS {schema}.tmp_observations;", schema=True)
 
         self.fill_lst_stations(self.cur_station)
 
@@ -471,7 +496,7 @@ class ClassEventObsDialog(QDialog):
                                 rec.append(self.fmt_col(date))
                             else:
                                 msg = f"Error in date format for file : '{file}')"
-                                ok = QMessageBox.warning(None, "WARNING:", msg)
+                                QMessageBox.warning(None, "WARNING:", msg)
                                 return False, None
                             rec.append(self.fmt_col(types[i]))
                             rec.append(self.fmt_col(nom_stat[i]))
@@ -489,7 +514,7 @@ class ClassEventObsDialog(QDialog):
             self.mgis.add_info("Loading to observations is an echec.")
             error_info = repr(e)
             if self.mgis.DEBUG:
-                error_info = error_info + '\n' + traceback.format_exc()
+                error_info = error_info + "\n" + traceback.format_exc()
             self.mgis.add_info(error_info)
 
             return False, None
@@ -512,8 +537,8 @@ class ClassEventObsDialog(QDialog):
                     )
 
                     df_tmp["comment"] = [
-                                            self.fmt_col(os.path.splitext(os.path.basename(file))[0])
-                                        ] * df_tmp.count()[0]
+                        self.fmt_col(os.path.splitext(os.path.basename(file))[0])
+                    ] * df_tmp.count()[0]
                     df_tmp["fichier"] = [os.path.basename(file)] * df_tmp.count()[0]
 
                     tmp = pd.concat([tmp, df_tmp])
@@ -525,7 +550,7 @@ class ClassEventObsDialog(QDialog):
             self.mgis.add_info("Loading to observations is an echec.")
             error_info = repr(e)
             if self.mgis.DEBUG:
-                error_info = error_info + '\n' + traceback.format_exc()
+                error_info = error_info + "\n" + traceback.format_exc()
             self.mgis.add_info(error_info)
             return False, None
 
@@ -563,17 +588,16 @@ class ClassEventObsDialog(QDialog):
         self.graph_edit.maj_courbes(data)
 
     def new_station(self):
-        # changer de page
         dlg = NewStationDialog()
         if dlg.exec():
-
             new_station = dlg.txt_station.text()
             new_var = dlg.cb_var.currentText()
             if new_station:
                 rows = self.mdb.run_query(
-                    "SELECT COUNT(*) FROM {0}.observations WHERE code = '{1}' "
-                    "AND type ='{2}'".format(self.mdb.SCHEMA, new_station, new_var),
+                    "SELECT COUNT(*) FROM {schema}.observations WHERE code = %s AND type = %s",
                     fetch=True,
+                    schema=True,
+                    params=[new_station, new_var],
                 )
                 if rows[0][0]:
                     if QT_VERSION > 5:
@@ -613,14 +637,18 @@ class ClassEventObsDialog(QDialog):
             for row in rows:
                 station = tab.model().data(tab.model().index(row - sup_ind, 0))
 
-                if self.box.ok_cancel_q(self, "Delete {} observations ?".format(str(station).strip()),"Observations of Events"):
+                if self.box.ok_cancel_q(
+                    self,
+                    "Delete {} observations ?".format(str(station).strip()),
+                    "Observations of Events",
+                ):
                     self.mgis.add_info(
                         "Deletion of {} Observations of Events".format(station), dbg=True
                     )
-                    self.mdb.execute(
-                        "DELETE FROM {0}.observations WHERE code = '{1}'".format(
-                            self.mdb.SCHEMA, station
-                        )
+                    self.mdb.run_query(
+                        "DELETE FROM {schema}.observations WHERE code = %s",
+                        schema=True,
+                        params=[station],
                     )
                     self.fill_lst_stations()
                     sup_ind += 1
@@ -629,15 +657,20 @@ class ClassEventObsDialog(QDialog):
         # charger les informations
         # changer de page
         if self.cur_station:
-            if self.box.ok_cancel_q(self,"Delete {0} values for {1} station ?".format(
-                            self.cur_var, self.cur_station.strip()),
-                            "Observations of Events"):
+            if self.box.ok_cancel_q(
+                self,
+                "Delete {0} values for {1} station ?".format(
+                    self.cur_var, self.cur_station.strip()
+                ),
+                "Observations of Events",
+            ):
                 self.mgis.add_info(
                     "Deletion of {} Observations of Events".format(self.cur_station), dbg=True
                 )
-                self.mdb.execute(
-                    "DELETE FROM {0}.observations WHERE code = '{1}' "
-                    "and type = '{2}'".format(self.mdb.SCHEMA, self.cur_station, self.cur_var)
+                self.mdb.run_query(
+                    "DELETE FROM {schema}.observations WHERE code = %s AND type = %s",
+                    schema=True,
+                    params=[self.cur_station, self.cur_var],
                 )
                 self.fill_lst_stations(self.cur_station)
 
@@ -699,10 +732,10 @@ class ClassEventObsDialog(QDialog):
                 self.mgis.add_info(
                     "Editing of {0} Observations for {1}".format(name_var, name_stat), dbg=True
                 )
-                self.mdb.execute(
-                    "DELETE FROM {0}.observations WHERE code = '{1}' AND type = '{2}'".format(
-                        self.mdb.SCHEMA, name_stat, name_var
-                    )
+                self.mdb.run_query(
+                    "DELETE FROM {schema}.observations WHERE code = %s AND type = %s",
+                    schema=True,
+                    params=[name_stat, name_var],
                 )
             d_rec = {}
             for r in range(self.ui.tab_values.model().rowCount()):
@@ -730,9 +763,9 @@ class ClassEventObsDialog(QDialog):
                     ]
                 )
             self.mdb.run_query(
-                "INSERT INTO {0}.observations (code,type,  date, valeur, comment) VALUES (%s, %s, %s, %s, %s)".format(
-                    self.mdb.SCHEMA
-                ),
+                "INSERT INTO {schema}.observations (code, type, date, valeur, comment) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                schema=True,
                 many=True,
                 list_many=recs,
             )
@@ -803,17 +836,17 @@ class SelectDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         # check if selected
         if QT_VERSION > 5:
-           q_styl = QStyle.StateFlag
-           active = QPalette.ColorGroup.Active
-           q_pcolor= QPalette.ColorRole
-           q_color = Qt.GlobalColor
+            q_styl = QStyle.StateFlag
+            active = QPalette.ColorGroup.Active
+            q_pcolor = QPalette.ColorRole
+            q_color = Qt.GlobalColor
 
         else:
             q_styl = QStyle
             active = QPalette.Active
             q_pcolor = QPalette
             q_color = Qt
-        selected = option.state &  q_styl.State_Selected
+        selected = option.state & q_styl.State_Selected
         if bool(selected) and index.row() == self.row:
             background_color = QColor(q_color.green)
             text_color = QColor(q_color.black)
@@ -859,15 +892,14 @@ class NewStationDialog(QDialog):
         self.cb_var = QComboBox()
         self.cb_var.addItem("H")
         self.cb_var.addItem("Q")
-        if QT_VERSION > 5 :
+        if QT_VERSION > 5:
             self.btn_box = QDialogButtonBox(
                 QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-                parent=self
+                parent=self,
             )
         else:
             self.btn_box = QDialogButtonBox(
-                QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-                parent=self
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel, parent=self
             )
 
         self.btn_box.accepted.connect(self.accept)
@@ -896,11 +928,51 @@ class GraphObservation(GraphCommon):
         self.axes.tick_params(axis="both", labelsize=7.0)
         self.axes.grid(True)
 
-        (self.courbe,) = self.axes.plot([], [], zorder=99, label="None")
+        (self.courbe,) = self.axes.plot([], [], zorder=99, label="None", rasterized=True)
         self.courbes.append(self.courbe)
 
         self.fig.canvas.mpl_connect("pick_event", self.onpick)
         self.init_legende()
+
+    def get_max_plot_points(self, default_points=2000):
+        """Adapte le nombre max de points à la largeur utile (en pixels)."""
+        try:
+            width_px = self.canvas.width()
+            if width_px <= 0:
+                width_px = int(self.fig.get_figwidth() * self.fig.dpi)
+        except Exception:
+            width_px = 0
+
+        if width_px <= 0:
+            return default_points
+
+        return max(400, min(default_points, int(width_px)))
+
+    def resample_data(self, data_x, data_y, max_points=None):
+        """
+        Resamples the data to improve rendering performance.
+        Limits the number of displayed points while preserving overall trends.
+
+        :param data_x: List/array of x-coordinates
+        :param data_y: List/array of y-coordinates
+        :param max_points: Maximum number of points (default: canvas width)
+        :return: Tuple (resampled_data_x, resampled_data_y)
+        """
+        if max_points is None:
+            max_points = self.get_max_plot_points()
+
+        if len(data_x) <= max_points or max_points <= 0:
+            return data_x, data_y
+
+        step = max(1, int(np.ceil(float(len(data_x)) / float(max_points))))
+        resampled_x = list(data_x[::step])
+        resampled_y = list(data_y[::step])
+
+        if resampled_x and resampled_x[-1] != data_x[-1]:
+            resampled_x.append(data_x[-1])
+            resampled_y.append(data_y[-1])
+
+        return resampled_x, resampled_y
 
     def init_graph(self, config):
         """initializes  Graphic"""
@@ -911,13 +983,15 @@ class GraphObservation(GraphCommon):
         if config is not None:
             self.leg.get_texts()[0].set_text(config[1])
             sql = (
-                "SELECT UNNEST(date), UNNEST(valeur) FROM {0}.observations "
-                "WHERE code = '{1}' and type = '{2}' "
-                "ORDER BY date".format(self.mdb.SCHEMA, config[0], config[1])
+                "SELECT UNNEST(date), UNNEST(valeur) FROM {schema}.observations "
+                "WHERE code = %s and type = %s "
+                "ORDER BY date"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, schema=True, params=[config[0], config[1]])
             if len(rows) > 0:
                 lst = list(zip(*rows))
+                data_x, data_y = self.resample_data(lst[0], lst[1])
+                lst = [data_x, data_y]
         else:
             self.leg.get_texts()[0].set_text("None")
 

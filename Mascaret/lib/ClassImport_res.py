@@ -20,18 +20,15 @@ email                :
 import datetime
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog
+from qgis.PyQt.uic import loadUi
 
 from ..ui.custom_control import ClassWarningBox
 from .model.ClassGetResults import ClassGetResults
 
+
 class ClassImportRes(QDialog):
-    def __init__(self,mgis, obj_mod=None):
+    def __init__(self, mgis, obj_mod=None):
         QDialog.__init__(self)
         self.mgis = mgis
         self.mdb = self.mgis.mdb
@@ -41,7 +38,7 @@ class ClassImportRes(QDialog):
         self.path_model = os.path.join(os.path.dirname(__file__), "..", "mascaret")
         self.run = ""
         self.scen = ""
-        self.basename ="mascaret"
+        self.basename = "mascaret"
         self.complet = False
         self.box = ClassWarningBox()
         self.cls_res = ClassGetResults(self.mdb, dbg=self.mgis.DEBUG)
@@ -67,7 +64,7 @@ class ClassImportRes(QDialog):
     def change_basename(self):
         basen = str(self.ed_run.text())
         self.basename = basen.replace("'", " ").replace('"', " ").strip()
-        self.txt_path.setText( self.basename)
+        self.txt_path.setText(self.basename)
 
     def change_run(self):
         run = str(self.ed_run.text())
@@ -129,19 +126,19 @@ class ClassImportRes(QDialog):
         id_run = self.insert_id_run(self.mdb, self.run, self.scen)
 
         self.cls_res.set_results_database(
-                self.path_model,
-                id_run,
-                self.date,
-                self.basename,
-                comments= self.comments,
-                tracer=has_tracer,
-                casier=has_basins,
+            self.path_model,
+            id_run,
+            self.date,
+            self.basename,
+            comments=self.comments,
+            tracer=has_tracer,
+            casier=has_basins,
         )
 
         if self.cls_res.mess.get_critic_status():
             txt = self.cls_res.mess.message()
             self.box.info(txt, "Error")
-            return  False
+            return False
 
         return True
 
@@ -156,8 +153,10 @@ class ClassImportRes(QDialog):
         tab = {run_: {"scenario": scen, "date": "{:%Y-%m-%d %H:%M}".format(maintenant)}}
         listimport = ["run", "scenario", "date"]
         mdb.insert("runs", tab, listimport)
-        info = mdb.select(
-            "runs", where="run='{}' AND scenario='{}'".format(run_, scen), list_var=["id"]
-        )
-        id_run = info["id"][0]
-        return id_run
+        # info = mdb.select(
+        #     "runs",
+        #     where="run = %s AND scenario = %s",
+        #     list_var=["id"],
+        #     params=[run_, scen],
+        # )
+        # print(info)

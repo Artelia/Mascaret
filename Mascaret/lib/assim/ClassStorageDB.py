@@ -68,11 +68,8 @@ class ClassStorageDB:
         :param numz: Zone number associated with the ks control.
         :return: The ``id_ctrl`` value from the database, or ``None`` if not found.
         """
-        sql = (
-            f"SELECT id_ctrl FROM {self.mdb.SCHEMA}.assim_res_ks "
-            f"WHERE id_runs = {id_run} AND zone_num = {numz}"
-        )
-        res = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT id_ctrl FROM {schema}.assim_res_ks WHERE id_runs = %s AND zone_num = %s"
+        res = self.mdb.run_query(sql, fetch=True, params=[id_run, numz], schema=True)
         if res:
             res = [val for val in res]
             return res[0][0]
@@ -87,19 +84,13 @@ class ClassStorageDB:
                  the law type code or -1 if not found.
         """
         if source_law == "extremities":
-            sql = (
-                f"SELECT name, type FROM {self.mdb.SCHEMA}.extremities "
-                f"WHERE active AND gid = {id_law}"
-            )
+            sql = "SELECT name, type FROM {schema}.extremities WHERE active AND gid = %s"
         elif source_law == "lateral_inflows":
-            sql = (
-                f"SELECT name FROM {self.mdb.SCHEMA}.lateral_inflows "
-                f"WHERE active AND gid = {id_law}"
-            )
+            sql = "SELECT name FROM {schema}.lateral_inflows WHERE active AND gid = %s"
         else:
             return None, -1
 
-        info = self.mdb.run_query(sql, fetch=True)
+        info = self.mdb.run_query(sql, fetch=True, params=[id_law], schema=True)
         if not info:
             return None, -1
 
@@ -115,10 +106,10 @@ class ClassStorageDB:
         :return: The ``id_ctrl`` value from the database, or ``None`` if not found.
         """
         sql = (
-            f"SELECT id_ctrl FROM {self.mdb.SCHEMA}.assim_res_law "
-            f"WHERE id_runs = {id_run} AND source_law = '{source_law}' AND id_law = {id_law}"
+            "SELECT id_ctrl FROM {schema}.assim_res_law "
+            "WHERE id_runs = %s AND source_law = %s AND id_law = %s"
         )
-        res = self.mdb.run_query(sql, fetch=True)
+        res = self.mdb.run_query(sql, fetch=True, params=[id_run, source_law, id_law], schema=True)
         if res:
             res = [val for val in res]
             return res[0][0]
@@ -189,26 +180,33 @@ class ClassStorageDB:
         :param name_file_law: filename or identifier of the law file
         :param name_law: human-readable name of the law
         """
-        check_sql = f"""
-            SELECT 1
-            FROM {self.mdb.SCHEMA}.assim_res_law
-            WHERE id_runs={id_runs}
-              AND id_law={id_law}
-              AND source_law='{source_law}';
-        """
-        exists = self.mdb.run_query(check_sql, fetch=True, arraysize=1)
+        check_sql = (
+            "SELECT 1 FROM {schema}.assim_res_law "
+            "WHERE id_runs = %s AND id_law = %s AND source_law = %s;"
+        )
+        exists = self.mdb.run_query(
+            check_sql,
+            fetch=True,
+            arraysize=1,
+            params=[id_runs, id_law, source_law],
+            schema=True,
+        )
         exists = [val for val in exists]
         # if exist => ignor
         if exists:
             return False
 
         # if not insert
-        insert_sql = f"""
-            INSERT INTO {self.mdb.SCHEMA}.assim_res_law
-                 (id_runs, id_law, source_law, name_file_law, name_law)
-            VALUES ({id_runs}, {id_law}, '{source_law}', '{name_file_law}', '{name_law}');
-        """
-        self.mdb.run_query(insert_sql)
+        insert_sql = (
+            "INSERT INTO {schema}.assim_res_law "
+            "(id_runs, id_law, source_law, name_file_law, name_law) "
+            "VALUES (%s, %s, %s, %s, %s);"
+        )
+        self.mdb.run_query(
+            insert_sql,
+            params=[id_runs, id_law, source_law, name_file_law, name_law],
+            schema=True,
+        )
 
     def _insert_or_ignore_assim_res_ks(
         self, id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj
@@ -224,14 +222,17 @@ class ClassStorageDB:
         :param ks_min: reference ks minor bed (double)
         :param ks_maj: reference ks major bed (double)
         """
-        check_sql = f"""
-            SELECT 1
-            FROM {self.mdb.SCHEMA}.assim_res_ks
-            WHERE id_runs={id_runs}
-              AND zone_num={id_zone}
-              AND branchnum={branchnum};
-        """
-        exists = self.mdb.run_query(check_sql, fetch=True, arraysize=1)
+        check_sql = (
+            "SELECT 1 FROM {schema}.assim_res_ks "
+            "WHERE id_runs = %s AND zone_num = %s AND branchnum = %s;"
+        )
+        exists = self.mdb.run_query(
+            check_sql,
+            fetch=True,
+            arraysize=1,
+            params=[id_runs, id_zone, branchnum],
+            schema=True,
+        )
         exists = [val for val in exists]
 
         # if exist => ignor
@@ -239,13 +240,16 @@ class ClassStorageDB:
             return False
 
         # if not insert
-        insert_sql = f"""
-            INSERT INTO {self.mdb.SCHEMA}.assim_res_ks
-                (id_runs, zone_num, branchnum, abs_min, abs_max, ks_min, ks_maj)
-            VALUES ({id_runs}, {id_zone}, {branchnum},
-            {abs_min}, {abs_maj}, {ks_min}, {ks_maj});
-        """
-        self.mdb.run_query(insert_sql)
+        insert_sql = (
+            "INSERT INTO {schema}.assim_res_ks "
+            "(id_runs, zone_num, branchnum, abs_min, abs_max, ks_min, ks_maj) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s);"
+        )
+        self.mdb.run_query(
+            insert_sql,
+            params=[id_runs, id_zone, branchnum, abs_min, abs_maj, ks_min, ks_maj],
+            schema=True,
+        )
 
         return True  # ligne insérée
 
@@ -257,9 +261,9 @@ class ClassStorageDB:
         :param var: text name of the variable modified
         :param val:  value
         """
-        query = f"""
-            INSERT INTO {self.mdb.SCHEMA}.assim_res
-                (id_runs, type_ctrl, id_ctrl, var, val)
-            VALUES ({id_runs}, '{type_ctrl_}', {id_ctrl}, '{var}', {val});
-        """
-        self.mdb.run_query(query)
+        query = (
+            "INSERT INTO {schema}.assim_res "
+            "(id_runs, type_ctrl, id_ctrl, var, val) "
+            "VALUES (%s, %s, %s, %s, %s);"
+        )
+        self.mdb.run_query(query, params=[id_runs, type_ctrl_, id_ctrl, var, val], schema=True)

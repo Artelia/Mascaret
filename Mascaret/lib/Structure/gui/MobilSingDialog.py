@@ -19,18 +19,24 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QT_VERSION, QVariant, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QButtonGroup,
+    QDialog,
+    QDoubleSpinBox,
+    QFileDialog,
+    QItemEditorFactory,
+    QShortcut,
+    QStyledItemDelegate,
+)
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 from ...Function import data_to_float
 from ...Graphic.GraphCommon import GraphCommon
-from ....ui.custom_control import _qt_is_checked
+from ....ui.custom_control import _qt_is_checked, get_qt_checked, get_qt_unchecked
+
 
 class ClassMobilSingDialog(QDialog):
     def __init__(self, mgis):
@@ -49,7 +55,7 @@ class ClassMobilSingDialog(QDialog):
 
         self.dico_ctrl = {
             "ZINITREG": [self.sb_init_lvl],
-            'ZMAXFG': [self.sb_zhaut],
+            "ZMAXFG": [self.sb_zhaut],
             "VREGCLOS": [self.sb_zreg],
             "VELOFGOPEN": [self.sb_vd],
             "VELOFGCLOSE": [self.sb_va],
@@ -63,10 +69,10 @@ class ClassMobilSingDialog(QDialog):
             "CRITDTREG": "'NDTREG'",
             "NDTREG": 1,
             "DTREG": 0,
-            "ZINCRFG": 9999.,
+            "ZINCRFG": 9999.0,
             "CLAPETT": False,
             "CLAPET": False,
-            "MAINTFIRST": False
+            "MAINTFIRST": False,
         }
         self.unitvd = 0
         self.unitvh = 0
@@ -191,10 +197,8 @@ class ClassMobilSingDialog(QDialog):
             self.edit_type = "table"
 
         val = ctrl_get_value(self.cb_method)
-        sql = "UPDATE {0}.weirs SET method_mob = '{1}' WHERE name = '{2}'".format(
-            self.mdb.SCHEMA, val, self.name_cur
-        )
-        self.mdb.execute(sql)
+        sql = "UPDATE {schema}.weirs SET method_mob = %s WHERE name = %s"
+        self.mdb.execute(sql, params=[val, self.name_cur], schema=True)
 
     def select_list(self, itm):
         self.name_cur = self.ui.lst_sets.model().item(itm.row(), 1).text()
@@ -202,14 +206,20 @@ class ClassMobilSingDialog(QDialog):
         self.ui.cb_method.setDisabled(False)
 
         rows = self.mdb.select(
-            "weirs", where="name = '{0}'".format(self.name_cur), list_var=["method_mob", "gid", 'z_crest', "abscissa"]
+            "weirs",
+            where="name = %s",
+            params=[self.name_cur],
+            list_var=["method_mob", "gid", "z_crest", "abscissa"],
         )
         if rows:
             self.id = rows["gid"][0]
             ctrl_set_value(self.cb_method, rows["method_mob"][0])
-            self.d_val.update({"PK": rows["abscissa"][0],
-                               "ZFINALREG": rows["z_crest"][0],
-                               })
+            self.d_val.update(
+                {
+                    "PK": rows["abscissa"][0],
+                    "ZFINALREG": rows["z_crest"][0],
+                }
+            )
             ctrl_set_value(self.sb_zbas, rows["z_crest"][0])
 
     def import_csv(self):
@@ -351,33 +361,33 @@ class ClassMobilSingDialog(QDialog):
                 recs.append([self.id, num, "VALUEZ", self.ui.tab_sets.model().item(num, 4).data(0)])
 
             rows = self.mdb.select(
-                "weirs_mob_val", where="id_weirs = {0}".format(self.id), list_var=["name_var"]
+                "weirs_mob_val", where="id_weirs = %s", params=[self.id], list_var=["name_var"]
             )
 
             if rows:
                 if "VALUEZ" in rows["name_var"]:
-                    sql = (
-                        "DELETE FROM {0}.weirs_mob_val "
-                        "WHERE id_weirs = {1} AND name_var='VALUEZ';\n".format(
-                            self.mdb.SCHEMA, self.id
-                        )
+
+                    self.mdb.delete(
+                        "weirs_mob_val",
+                        where="id_weirs = %s AND name_var = 'VALUEZ'",
+                        params=[self.id],
                     )
 
-                    sql += (
-                        "DELETE FROM {0}.weirs_mob_val "
-                        "WHERE id_weirs = {1} AND name_var='TIME'".format(self.mdb.SCHEMA, self.id)
+                    self.mdb.delete(
+                        "weirs_mob_val",
+                        where="id_weirs = %s AND name_var = 'TIME'",
+                        params=[self.id],
                     )
 
-                    self.mdb.execute(sql)
-
-            sql = "INSERT INTO {0}.weirs_mob_val (id_weirs, id_order, name_var, value) VALUES (%s, %s, %s, %s)".format(
-                self.mdb.SCHEMA
+            sql = (
+                "INSERT INTO {schema}.weirs_mob_val "
+                "(id_weirs, id_order, name_var, value) VALUES (%s, %s, %s, %s)"
             )
 
-            self.mdb.run_query(sql, many=True, list_many=recs)
+            self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
 
             self.ui.weirs_pages.setCurrentIndex(0)
-        except:
+        except Exception:
             self.reject_page2()
             self.mgis.add_info("Cancel of gate information")
 
@@ -402,26 +412,23 @@ class ClassMobilSingDialog(QDialog):
                 self.d_val.update({var: val})
             # save
             for var, val in self.d_val.items():
-                sql = "SELECT * FROM {0}.weirs_mob_val WHERE id_weirs= {1} AND  name_var = '{2}' ".format(
-                    self.mdb.SCHEMA, self.id, var
-                )
-                row = self.mdb.run_query(sql, fetch=True)
+                sql = "SELECT * FROM {schema}.weirs_mob_val WHERE id_weirs = %s AND name_var = %s"
+                row = self.mdb.run_query(sql, fetch=True, params=[self.id, var], schema=True)
                 if len(row) > 0:
-                    sql = "UPDATE {0}.weirs_mob_val SET value = {3} WHERE id_weirs = {1} AND  name_var = '{2}'".format(
-                        self.mdb.SCHEMA, self.id, var, val
+                    sql = (
+                        "UPDATE {schema}.weirs_mob_val SET value = %s "
+                        "WHERE id_weirs = %s AND name_var = %s"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.execute(sql, params=[val, self.id, var], schema=True)
                 else:
                     sql = (
-                        "INSERT INTO {0}.weirs_mob_val (id_weirs, id_order, name_var, value)"
-                        " VALUES ({1}, {2}, '{3}',{4})".format(
-                            self.mdb.SCHEMA, self.id, 0, var, val
-                        )
+                        "INSERT INTO {schema}.weirs_mob_val (id_weirs, id_order, name_var, value)"
+                        " VALUES (%s, %s, %s, %s)"
                     )
-                    self.mdb.execute(sql)
+                    self.mdb.execute(sql, params=[self.id, 0, var, val], schema=True)
 
             self.ui.weirs_pages.setCurrentIndex(0)
-        except:
+        except Exception:
             self.reject_page3()
             self.mgis.add_info("Cancel of gate information")
 
@@ -449,7 +456,7 @@ class ClassMobilSingDialog(QDialog):
         :param v (int): Index of the selected time unit
         :return: None
         """
-        v =  self.bg_time.id(vbt)
+        v = self.bg_time.id(vbt)
         unit = ["s", "min", "h", "day"]
         for i in range(4):
             if i == v:
@@ -492,15 +499,11 @@ class ClassMobilSingDialog(QDialog):
         # get value lst_sets
         name = str(self.ui.lst_sets.model().item(itm.row(), 1).text())
         if _qt_is_checked(itm, check_level="full"):
-            sql = "UPDATE {0}.weirs SET active_mob = 't' WHERE name = '{1}'".format(
-                self.mdb.SCHEMA, name
-            )
-            self.mdb.run_query(sql)
+            sql = "UPDATE {schema}.weirs SET active_mob = 't' WHERE name = %s"
+            self.mdb.run_query(sql, params=[name], schema=True)
         else:
-            sql = "UPDATE {0}.weirs SET active_mob = 'f' WHERE name = '{1}'".format(
-                self.mdb.SCHEMA, name
-            )
-            self.mdb.run_query(sql)
+            sql = "UPDATE {schema}.weirs SET active_mob = 'f' WHERE name = %s"
+            self.mdb.run_query(sql, params=[name], schema=True)
 
     def init_ui(self):
         """initialisation gui"""
@@ -513,30 +516,24 @@ class ClassMobilSingDialog(QDialog):
 
     def delete_useless_data(self):
         sql = (
-            "DELETE  FROM {0}.weirs_mob_val WHERE id_weirs IN "
-            "(SELECT DISTINCT id_weirs FROM {0}.weirs_mob_val "
-            "where id_weirs not in (SELECT gid FROM {0}.weirs));"
+            "DELETE FROM {schema}.weirs_mob_val WHERE id_weirs IN "
+            "(SELECT DISTINCT id_weirs FROM {schema}.weirs_mob_val "
+            "WHERE id_weirs NOT IN (SELECT gid FROM {schema}.weirs));"
         )
-        self.mdb.run_query(sql.format(self.mdb.SCHEMA))
+
+        self.mdb.run_query(sql, schema=True)
 
     def fill_lst_conf(self, id=None):
         """fill configuration list"""
         model = QStandardItemModel()
-        if QT_VERSION > 5:
-            qt_check = Qt.CheckState.Checked
-            qt_ucheck = Qt.CheckState.Unchecked
-        else:
-            qt_check = Qt.Checked
-            qt_ucheck = Qt.Unchecked
-
+        qt_check = get_qt_checked()
+        qt_ucheck = get_qt_unchecked()
         model.setColumnCount(2)
         self.ui.lst_sets.setModel(model)
         self.ui.lst_sets.setModelColumn(1)
 
-        sql = "SELECT active_mob,name FROM {0}.weirs WHERE active ORDER BY name".format(
-            self.mdb.SCHEMA
-        )
-        rows = self.mdb.run_query(sql, fetch=True)
+        sql = "SELECT active_mob, name FROM {schema}.weirs WHERE active ORDER BY name"
+        rows = self.mdb.run_query(sql, fetch=True, schema=True)
 
         if rows is not None:
             for i, row in enumerate(rows):
@@ -584,8 +581,8 @@ class ClassMobilSingDialog(QDialog):
 
     def edit_set(self):
         if self.ui.lst_sets.selectedIndexes():
-            l = self.ui.lst_sets.selectedIndexes()[0].row()
-            self.cur_set = self.ui.lst_sets.model().item(l, 1).text()
+            lst = self.ui.lst_sets.selectedIndexes()[0].row()
+            self.cur_set = self.ui.lst_sets.model().item(lst, 1).text()
 
             if self.edit_type == "table":
                 self.fill_tab_sets()
@@ -596,11 +593,9 @@ class ClassMobilSingDialog(QDialog):
                 self.ui.weirs_pages.setCurrentIndex(2)
 
     def display_method2(self):
-        sql = "SELECT  name_var, value FROM {0}.weirs_mob_val " "WHERE id_weirs = {1} ".format(
-            self.mdb.SCHEMA, self.id
-        )
+        sql = "SELECT name_var, value FROM {schema}.weirs_mob_val WHERE id_weirs = %s"
 
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, params=[self.id], schema=True)
         if len(rows) > 0:
             dico = {}
             for param, val in rows:
@@ -660,11 +655,13 @@ class ClassMobilSingDialog(QDialog):
             c = 0
             for var in self.dico_meth1:
                 sql = (
-                    "SELECT value FROM {0}.weirs_mob_val "
-                    "WHERE id_weirs = {1} and name_var = '{2}' "
-                    "ORDER BY id_order".format(self.mdb.SCHEMA, self.id, var["name"])
+                    "SELECT value FROM {schema}.weirs_mob_val "
+                    "WHERE id_weirs = %s AND name_var = %s "
+                    "ORDER BY id_order"
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
+                rows = self.mdb.run_query(
+                    sql, fetch=True, params=[self.id, var["name"]], schema=True
+                )
 
                 if var["id"] == 1:
                     model.insertRows(0, len(rows))
@@ -776,12 +773,12 @@ class GraphMobSing(GraphCommon):
         lst_graph = []
         for var in self.lst_var:
             sql = (
-                "SELECT value FROM {0}.weirs_mob_val "
-                "WHERE id_weirs = {1} and name_var = '{2}' "
-                "ORDER BY id_order".format(self.mdb.SCHEMA, self.id, var["name"])
+                "SELECT value FROM {schema}.weirs_mob_val "
+                "WHERE id_weirs = %s AND name_var = %s "
+                "ORDER BY id_order"
             )
 
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.id, var["name"]], schema=True)
 
             if len(rows) > 0:
                 lst_graph.append(rows[0])

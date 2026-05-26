@@ -17,6 +17,7 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
+import ast
 import io
 import json
 import os
@@ -26,6 +27,7 @@ from datetime import datetime
 import numpy as np
 import psycopg2
 import psycopg2.extras
+from psycopg2 import sql as pgsql
 from qgis.core import QgsDataSourceUri
 from qgis.core import QgsVectorLayer, QgsProject
 from qgis.gui import QgsMessageBar
@@ -80,6 +82,10 @@ class ClassMasDatabase(object):
         self.box = ClassWarningBox()
         self.ignor_schema = list()
 
+    @property
+    def schema_id(self):
+        return pgsql.Identifier(self.SCHEMA)
+
     def connect_pg(self):
         """
         Method for setting up PostgreSQL connection object as MasDatabase class instance attribute.
@@ -120,29 +126,40 @@ class ClassMasDatabase(object):
         else:
             self.mgis.add_info("Can not disconnect. There is no opened connection!")
 
-    def execute(self, sql,verbose=False):
+    def execute(self, sql, verbose=False, params=None, schema=None):
         try:
             cur = self.con.cursor()
-            cur.execute(sql)
+            if schema is True:
+                schema = self.schema_id
+            elif schema is False:
+                schema = None
+            if isinstance(sql, str):
+                sql = pgsql.SQL(sql)
+            if schema is not None:
+                sql = sql.format(schema=schema)
+            if params is None:
+                cur.execute(sql)
+            else:
+                cur.execute(sql, params)
             self.con.commit()
 
         except psycopg2.Error as err:
             self.con.rollback()
-            raise err.pgerror
             if verbose:
-                print(f"[SQL ERROR] {e.pgerror}")
-
-
+                print(f"[SQL ERROR] {err.pgerror}")
+            raise err.pgerror
 
     def run_query(
-            self,
-            qry,
-            fetch=False,
-            arraysize=-1,
-            be_quiet=False,
-            namvar=False,
-            many=False,
-            list_many=None,
+        self,
+        qry,
+        fetch=False,
+        arraysize=-1,
+        be_quiet=False,
+        namvar=False,
+        many=False,
+        list_many=None,
+        params=None,
+        schema=None,
     ):
         """
         Running PostgreSQL queries
@@ -150,11 +167,14 @@ class ClassMasDatabase(object):
         Args:
             :param qry : (str) Query for database.
             :param fetch: (bool) Flag for returning result from query.
-            :param arraysize: (int) Number of items returned from query - default 0 mean using fetchall method.
+            :param arraysize: (int) Number of items returned from query
+                - default 0 mean using fetchall method.
             :param be_quiet: (bool) Flag for printing exception message.
             :param namvar: (bool) Flag if returning variables name of returning results
             :param many: (bool) True :executemany
             :param list_many: (list) list value
+            :param params: (list or tuple) query parameters
+            :param schema: (str) Schema where tables will be created or processed.
 
         Returns:
             list/generator/None: Returned value depends on the 'fetch' and 'arraysize' parameters.
@@ -167,11 +187,24 @@ class ClassMasDatabase(object):
         err = False
         try:
             if self.con:
+
+                if schema is True:
+                    schema = self.schema_id
+                elif schema is False:
+                    schema = None
+                if isinstance(qry, str):
+                    qry = pgsql.SQL(qry)
+                if schema is not None:
+                    qry = qry.format(schema=schema)
+
                 cur = self.con.cursor(cursor_factory=psycopg2.extras.DictCursor)
                 if many:
                     cur.executemany(qry, list_many)
                 else:
-                    cur.execute(qry)
+                    if params is None:
+                        cur.execute(qry)
+                    else:
+                        cur.execute(qry, params)
                 if fetch is True and arraysize <= 0:
                     result = cur.fetchall()
                     descr = cur.description
@@ -257,7 +290,8 @@ class ClassMasDatabase(object):
 
         Args:
             :param masobject: (class) Mascaret class object.
-            :param pg_method: (str) String representation of method that will be called on the masobject class.
+            :param pg_method: (str) String representation of method
+                that will be called on the masobject class.
             :param schema: (str) Schema where tables will be created or processed.
             :param srid: (int) A Spatial Reference System Identifier.
             :param kwargs: (dict) Additional keyword arguments passed to pg_method.
@@ -266,10 +300,10 @@ class ClassMasDatabase(object):
             :return obj: Instance of Mascaret class object
         """
 
-        try:
-            overwrite = masobject.overwrite
-        except AttributeError:
-            overwrite = None
+        overwrite = getattr(masobject, "overwrite", None)
+        if overwrite is None:
+            overwrite = getattr(masobject, "OVERWRITE", None)
+
         self.setup_hydro_object(masobject, schema, srid, overwrite)
         obj = masobject()
         method = getattr(obj, pg_method)
@@ -336,11 +370,9 @@ class ClassMasDatabase(object):
             schema_new = self.SCHEMA
         else:
             schema_new = schema
-        qry = "SELECT table_name FROM information_schema.tables WHERE table_schema = '{0}'".format(
-            schema_new
-        )
+        qry = pgsql.SQL("SELECT table_name FROM information_schema.tables WHERE table_schema = %s")
         try:
-            tabs = [tab[0] for tab in self.run_query(qry, fetch=True)]
+            tabs = [tab[0] for tab in self.run_query(qry, fetch=True, params=[schema_new])]
             return tabs
         except TypeError:
             return None
@@ -420,8 +452,9 @@ class ClassMasDatabase(object):
 
     def create_model(self, dossier):
         """
-        Create empty model inside PostgreSQL database.
-        :param dossier: represitory of parameter.csv in plugin represitory
+        Create an empty model schema in the PostgreSQL database.
+        :param dossier: (str) Path to plugin data directory containing initialization files.
+        :return:
         """
 
         self.register.clear()
@@ -439,12 +472,14 @@ class ClassMasDatabase(object):
             # self.public_fct_sql()
             # add clone_file is a reference fct to check public fct
             if not self.check_fct_public("clone_schema"):
-                obj = self.process_masobject(Maso.class_fct_psql, "pg_clone_schema")
+                self.process_masobject(Maso.class_fct_psql, "pg_clone_schema")
                 self.mgis.add_info("  {0} OK".format("pg_clone_schema"), dbg=True)
 
-            chaine = """CREATE SCHEMA {0} AUTHORIZATION {1};"""
-            # postgres;"""
-            if self.run_query(chaine.format(self.SCHEMA, self.USER)) is None:
+            chaine = pgsql.SQL("CREATE SCHEMA {schema} AUTHORIZATION {user};")
+            chaine = chaine.format(
+                schema=pgsql.Identifier(self.SCHEMA), user=pgsql.Identifier(self.USER)
+            )
+            if self.run_query(chaine) is None:
                 return
             else:
                 self.mgis.add_info('<br>Model "{0}" created.'.format(self.SCHEMA))
@@ -514,7 +549,7 @@ class ClassMasDatabase(object):
                 Maso.assim_ks,
                 Maso.assim_res,
                 Maso.assim_res_ks,
-                Maso.assim_res_law
+                Maso.assim_res_law,
             ]
             tables.sort(key=lambda x: x().order)
 
@@ -534,20 +569,17 @@ class ClassMasDatabase(object):
                 for ligne in file:
                     liste_value.append(ligne.replace("\n", "").split(";"))
             liste_col = self.list_columns("parametres")
-            var = ",".join(liste_col)
-            valeurs = "("
-            for k in liste_col:
-                valeurs += "%s,"
-            valeurs = valeurs[:-1] + ")"
+            cols = pgsql.SQL(", ").join(pgsql.Identifier(c) for c in liste_col)
 
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                self.SCHEMA, "parametres", var, valeurs
+            vals = pgsql.SQL("({})").format(
+                pgsql.SQL(", ").join(pgsql.SQL("%s") for _ in liste_col)
             )
+            sql = "INSERT INTO {schema}.parametres({cols}) VALUES {vals};"
+            sql = pgsql.SQL(sql).format(schema=self.schema_id, cols=cols, vals=vals)
             self.run_query(sql, many=True, list_many=liste_value)
             # IF WATER QUALITY
             tbwq = ClassTableWQ.ClassTableWQ(self.mgis, self)
             tbwq.default_tab_phy()
-
             self.insert_abacus_table(self.mgis.dossier_struct)
             self.insert_var_to_result_var(dossier)
 
@@ -559,13 +591,13 @@ class ClassMasDatabase(object):
             self.load_gis_layer()
 
             # create view
-            sql = (
-                "CREATE VIEW {0}.results AS SELECT results_by_pk.id_runs, "
+            sql = pgsql.SQL(
+                "CREATE VIEW {schema}.results AS SELECT results_by_pk.id_runs, "
                 'UNNEST(results_by_pk."time") as time, '
                 "results_by_pk.pknum, results_by_pk.var, "
-                "UNNEST(results_by_pk.val) as val FROM {0}.results_by_pk;"
+                "UNNEST(results_by_pk.val) as val FROM {schema}.results_by_pk;"
             )
-            sql = sql.format(self.SCHEMA)
+            sql = sql.format(schema=self.schema_id)
             self.run_query(sql)
             self.mgis.add_info('Model "{0}" completed'.format(self.SCHEMA))
 
@@ -575,7 +607,7 @@ class ClassMasDatabase(object):
 
     def public_fct_sql(self):
         """
-        add function in schema
+        Create required SQL functions in the public schema if missing.
         :return:
         """
         listefct = [
@@ -592,7 +624,7 @@ class ClassMasDatabase(object):
         if not self.check_fct_public(listefct):
             for fct in listefct:
                 try:
-                    obj = self.process_masobject(Maso.class_fct_psql, fct)
+                    self.process_masobject(Maso.class_fct_psql, fct)
                     self.mgis.add_info("  {0} OK".format(fct), dbg=True)
 
                 except Exception:
@@ -625,7 +657,7 @@ class ClassMasDatabase(object):
         error = False
         for fct, var in listefct:
             try:
-                obj = self.process_masobject(Maso.class_fct_psql, fct, local=var)
+                self.process_masobject(Maso.class_fct_psql, fct, local=var)
                 self.mgis.add_info("  {0} OK".format(fct), dbg=True)
             except Exception as err:
                 self.mgis.add_info("failure!{0} : {1}".format(fct, str(err)), dbg=True)
@@ -634,8 +666,7 @@ class ClassMasDatabase(object):
 
     def add_ext_postgis(self):
         """
-        To add variable in db for the first model creation
-        and to add exemple
+        Enable required PostGIS extensions in the current database.
         :return:
         """
         try:
@@ -658,49 +689,52 @@ class ClassMasDatabase(object):
         cond = True
         if isinstance(fct_name, list):
             for name in fct_name:
-                sql = " select exists(select * from pg_proc where proname = '{}');".format(name)
-                rows = self.run_query(sql, fetch=True)[0][0]
+                qry = pgsql.SQL("SELECT EXISTS(SELECT * FROM pg_proc WHERE proname = %s)")
+                rows = self.run_query(qry, fetch=True, params=[name])[0][0]
                 if not rows:
                     cond = False
             return cond
         else:
-            sql = " select exists(select * from pg_proc where proname = '{}');".format(fct_name)
-            rows = self.run_query(sql, fetch=True)[0][0]
+            qry = pgsql.SQL("SELECT EXISTS(SELECT * FROM pg_proc WHERE proname = %s)")
+            rows = self.run_query(qry, fetch=True, params=[fct_name])[0][0]
             if not rows:
                 cond = False
             return cond
 
     def check_fct_public(self, fct_name):
         """
-        check if functions exist
-        :param fct_name: (list or str)name function
-        :return:
+        Check whether one or multiple SQL functions exist in public namespace.
+        :param fct_name: (list or str) function name(s)
+        :return: (bool) True if all requested functions exist, else False
         """
         cond = True
         if isinstance(fct_name, list):
             for name in fct_name:
-                sql = (
-                    " select exists(select * from pg_proc where proname = '{}' "
-                    "AND pronamespace = (SELECT pronamespace from pg_proc "
-                    "WHERE proname ='clone_schema'));".format(name)
+                qry = pgsql.SQL(
+                    "SELECT EXISTS(SELECT * FROM pg_proc WHERE proname = %s "
+                    "AND pronamespace = (SELECT pronamespace FROM pg_proc "
+                    "WHERE proname = %s))"
                 )
-                rows = self.run_query(sql, fetch=True)[0][0]
+                rows = self.run_query(qry, fetch=True, params=[name, "clone_schema"])[0][0]
                 if not rows:
                     cond = False
             return cond
         else:
-            sql = (
-                " select exists(select * from pg_proc where proname = '{}' "
-                "AND pronamespace = (SELECT pronamespace from pg_proc "
-                "WHERE proname ='clone_schema'));".format(fct_name)
+            qry = pgsql.SQL(
+                "SELECT EXISTS(SELECT * FROM pg_proc WHERE proname = %s "
+                "AND pronamespace = (SELECT pronamespace FROM pg_proc "
+                "WHERE proname = %s))"
             )
-            rows = self.run_query(sql, fetch=True)[0][0]
+            rows = self.run_query(qry, fetch=True, params=[fct_name, "clone_schema"])[0][0]
             if not rows:
                 cond = False
             return cond
 
     def add_fct_for_update_pk(self):
-        """add fct psql to compute abscissa"""
+        """
+        Create SQL functions used to compute/update abscissa.
+        :return:
+        """
         cl = Maso.class_fct_psql()
         lfct = [
             cl.pg_abscisse_profil(self.SCHEMA),
@@ -717,7 +751,10 @@ class ClassMasDatabase(object):
         self.run_query(qry)
 
     def add_fct_for_visu(self):
-        """add fct psql for the visualisation"""
+        """
+        Create SQL functions used by visualization layers.
+        :return:
+        """
         cl = Maso.class_fct_psql()
         lfct = [
             cl.pg_delete_visu_flood_marks(self.SCHEMA),
@@ -732,8 +769,8 @@ class ClassMasDatabase(object):
 
     def check_first_model(self):
         """
-        Check if first model
-        :return: bool
+        Check whether the database contains only the default/non-user schemas.
+        :return: (bool) True when this is effectively the first model context, else False.
         """
         qry = (
             "SELECT nspname FROM pg_namespace WHERE nspname !~ '^pg_' "
@@ -746,7 +783,10 @@ class ClassMasDatabase(object):
             return True
 
     def check_extension(self):
-        """check postgis extension"""
+        """
+        Check whether the PostGIS extension is missing.
+        :return: (bool) True if postgis is not found, else False.
+        """
         sql = "SELECT extname FROM pg_extension"
         extension = self.run_query(sql, fetch=True)
         cond = True
@@ -759,8 +799,8 @@ class ClassMasDatabase(object):
 
     def liste_models(self):
         """
-        get list schema
-        :return: schema list
+        List available user model schemas in the database.
+        :return: (list) schema names excluding system schemas
         """
         liste = []
         try:
@@ -786,12 +826,15 @@ class ClassMasDatabase(object):
         return liste
 
     def check_schema_into_db(self):
-        """check if schema exists yet"""
+        """
+        Check whether the current schema (`self.SCHEMA`) already exists.
+        :return: (bool) True if schema exists, else False.
+        """
         if self.SCHEMA in self.list_schema():
             return True
         return False
 
-    def drop_model(self, model_name, cascade=False, verbose=True):
+    def drop_model(self, model_name, cascade=False, verbose=False):
         """
         Delete model inside PostgreSQL database.
 
@@ -800,8 +843,12 @@ class ClassMasDatabase(object):
             :param cascade : (bool) Flag forcing cascade delete.
             :param verbose : (bool) Print the name model
         """
-        qry = """DROP SCHEMA "{0}" CASCADE;""" if cascade is True else """DROP SCHEMA "{0}";"""
-        qry = qry.format(model_name)
+        if cascade is True:
+            qry = pgsql.SQL("DROP SCHEMA {schema} CASCADE;").format(
+                schema=pgsql.Identifier(model_name)
+            )
+        else:
+            qry = pgsql.SQL("DROP SCHEMA {schema};").format(schema=pgsql.Identifier(model_name))
         if self.run_query(qry) is None:
             return False
         else:
@@ -820,13 +867,17 @@ class ClassMasDatabase(object):
             :param  cascade (bool) : If CASCADE DROP
             :param verbose: (bool) display sql commande
         """
-        casc = ""
         if cascade is True:
-            casc = "CASCADE"
-        qry = "DROP TABLE IF EXISTS {0}.{1} {2};"
-        qry = qry.format(self.SCHEMA, table_name, casc)
+            qry = (
+                """DROP SCHEMA {schema}.{table} CASCADE;"""
+                if cascade is True
+                else """DROP SCHEMA {schema}.{table};"""
+            )
+        else:
+            qry = """DROP SCHEMA {schema}.{table};"""
+        qry = qry.format(schema=self.schema_id, table=pgsql.Identifier(table_name))
         if verbose:
-            self.mgis.add_info(qry)
+            self.mgis.add_info(qry.as_string(self.con))
         if self.run_query(qry) is None:
             return False
         else:
@@ -886,8 +937,9 @@ class ClassMasDatabase(object):
         Create PostgreSQL function create_st_index_if_not_exists(schema, table).
         The function checks if a spatial index exists for the table - if not, it is created.
         """
-        qry = """
-CREATE OR REPLACE FUNCTION "{0}".create_spatial_index(schema text, t_name text)
+        qry = pgsql.SQL(
+            """
+CREATE OR REPLACE FUNCTION {schema}.create_spatial_index(schema text, t_name text)
     RETURNS VOID AS
 $BODY$
 DECLARE
@@ -901,13 +953,14 @@ BEGIN
         WHERE c.relname = full_index_name AND n.nspname = schema
         )
     THEN
-        EXECUTE 'CREATE INDEX "' || full_index_name || '" ON "' || schema || '"."' || t_name || '" USING GIST (geom)';
+        EXECUTE 'CREATE INDEX "' || full_index_name || '" 
+        ON "' || schema || '"."' || t_name || '" USING GIST (geom)';
     END IF;
 END;
 $BODY$
     LANGUAGE plpgsql;
 """
-        qry = qry.format(self.SCHEMA)
+        ).format(schema=self.schema_id)
         self.run_query(qry)
 
     def load_model(self):
@@ -922,9 +975,12 @@ $BODY$
         reg = [self.register[k].name for k in sorted(self.register.keys())]
 
         self.mgis.add_info(
-            "Objects registered in the database:<br>  {0}".format("<br>  ".join(reg)), dbg=True)
+            "Objects registered in the database:<br>  {0}".format("<br>  ".join(reg)), dbg=True
+        )
         self.mgis.add_info(
-            "You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS", dbg=True)
+            "You can load them now using  Geometry > Load Mascaret Database Tables Into QGIS",
+            dbg=True,
+        )
         if reg:
             self.mgis.add_info("There are some objects registered in the database.")
         else:
@@ -946,16 +1002,19 @@ $BODY$
 
     def projection(self, nom, liste_x, liste_g):
         """fonction de projection de la bathymétrie le long du profil"""
+        qry = pgsql.SQL(
+            "SELECT t.gid, "
+            "ST_Length(p.geom)*ST_LineLocatePoint(ST_LineMerge(p.geom), t.geom) as x "
+            "FROM {schema}.profiles as p, {schema}.topo as t "
+            "WHERE p.name = %s "
+            "AND t.profile = %s "
+            "AND t.x IS NULL "
+            "AND t.gid IN ({gid_list})"
+        ).format(
+            schema=self.schema_id, gid_list=pgsql.SQL(",").join(pgsql.Literal(g) for g in liste_g)
+        )
 
-        sql = """SELECT t.gid, 
-                       ST_Length(p.geom)*ST_LineLocatePoint(ST_LineMerge(p.geom), t.geom) as x 
-                FROM {0}.profiles as p, {0}.topo as t 
-                WHERE p.name='{1}'
-                AND t.profile ='{1}'
-                AND t.x IS NULL
-                AND t.gid IN ({2})"""
-
-        rows = self.run_query(sql.format(self.SCHEMA, nom, ",".join(map(str, liste_g))), fetch=True)
+        rows = self.run_query(qry, fetch=True, params=[nom, nom])
 
         for gid, x in rows:
             if gid in liste_g:
@@ -964,7 +1023,7 @@ $BODY$
 
         return liste_x
 
-    def query_todico(self, sql_query, verbose=False):
+    def query_todico(self, sql_query, params=None, verbose=False, schema=False):
         """
         Query Result to dictionnary
         :param  sql_query : SQL query
@@ -972,11 +1031,13 @@ $BODY$
         :return: dict
         """
         if verbose:
-            self.mgis.add_info(sql_query)
-        (results, nam_col) = self.run_query(sql_query, fetch=True, namvar=True)
+            self.mgis.add_info(sql_query.as_string(self.con))
+        (results, nam_col) = self.run_query(
+            sql_query, fetch=True, namvar=True, params=params, schema=schema
+        )
         if results is None or nam_col is None:
             self.mgis.add_info("error : ")
-            self.mgis.add_info(sql_query)
+            self.mgis.add_info(sql_query.as_string(self.con))
             return None
         cols = [col[0] for col in nam_col]
         dico = {}
@@ -991,15 +1052,16 @@ $BODY$
                     dico[cols[i]].append(val)
         return dico
 
-    def select(self, table, where="", order="", list_var=None, verbose=False):
+    def select(self, table, where="", order="", list_var=None, params=None, verbose=False):
         """
-        Select variables of table
+        Select rows from a table and return column-oriented dictionary.
         :param table: (str) table name
-        :param where: (str)  condition
-        :param order: (str) name variables to sort
-        :param list_var: (list) list of variables
-        :param verbose: (bool) display sql commande
-        :return:
+        :param where: (str) SQL WHERE condition without WHERE
+        :param order: (str) SQL ORDER BY expression without ORDER BY
+        :param list_var: (list) selected columns
+        :param params: (list or tuple) query parameters
+        :param verbose: (bool) print SQL query
+        :return: (dict or None)
         """
         if where:
             where = " WHERE " + where + " "
@@ -1010,19 +1072,27 @@ $BODY$
         else:
             lvar = "*"
 
-        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
-        dico = self.query_todico(sql.format(self.SCHEMA, table, where, order, lvar), verbose)
+        qry = pgsql.SQL("SELECT {vars} FROM {schema}.{table} {where} {order};").format(
+            vars=pgsql.SQL(lvar),
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            where=pgsql.SQL(where),
+            order=pgsql.SQL(order),
+        )
+        dico = self.query_todico(qry, params=params, verbose=verbose)
         return dico
 
     #
-    def select_one(self, table, where="", order="", list_var=None, verbose=False):
+    def select_one(self, table, where="", order="", list_var=None, params=None, verbose=False):
         """
-        select one variable
+        Select a single row from a table.
         :param table: (str) table name
-        :param where: (str)  condition
-        :param order: (str) name variables to sort
-        :param  list_var : (list) list of variables
-        :param verbose: (bool) display sql commande
+        :param where: (str) SQL WHERE condition without WHERE
+        :param order: (str) SQL ORDER BY expression without ORDER BY
+        :param list_var: (list) selected columns
+        :param params: (list or tuple) query parameters
+        :param verbose: (bool) print SQL query
+        :return: (dict or None)
         """
 
         if where:
@@ -1035,17 +1105,24 @@ $BODY$
         else:
             lvar = "*"
 
-        sql = "SELECT {4} FROM {0}.{1} {2} {3};"
+        qry = pgsql.SQL("SELECT {vars} FROM {schema}.{table} {where} {order};").format(
+            vars=pgsql.SQL(lvar),
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            where=pgsql.SQL(where),
+            order=pgsql.SQL(order),
+        )
+
         if verbose:
-            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
-        # self.mgis.add_info(sql.format(self.SCHEMA, table, where, order))
+            self.mgis.add_info(qry.as_string(self.con))
+
         (results, nam_col) = self.run_query(
-            sql.format(self.SCHEMA, table, where, order, lvar), fetch=True, arraysize=1, namvar=True
+            qry, fetch=True, arraysize=1, namvar=True, params=params
         )
 
         if results is None or nam_col is None:
             self.mgis.add_info("error : ")
-            self.mgis.add_info(sql.format(self.SCHEMA, table, where, order, lvar))
+            self.mgis.add_info(str(qry))
             return None
 
         cols = [col[0] for col in nam_col]
@@ -1053,34 +1130,42 @@ $BODY$
         if not results:
             return None
         dico = {}
-        # self.mgis.add_info("{0} {1}".format(results[0],cols))
 
         for i, val in enumerate(results[0]):
-            # self.mgis.add_info("{0}  {1}".format(cols[i],val))
             dico[cols[i]] = val
 
         return dico
 
     #
-    def select_distinct(self, var, table, where="", ordre=None, verbose=False):
+    def select_distinct(self, var, table, where="", ordre=None, params=None, verbose=False):
         """
-        select the "where" variable which is multiple
-        :param var: (str) variable name
+        Select distinct values for a column.
+        :param var: (str) target column
         :param table: (str) table name
-        :param where: (str)  condition
-        :param ordre: (str) name variables to sort
-        :param verbose: display sql commande
+        :param where: (str) SQL WHERE condition without WHERE
+        :param ordre: (str) SQL ORDER BY expression
+        :param params: (list or tuple) query parameters
+        :param verbose: (bool) print SQL query
+        :return: (dict or None)
         """
         if ordre is None:
             ordre = var
         if where:
             where = "WHERE " + where
-        sql = "SELECT DISTINCT {0} FROM {1}.{2} {3} ORDER BY {4};"
-        (results, nam_col) = self.run_query(
-            sql.format(var, self.SCHEMA, table, where, ordre), fetch=True, namvar=True
+
+        qry = pgsql.SQL(
+            "SELECT DISTINCT {var} FROM {schema}.{table} {where} ORDER BY {ordre};"
+        ).format(
+            var=pgsql.SQL(var),
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            where=pgsql.SQL(where),
+            ordre=pgsql.SQL(ordre),
         )
+
+        (results, nam_col) = self.run_query(qry, fetch=True, namvar=True, params=params)
         if verbose:
-            self.mgis.add_info(sql.format(var, self.SCHEMA, table, where, ordre))
+            self.mgis.add_info(qry.as_string(self.con))
         if nam_col and results:
             cols = [col[0] for col in nam_col]
             dico = {}
@@ -1089,8 +1174,8 @@ $BODY$
                     if cols[i] not in dico.keys():
                         dico[cols[i]] = []
                     try:
-                        dico[cols[i]].append(eval(val))
-                    except Exception:
+                        dico[cols[i]].append(ast.literal_eval(val))
+                    except (ValueError, SyntaxError):
                         dico[cols[i]].append(val)
 
             return dico
@@ -1098,84 +1183,101 @@ $BODY$
         return None
 
     #
-    def select_max(self, var, table, where=None):
+    def select_max(self, var, table, where=None, params=None):
         """
-        select the max in the table for the "where" variable
-        :param var: (str) variable name
+        Return the maximum value of a column.
+        :param var: (str) column name
         :param table: (str) table name
-        :param where: (str)  condition
-        :return: None
+        :param where: (str) SQL WHERE condition without WHERE
+        :param params: (list or tuple) query parameters
+        :return:
         """
         if where:
-            sql = "SELECT MAX({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+            qry = pgsql.SQL("SELECT MAX({var}) FROM {schema}.{table} WHERE {where};").format(
+                var=pgsql.SQL(var),
+                schema=self.schema_id,
+                table=pgsql.Identifier(table),
+                where=pgsql.SQL(where),
+            )
         else:
-            sql = "SELECT MAX({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
-        results = self.run_query(sql, fetch=True, arraysize=1)
-        # results obj: generator
+            qry = pgsql.SQL("SELECT MAX({var}) FROM {schema}.{table};").format(
+                var=pgsql.SQL(var), schema=self.schema_id, table=pgsql.Identifier(table)
+            )
+        results = self.run_query(qry, fetch=True, arraysize=1, params=params)
         if results:
             for row in results:
                 var = row[0][0]
             return var
         else:
             self.mgis.add_info("error : ")
-            self.mgis.add_info(sql.format(var, self.SCHEMA, table, where))
+            self.mgis.add_info(str(qry))
             return None
 
-    def select_min(self, var, table, where=None):
+    def select_min(self, var, table, where=None, params=None):
         """
-        select the max in the table for the "where" variable"
-        :param var: (str) variable name
+        Return the minimum value of a column.
+        :param var: (str) column name
         :param table: (str) table name
-        :param where: (str)  condition
-        :return: None
+        :param where: (str) SQL WHERE condition without WHERE
+        :param params: (list or tuple) query parameters
+        :return:
         """
         if where:
-            sql = "SELECT MIN({0}) FROM {1}.{2} WHERE {3};".format(var, self.SCHEMA, table, where)
+            qry = pgsql.SQL("SELECT MIN({var}) FROM {schema}.{table} WHERE {where};").format(
+                var=pgsql.SQL(var),
+                schema=self.schema_id,
+                table=pgsql.Identifier(table),
+                where=pgsql.SQL(where),
+            )
         else:
-            sql = "SELECT MIN({0}) FROM {1}.{2};".format(var, self.SCHEMA, table)
-        results = self.run_query(sql, fetch=True, arraysize=1)
-        # results obj: generator
+            qry = pgsql.SQL("SELECT MIN({var}) FROM {schema}.{table};").format(
+                var=pgsql.SQL(var), schema=self.schema_id, table=pgsql.Identifier(table)
+            )
+        results = self.run_query(qry, fetch=True, arraysize=1, params=params)
         for row in results:
             var = row[0][0]
         return var
 
-    def delete(self, table, where=None, verbose=False):
+    def delete(self, table, where=None, params=None, verbose=False):
         """
-        Delete table information
-        :param table : table name
-        :param  where : condition
-        :param verbose: (bool) display sql commande
+        Delete rows from a table.
+        :param table: (str) table name
+        :param where: (str) SQL WHERE condition without WHERE
+        :param params: (list or tuple) query parameters
+        :param verbose: (bool) print SQL query
+        :return:
         """
         if where:
             where = "WHERE {0}".format(where)
-        sql = "DELETE FROM {0}.{1} {2} ;".format(self.SCHEMA, table, where)
+
+        qry = pgsql.SQL("DELETE FROM {schema}.{table} {where} ;").format(
+            schema=self.schema_id, table=pgsql.Identifier(table), where=pgsql.SQL(where)
+        )
         if verbose:
-            self.mgis.add_info(sql)
-        self.run_query(sql)
-        # self.mgis.add_info('function delete end', dbg=True)
+            self.mgis.add_info(qry.as_string(self.con))
+        self.run_query(qry, params=params)
 
     def insert(self, table, tab, colonnes, delim=" ", verbose=False):
         """
-        Insert in table
+        Insert rows into table using nested dictionary structure.
         :param table: (str) table name
-        :param tab: tab[key]= {key2 : list1}   key =  first column
-                    key2 = other columns and list1 values
-        :param colonnes: columns list
-        :param delim:
-        :param verbose: display sql command
-        :return:
+        :param tab: (dict) data mapping {row_key: {column: value}}
+        :param colonnes: (list) target columns
+        :param delim: (str) delimiter for list values
+        :param verbose: (bool) print SQL query
+        :return: (bool) error flag from run_query
         """
         tmp = [colonnes[0]]
         tmp += sorted(colonnes[1:])
         var = ",".join(tmp)
         valeurs = ""
         for id in tab.keys():
-            if isinstance(id, basestring):
+            if isinstance(id, str):
                 valeurs += "('" + str(id) + "',"
             else:
                 valeurs += "(" + str(id) + ","
             for k in sorted(tab[id].keys()):
-                if isinstance(tab[id][k], basestring):
+                if isinstance(tab[id][k], str):
                     valeurs += "'" + tab[id][k] + "',"
                 elif isinstance(tab[id][k], list):
                     valeurs += "'" + delim.join(tab[id][k]) + "',"
@@ -1188,17 +1290,24 @@ $BODY$
 
         valeurs = valeurs[:-1]
 
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(self.SCHEMA, table, var, valeurs)
+        qry = pgsql.SQL("INSERT INTO {schema}.{table}({cols}) VALUES {vals};").format(
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            cols=pgsql.SQL(var),
+            vals=pgsql.SQL(valeurs),
+        )
         if verbose:
-            self.mgis.add_info(sql)
-        err = self.run_query(sql)
+            self.mgis.add_info(qry.as_string(self.con))
+        err = self.run_query(qry)
         return err
 
     def insert2(self, table, tab, verbose=False):
         """
+        Insert rows into table using column-oriented dictionary.
         :param table: (str) table name
-        :param tab :(dict) tab= {key : list_value}   key =  column name
-        :param verbose: (bool) display sql commande
+        :param tab: (dict) mapping {column: [values]}
+        :param verbose: (bool) print SQL query
+        :return: (bool) error flag from run_query
         """
         colonnes = sorted(tab.keys())
         var = ",".join(colonnes)
@@ -1208,22 +1317,26 @@ $BODY$
             for k in colonnes:
                 temp.append(str(tab[k][i]))
             valeurs.append("({})".format(",".join(temp)))
-        sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-            self.SCHEMA, table, var, ",".join(valeurs)
+
+        qry = pgsql.SQL("INSERT INTO {schema}.{table}({cols}) VALUES {vals};").format(
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            cols=pgsql.SQL(var),
+            vals=pgsql.SQL(",".join(valeurs)),
         )
         if verbose:
-            self.mgis.add_info(sql)
+            self.mgis.add_info(qry.as_string(self.con))
 
-        err = self.run_query(sql)
+        err = self.run_query(qry)
         return err
 
     def insert_res(self, table, liste_value, colonnes, batch_size=1000000):
         """Insert multiple rows efficiently.
-         Args:
-            table: Table name
-            liste_value: List of value sequences to insert
-            colonnes: List of column names
-            batch_size: Number of rows to insert per batch
+        Args:
+           table: Table name
+           liste_value: List of value sequences to insert
+           colonnes: List of column names
+           batch_size: Number of rows to insert per batch
 
         """
         if not liste_value:
@@ -1233,17 +1346,17 @@ $BODY$
             raise ValueError("Column list cannot be empty")
 
         # Construction optimisée en une ligne
-        placeholders = f"({','.join(['%s'] * len(colonnes))})"
-        columns_str = ','.join(colonnes)
-
-        sql = (
-            f"INSERT INTO {self.SCHEMA}.{table} "
-            f"({columns_str}) VALUES {placeholders};"
+        placeholders = ",".join(["%s"] * len(colonnes))
+        cols_sql = pgsql.SQL(",").join(pgsql.Identifier(c) for c in colonnes)
+        sql = pgsql.SQL("INSERT INTO {schema}.{table} ({cols}) VALUES ({vals});").format(
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            cols=cols_sql,
+            vals=pgsql.SQL(placeholders),
         )
         for i in range(0, len(liste_value), batch_size):
-            batch = liste_value[i:i + batch_size]
+            batch = liste_value[i : i + batch_size]
             self.run_query(sql, many=True, list_many=batch)
-
 
     def buff_file(self, liste):
         txt = ""
@@ -1262,30 +1375,32 @@ $BODY$
         return f
 
     def update_res(self, table, liste_value, colonnes):
-        sql = ""
-        for value in liste_value:
-            condition = """run='{0}' AND scenario='{1}' """.format(
-                value[colonnes.index("run")], value[colonnes.index("scenario")]
-            )
-            condition += """AND branche='{}' """.format(value[colonnes.index("branche")])
-            condition += """AND t='{}' """.format(value[colonnes.index("t")])
-            condition += """AND section='{}' """.format(value[colonnes.index("section")])
-            condition += """AND pk='{}' """.format(value[colonnes.index("pk")])
-            if "date" in colonnes:
-                condition += """AND date='{:%Y-%m-%d %H:%M:%S}' """.format(
-                    value[colonnes.index("date")]
-                )
-            list_exclu = ["run", "scenario", "date", "t", "branche", "section", "pk"]
-            values = ""
-            for i, col in enumerate(colonnes):
-                if col not in list_exclu:
-                    values += "{}='{}' ,".format(col, value[i])
-            values = values[:-1]
-            sql += "UPDATE  {0}.{1} SET {2} WHERE {3};\n".format(
-                self.SCHEMA, table, values, condition
-            )
+        key_columns = ["run", "scenario", "branche", "t", "section", "pk"]
+        if "date" in colonnes:
+            key_columns.append("date")
 
-        self.run_query(sql)
+        excluded_columns = set(key_columns)
+        updatable_columns = [col for col in colonnes if col not in excluded_columns]
+        if not updatable_columns:
+            return
+
+        set_sql = pgsql.SQL(", ").join(
+            pgsql.SQL("{col} = %s").format(col=pgsql.Identifier(col)) for col in updatable_columns
+        )
+        where_sql = pgsql.SQL(" AND ").join(
+            pgsql.SQL("{col} = %s").format(col=pgsql.Identifier(col)) for col in key_columns
+        )
+        qry = pgsql.SQL("UPDATE {schema}.{table} SET {set_clause} WHERE {where_clause};").format(
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            set_clause=set_sql,
+            where_clause=where_sql,
+        )
+
+        for value in liste_value:
+            set_params = [value[colonnes.index(col)] for col in updatable_columns]
+            where_params = [value[colonnes.index(col)] for col in key_columns]
+            self.run_query(qry, params=set_params + where_params)
 
     def update(self, table, tab, var="nom"):
         """
@@ -1307,62 +1422,146 @@ $BODY$
                 else:
                     tab_var.append("{0}={1}".format(k, v))
 
-            sql = """UPDATE {0}.{1} SET {2}  WHERE {3}='{4}'"""
-            self.run_query(sql.format(self.SCHEMA, table, ", ".join(tab_var), var, nom))
+            qry = pgsql.SQL("UPDATE {schema}.{table} SET {setters} WHERE {var}=%s;").format(
+                schema=self.schema_id,
+                table=pgsql.Identifier(table),
+                setters=pgsql.SQL(", ".join(tab_var)),
+                var=pgsql.Identifier(var),
+            )
+            self.run_query(qry, params=[nom])
+
+    def update_scalar(self, table, col, var_where, val, where_val):
+        """
+        update info
+        :param table: (str) table name
+        :param col: (str) column name
+        :param val: value to update
+        :param var_where: (str) variable name
+        :param where_val:  vvalue to where
+
+        :return:
+        """
+        qry = pgsql.SQL("UPDATE {schema}.{table} SET {col}=%s WHERE {var}=%s;").format(
+            schema=self.schema_id,
+            table=pgsql.Identifier(table),
+            col=pgsql.Identifier(col),
+            var=pgsql.Identifier(var_where),
+        )
+        self.run_query(qry, params=[val, where_val])
 
     def copy(self, table, var, fichier):
         """
-        Copy file in sql
+        Import file data into a table using PostgreSQL COPY.
         :param table: (str) table name
-        :param var: (str) variable name
-        :param fichier:  name file
+        :param var: (list) target columns
+        :param fichier: (str) file path
         :return:
         """
-        sql = """COPY {0}.{1}({2}) FROM '{3}' WITH DELIMITER ',';"""
-        self.run_query(sql.format(self.SCHEMA, table, ",".join(var), fichier))
+        qry = pgsql.SQL("COPY {schema}.{table}({cols}) FROM %s WITH DELIMITER ',';").format(
+            schema=self.schema_id, table=pgsql.Identifier(table), cols=pgsql.SQL(",".join(var))
+        )
+        self.run_query(qry, params=[fichier])
 
     def list_columns(self, table):
         """
-        List columns
-        :param table : table name
-        :return list of the columns
+        List columns for a table in current schema.
+        :param table: (str) table name
+        :return: (list) column names
         """
-        sql = """SELECT column_name FROM information_schema.columns 
-                  WHERE table_schema='{0}' AND table_name='{1}';"""
-        rows = self.run_query(sql.format(self.SCHEMA, table), fetch=True)
+        qry = pgsql.SQL(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema=%s AND table_name=%s;"
+        )
+        rows = self.run_query(qry, fetch=True, params=[self.SCHEMA, table])
         liste = [row[0] for row in rows]
         return liste
 
     def add_columns(self, table, colonne):
         """
-        add columns
+        Add a new double precision column to a table.
         :param table: (str) table name
-        :param colonne : column name to add
+        :param colonne: (str) new column name
+        :return:
         """
-        sql = """ALTER TABLE {0}.{1} ADD COLUMN {2} double precision;"""
-        self.run_query(sql.format(self.SCHEMA, table, colonne))
+        qry = pgsql.SQL("ALTER TABLE {schema}.{table} ADD COLUMN {col} double precision;").format(
+            schema=self.schema_id, table=pgsql.Identifier(table), col=pgsql.Identifier(colonne)
+        )
+        self.run_query(qry)
+
+    def _resolve_pg_executable(self, exe_name):
+        """
+        Resolve PostgreSQL executable from configured postgres path.
+        :param exe_name: (str) executable name (pg_dump, pg_restore, psql)
+        :return: (str or None) full executable path
+        """
+        pg_path = getattr(self.mgis, "postgres_path", None)
+        if not pg_path:
+            self.mgis.add_info("PostgreSQL path is not configured.")
+            return None
+
+        exe = os.path.join(pg_path, exe_name)
+        if os.path.isfile(exe):
+            return exe
+        if os.path.isfile(exe + ".exe"):
+            return exe + ".exe"
+
+        self.mgis.add_info(
+            "Executable file not found: {} (checked '{}' and '{}')".format(
+                exe_name, exe, exe + ".exe"
+            )
+        )
+        return None
 
     def export_schema(self, file, schem=None):
         """
-        export schema
-        :param file : file name to export
-        :param schem : schema name
+        Export a schema to PostgreSQL custom dump file.
+        :param file: (str) output dump file path
+        :param schem: (str) schema name to export
+        :return: (bool) True on success, else False
         """
         try:
             if schem is None:
                 schem = self.SCHEMA
-            exe = os.path.join(self.mgis.postgres_path, "pg_dump")
+            exe = self._resolve_pg_executable("pg_dump")
 
-            if os.path.isfile(exe) or os.path.isfile(exe + ".exe"):
-                commande = '"{0}" -p {6} -F c -n {1} -U {2} -f"{3}" -d {4} -h {5}'.format(
-                    exe, schem, self.USER, file, self.dbname, self.host, self.port
+            if exe:
+                cmd = [
+                    exe,
+                    "-p",
+                    str(self.port),
+                    "-F",
+                    "c",
+                    "-n",
+                    str(schem),
+                    "-U",
+                    str(self.USER),
+                    "-f",
+                    str(file),
+                    "-d",
+                    str(self.dbname),
+                    "-h",
+                    str(self.host),
+                ]
+                env = os.environ.copy()
+                env["PGPASSWORD"] = str(self.password)
+                # no windows
+                startupinfo = None
+                if os.name == "nt":
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+                p = subprocess.run(
+                    cmd,
+                    shell=False,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env,
+                    text=True,
+                    startupinfo=startupinfo,
                 )
-
-                #  self.mgis.add_info(commande, file)
-                os.putenv("PGPASSWORD", "{0}".format(self.password))
-
-                p = subprocess.Popen(commande, shell=True)
-                p.wait()
+                if p.returncode != 0:
+                    self.mgis.add_info(p.stderr.strip())
+                    return False
                 return True
             else:
                 self.mgis.add_info(
@@ -1371,48 +1570,71 @@ $BODY$
                 )
                 return False
 
-        except Exception:
+        except Exception as e:
+            self.mgis.add_info("ERROR export_schema: {}".format(str(e)))
             return False
 
     def import_schema(self, file, old=False):
         """
-        import schema
-        :param file: file name
-        :param old: old version to the importation
-        :return:
+        Import a schema dump into current database.
+        :param file: (str) dump file path
+        :param old: (bool) use psql legacy mode if True, pg_restore otherwise
+        :return: (bool) True on success, else False
         """
         try:
-            if old:
-                exe = os.path.join(self.mgis.postgres_path, "psql")
-            else:
-                exe = os.path.join(self.mgis.postgres_path, "pg_restore")
-            if os.path.isfile(exe) or os.path.isfile(exe + ".exe"):
-                # d = dict(os.environ)
-                # d["PGPASSWORD"] = "{0}".format(self.password)
-                os.putenv("PGPASSWORD", "{0}".format(self.password))
+            exe = self._resolve_pg_executable("psql" if old else "pg_restore")
+            if exe:
+                env = os.environ.copy()
+                env["PGPASSWORD"] = str(self.password)
+
                 if old:
-                    commande = '"{0}" -U {1} -p {2} -f "{3}" -d {4} -h {5}'.format(
-                        exe, self.USER, self.port, file, self.dbname, self.host
-                    )
+                    cmd = [
+                        exe,
+                        "-U",
+                        str(self.USER),
+                        "-p",
+                        str(self.port),
+                        "-f",
+                        str(file),
+                        "-d",
+                        str(self.dbname),
+                        "-h",
+                        str(self.host),
+                    ]
                 else:
-                    commande = '"{0}" -U {1} -O -F c -p {2}  -d {4} -h {5} ' '"{3}"'.format(
-                        exe, self.USER, self.port, file, self.dbname, self.host
-                    )
-                p = subprocess.Popen(
-                    commande,
-                    shell=True,
+                    cmd = [
+                        exe,
+                        "-U",
+                        str(self.USER),
+                        "-O",
+                        "-F",
+                        "c",
+                        "-p",
+                        str(self.port),
+                        "-d",
+                        str(self.dbname),
+                        "-h",
+                        str(self.host),
+                        str(file),
+                    ]
+                    # no windows
+                startupinfo = None
+                if os.name == "nt":
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                p = subprocess.run(
+                    cmd,
+                    shell=False,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     stdin=subprocess.PIPE,
+                    env=env,
+                    text=True,
+                    startupinfo=startupinfo,
                 )
-                outs, err = p.communicate()
                 self.mgis.add_info("Import File :{0}".format(file), dbg=True)
-                # self.mgis.add_info("{0}".format(outs.code('utf-8')))
-                p.wait()
-                if len(err) > 0:
-                    self.mgis.add_info(str(err))
-                    # self.mgis.add_info("{0}".format(err.code('utf-8')))
-
+                if p.returncode != 0:
+                    self.mgis.add_info(p.stderr.strip())
                     return False
                 return True
             else:
@@ -1430,7 +1652,7 @@ $BODY$
         get list schema
         :return: list schema
         """
-        sql = "SELECT nspname from pg_catalog.pg_namespace;"
+        sql = pgsql.SQL("SELECT nspname from pg_catalog.pg_namespace;")
         info = self.run_query(sql, fetch=True)
         listf = []
         if info is not None:
@@ -1469,8 +1691,9 @@ $BODY$
                     valeurs += "%s,"
                 valeurs = valeurs[:-1] + ")"
 
-                sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                    self.SCHEMA, "struct_abac", var, valeurs
+                sql = "INSERT INTO {schema}.struct_abac({var}) VALUES {value};"
+                sql = pgsql.SQL(sql).format(
+                    schema=self.schema_id, var=pgsql.SQL(var), value=pgsql.SQL(valeurs)
                 )
 
                 self.run_query(sql, many=True, list_many=list_insert)
@@ -1482,12 +1705,11 @@ $BODY$
         :param abc: abacus name
         :return:
         """
-        where = "WHERE nam_method='{}' AND nam_abac ='{}'".format(method, abc)
-        sql = "SELECT * FROM {0}.{1} {2};"
+        qry = pgsql.SQL(
+            "SELECT * FROM {schema}.{table} WHERE nam_method=%s AND nam_abac=%s;"
+        ).format(schema=self.schema_id, table=pgsql.Identifier("struct_abac"))
 
-        results = self.run_query(
-            sql.format(self.SCHEMA, "struct_abac", where), fetch=True, arraysize=1
-        )
+        results = self.run_query(qry, fetch=True, arraysize=1, params=[method, abc])
         for row in results:
             if row[0][0] is not None:
                 return True
@@ -1503,21 +1725,35 @@ $BODY$
         :return: id_var ; var identifiant number
         """
         id_var = None
-        info = self.select(
+        result_direct = self.select(
             "results_var",
-            where="var = '{var}' AND type_res = '{type_res}'".format(**dico),
+            where="var = %s AND type_res = %s",
             list_var=["id"],
+            params=[dico["var"], dico["type_res"]],
         )
-        if info["id"]:
-            id_var = info["id"][0]
+        if result_direct and result_direct.get("id"):
+            id_var = result_direct["id"][0]
         else:
             if len(dico) > 2:
-                dico["schema"] = self.SCHEMA
-                id_var = self.select_max("id", "results_var") + 1
-                dico["id"] = id_var
-                self.run_query(
+                id_var = self.select_max("id", "results_var")
+                if id_var:
+                    id_var += 1
+                else:
+                    id_var = 1
+                qry = pgsql.SQL(
                     "INSERT INTO {schema}.results_var (id,type_res, var, name,type_var) "
-                    "VALUES ( {id}, '{type_res}', '{var}', '{name}','{type_var}')".format(**dico)
+                    "VALUES (%s, %s, %s, %s, %s)"
+                )
+                self.run_query(
+                    qry,
+                    schema=True,
+                    params=[
+                        id_var,
+                        dico["type_res"],
+                        dico["var"],
+                        dico.get("name", ""),
+                        dico.get("type_var", ""),
+                    ],
                 )
 
         return id_var
@@ -1545,12 +1781,13 @@ $BODY$
             for k in liste_col:
                 valeurs += "%s,"
             valeurs = valeurs[:-1] + ")"
-
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                self.SCHEMA, "results_var", var, valeurs
+            sql = pgsql.SQL("INSERT INTO {schema}.results_var({var}) VALUES {value};").format(
+                schema=self.schema_id, var=pgsql.SQL(var), value=pgsql.SQL(valeurs)
             )
-            self.run_query(sql, many=True, list_many=liste_value)
-
+            err = self.run_query(sql, many=True, list_many=liste_value)
+            if err:
+                self.mgis.add_info("Insert into results_var failed.")
+                return False
             # add tracer variable
             info = self.select(
                 "tracer_name", where="type='TRANSPORT_PUR'", list_var=["type", "text", "sigle"]
@@ -1614,23 +1851,33 @@ $BODY$
         self.ignor_schema += [dest]
         list_tab_res = ["runs", "results_sect", "runs_graph", "runs_plani", "results_by_pk"]
 
-        qry = "SELECT clone_schema('{}','{}','{}');".format(src, dest, ",".join(list_tab_res))
+        qry = pgsql.SQL("SELECT clone_schema({}, {}, {});").format(
+            pgsql.Literal(src), pgsql.Literal(dest), pgsql.Literal(",".join(list_tab_res))
+        )
         self.run_query(qry)
         self.mgis.add_info("Creation of the temporary table :{} ".format(dest), dbg=True)
+
         # add selection
         lst_run = self.get_id_run(selection)
         if len(lst_run) > 0:
-            lst_run = ["{}".format(id) for id in lst_run]
-            # res = None
-            for tab in list_tab_res:
-                if tab == "runs":
-                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id IN ({4}) );"""
-                    sql = sql.format(dest, tab, src, tab, ",".join(lst_run))
-                else:
-                    sql = """INSERT INTO {0}.{1}(SELECT * FROM {2}.{3} WHERE id_runs IN ({4}) );"""
-                    sql = sql.format(dest, tab, src, tab, ",".join(lst_run))
+            dest_ident = pgsql.Identifier(dest)
+            src_ident = pgsql.Identifier(src)
 
-                self.run_query(sql)
+            for tab_name in list_tab_res:
+                tab_ident = pgsql.Identifier(tab_name)
+                where_col = pgsql.Identifier("id" if tab_name == "runs" else "id_runs")
+
+                sql = pgsql.SQL(
+                    "INSERT INTO {dest}.{tab} "
+                    "SELECT * FROM {src}.{tab} "
+                    "WHERE {where_col} = ANY(%s);"
+                ).format(
+                    dest=dest_ident,
+                    src=src_ident,
+                    tab=tab_ident,
+                    where_col=where_col,
+                )
+                self.run_query(sql, params=[lst_run])
 
         basename = os.path.basename(file)
         file_name = os.path.splitext(basename)[0]
@@ -1666,7 +1913,7 @@ $BODY$
             self.add_ext_postgis()
 
         if not self.check_fct_public("clone_schema"):
-            obj = self.process_masobject(Maso.class_fct_psql, "pg_clone_schema")
+            self.process_masobject(Maso.class_fct_psql, "pg_clone_schema")
             self.mgis.add_info("  {0} OK".format("pg_clone_schema"), dbg=True)
 
         chkt = CheckTab(self.mgis, self)
@@ -1679,7 +1926,7 @@ $BODY$
             if not self.check_fct_public(listefct):
                 for fct in listefct:
                     try:
-                        obj = self.process_masobject(Maso.class_fct_psql, fct)
+                        self.process_masobject(Maso.class_fct_psql, fct)
                         self.mgis.add_info("  {0} OK".format(fct), dbg=True)
 
                     except Exception:
@@ -1687,25 +1934,36 @@ $BODY$
                         self.mgis.add_info("failure!{0}".format(fct), dbg=True)
 
         if actname in self.list_schema():
-            sql = "ALTER SCHEMA {0} RENAME TO {0}_tmp;".format(actname)
+            sql = pgsql.SQL("ALTER SCHEMA {schem} RENAME TO {schem_tmp};").format(
+                schem=pgsql.Identifier(actname),
+                schem_tmp=pgsql.Identifier(actname + "_tmp"),
+            )
             self.run_query(sql)
 
         # add new
         err = self.import_schema(new_file)
         if not err:
             if actname in self.list_schema():
-                sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
+                sql = pgsql.SQL("ALTER SCHEMA {schem_tmp} RENAME TO {schem};").format(
+                    schem=pgsql.Identifier(actname),
+                    schem_tmp=pgsql.Identifier(actname + "_tmp"),
+                )
                 self.run_query(sql)
             self.mgis.add_info("Error Import.")
         else:
             # alter new
             if namesh in self.list_schema():
                 self.drop_model(namesh, cascade=True)
-            sql = "ALTER SCHEMA {0} RENAME TO {1};\n".format(actname, namesh)
+            sql = pgsql.SQL("ALTER SCHEMA {schem} RENAME TO {schem_new};").format(
+                schem=pgsql.Identifier(actname),
+                schem_new=pgsql.Identifier(namesh),
+            )
             self.run_query(sql)
             if actname in self.list_schema():
-                # l'existant remettre name
-                sql = "ALTER SCHEMA {0}_tmp RENAME TO {0};".format(actname)
+                sql = pgsql.SQL("ALTER SCHEMA {schem_tmp} RENAME TO {schem};").format(
+                    schem=pgsql.Identifier(actname),
+                    schem_tmp=pgsql.Identifier(actname + "_tmp"),
+                )
                 self.run_query(sql)
             self.mgis.add_info("Import is done.")
         self.ignor_schema = list()
@@ -1718,10 +1976,13 @@ $BODY$
         """
         lst_id = []
         for key, lst in selection.items():
-            id_run = self.run_query(
-                f"SELECT id FROM {self.SCHEMA}.runs WHERE run = '{key}' AND scenario IN ({','.join(lst)})",
-                fetch=True,
-            )
+            print(lst, key)
+            placeholders = pgsql.SQL(",").join(pgsql.Literal(s) for s in lst)
+            qry = pgsql.SQL(
+                "SELECT id FROM {schema}.runs WHERE run = %s AND scenario IN ({scens})"
+            ).format(schema=self.schema_id, scens=placeholders)
+            print(qry.as_string(self.con))
+            id_run = self.run_query(qry, fetch=True, params=[key])
             if id_run:
                 lst_id += [id[0] for id in id_run]
         return lst_id
@@ -1734,11 +1995,11 @@ $BODY$
         """
         dict_name = dict()
 
-        rows = self.run_query(
-            "SELECT id, run, scenario FROM {0}.runs "
-            "WHERE id in ({1}) ".format(self.SCHEMA, ",".join([str(id) for id in lst_id])),
-            fetch=True,
+        placeholders = pgsql.SQL(",").join(pgsql.Literal(id) for id in lst_id)
+        qry = pgsql.SQL("SELECT id, run, scenario FROM {schema}.runs WHERE id IN ({ids})").format(
+            schema=self.schema_id, ids=placeholders
         )
+        rows = self.run_query(qry, fetch=True)
         if rows:
             for row in rows:
                 dict_name[row[0]] = {"run": row[1], "scenario": row[2]}
@@ -1747,10 +2008,9 @@ $BODY$
 
     def correction_seq(self):
         """
-        correction of the sequence database
+        Rebuild and rebind sequence defaults for key tables.
         :return:
         """
-
         tables = {
             "admin_tab": "id_",
             "basins_0": "basinnum",
@@ -1784,25 +2044,26 @@ $BODY$
         }
         for tbl, col in tables.items():
             tbl = tbl.split("_")[0]
-            dico = {
-                "my_seq": "{}.{}_{}_seq".format(self.SCHEMA, tbl, col),
-                "table": "{}.{}".format(self.SCHEMA, tbl),
-                "id_name": col,
-            }
-            sql = """    CREATE SEQUENCE {my_seq}
-                INCREMENT 1
-                START 1
-                MINVALUE 1
-                MAXVALUE 9223372036854775807
-                CACHE 1;
-                select setval('{my_seq}', (SELECT MAX({id_name}) FROM {table}));
-                ALTER SEQUENCE {my_seq}   OWNER TO postgres;
-                ALTER TABLE {table} ALTER COLUMN {id_name} SET DEFAULT nextval('{my_seq}'::regclass);
-                """.format(
-                **dico
-            )
+            seq_name = f"{self.SCHEMA}.{tbl}_{col}_seq"
+            seq_ident = pgsql.Identifier(self.SCHEMA, f"{tbl}_{col}_seq")
+            table_ident = pgsql.Identifier(self.SCHEMA, tbl)
+            col_ident = pgsql.Identifier(col)
+            seq_literal = pgsql.Literal(seq_name)
 
-            #  self.mgis.add_info(sql)
+            sql = pgsql.SQL(
+                "CREATE SEQUENCE {seq} "
+                "INCREMENT 1 START 1 MINVALUE 1 "
+                "MAXVALUE 9223372036854775807 CACHE 1; "
+                "SELECT setval({seq_lit}, (SELECT MAX({col}) FROM {table})); "
+                "ALTER SEQUENCE {seq} OWNER TO postgres; "
+                "ALTER TABLE {table} ALTER COLUMN {col} "
+                "SET DEFAULT nextval({seq_lit}::regclass);"
+            ).format(
+                seq=seq_ident,
+                seq_lit=seq_literal,
+                table=table_ident,
+                col=col_ident,
+            )
             self.run_query(sql)
 
     def checkschema_import(self, file):
@@ -1841,28 +2102,38 @@ $BODY$
 
         if len(lst_table) > 0:
             for tbl in lst_table:
-                query = "VACUUM {2} {0}.{1};\n".format(self.SCHEMA, tbl, sql_add)
-                cur.execute(query)  # obliger dans boucle si full
+                query = pgsql.SQL("VACUUM {sql_add} {schema}.{table};").format(
+                    sql_add=pgsql.SQL(sql_add),
+                    schema=pgsql.Identifier(self.SCHEMA),
+                    table=pgsql.Identifier(tbl),
+                )
+                cur.execute(query)
         else:
-            query = "VACUUM {0} ;\n".format(sql_add)
+            query = pgsql.SQL("VACUUM {sql_add};").format(
+                sql_add=pgsql.SQL(sql_add),
+            )
             cur.execute(query)
         self.con.set_isolation_level(old_isolation_level)
         self.con.commit()
 
     def planim_select(self):
+        """
+        Compute planimetry zones from active profiles.
+        :return: (dict) keys: pas, min, max, absmin, absmax
+        """
         sql = """
- SELECT planim, 
+ SELECT planim,
     branchnum, 
     minp,
     maxp,
     (SELECT  abscissa FROM
         (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-         FROM  {0}.profiles WHERE active ORDER BY abscissa) t7
+         FROM  {schema}.profiles WHERE active ORDER BY abscissa) t7
      WHERE  nombre2 = minp) as absmin , 
     (SELECT  abscissa FROM
           (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, 
          abscissa 
-         FROM  {0}.profiles WHERE active ORDER BY abscissa) t8
+         FROM  {schema}.profiles WHERE active ORDER BY abscissa) t8
       WHERE  nombre2 = maxp) as absmax 
 FROM
     (SELECT planim,
@@ -1895,7 +2166,7 @@ FROM
                              abscissa,
                              Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
                              Lead (planim,1) OVER (ORDER BY abscissa) as mp1
-                             FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+                             FROM {schema}.profiles WHERE active ORDER BY abscissa) as t0 
                        ORDER BY abscissa ) t1
                  WHERE num != -1 ORDER BY branchnum) t3 
            JOIN
@@ -1910,20 +2181,22 @@ FROM
                  else -1 end AS num2 ,
                  abscissa,
                  bm1
-                 FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, 
+                 FROM (SELECT   ROW_NUMBER() OVER (ORDER BY abscissa) AS nombre, 
                        planim, 
                        branchnum ,
                        abscissa,
                        LAG (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
                        LAG (planim,1) OVER (ORDER BY abscissa) as mm1 
-                       FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
+                       FROM {schema}.profiles WHERE active ORDER BY abscissa) as t0 
                  ORDER BY abscissa ) t1
              WHERE num2 != -1 ORDER BY branchnum) t4
-           ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+           ON t3.planim =t4.planim and t3.branchnum =t4.branchnum  
+                WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
 WHERE minp != bp1 or bp1 is NULL
             """
 
-        (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        qry = pgsql.SQL(sql).format(schema=self.schema_id)
+        (results, nam_col) = self.run_query(qry, fetch=True, namvar=True)
         dico_planim = {"pas": [], "min": [], "max": [], "absmin": [], "absmax": []}
         for pas, branch, minp, maxp, absmin, absmax in results:
             dico_planim["pas"].append(pas)
@@ -1935,21 +2208,26 @@ WHERE minp != bp1 or bp1 is NULL
         return dico_planim
 
     def maillage_select(self):
+        """
+        Compute mesh zones from active profiles.
+        :return: (dict) keys: pas, min, max
+        """
         sql = """
         SELECT mesh, branchnum, minp,maxp
         FROM
-            (SELECT mesh, branchnum, minp,maxp,   Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
-            (SELECT  t3.mesh, t3.branchnum, num2 as minp, num as maxp,  t4.abscissa as abs4 , t3.abscissa as abs3 FROM
+            (SELECT mesh, branchnum, minp,maxp, Lag (minp,1) OVER (ORDER BY abs4, abs3) AS bp1 FROM
+            (SELECT  t3.mesh, t3.branchnum, num2 as minp, num as maxp,  
+                t4.abscissa as abs4 , t3.abscissa as abs3 FROM
             (SELECT  mesh, branchnum, num,abscissa FROM
             (SELECT  nombre, mesh, branchnum , case 
                  when branchnum != bp1 then  nombre
                 when mesh != mp1  then  nombre + 1
                 when  mp1  is NULL and bp1 is null then nombre
                 else -1 end AS num ,abscissa
-            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
-                  Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
+            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,
+                  abscissa, Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
                   Lead (mesh,1) OVER (ORDER BY abscissa) as mp1
-                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+                  FROM {schema}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa) t1
             WHERE num != -1 ORDER BY branchnum) t3 
             JOIN
             (SELECT  mesh, branchnum, num2,abscissa FROM
@@ -1958,15 +2236,17 @@ WHERE minp != bp1 or bp1 is NULL
                 when mesh != mm1  then  nombre
                 When  mm1  is NULL and bm1 is null then nombre
                 else -1 end AS num2 ,abscissa
-            FROM (SELECT   ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
+            FROM (SELECT ROW_NUMBER() OVER (ORDER BY abscissa) AS nombre, mesh, branchnum ,abscissa,
                   LAg (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
                   LAG (mesh,1) OVER (ORDER BY abscissa) as mm1 
-                  FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1
+                  FROM {schema}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa) t1
             WHERE num2 != -1 ORDER BY branchnum) t4
-            ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  ORDER BY abs4, abs3) t5) t6
+            ON t3.mesh =t4.mesh and t3.branchnum =t4.branchnum  WHERE num2<=num  
+                ORDER BY abs4, abs3) t5) t6
         WHERE (minp != bp1 or bp1 is NULL) and minp !=maxp
         """
-        (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        qry = pgsql.SQL(sql).format(schema=self.schema_id)
+        (results, nam_col) = self.run_query(qry, fetch=True, namvar=True)
 
         dico_mesh = {"pas": [], "min": [], "max": []}
         for pas, branch, minp, maxp in results:
@@ -1977,6 +2257,10 @@ WHERE minp != bp1 or bp1 is NULL
         return dico_mesh
 
     def zone_ks(self):
+        """
+        Compute friction (Ks) zones and merged geometry by branch.
+        :return: (dict) zone attributes and geometry
+        """
         sql = """
 SELECT  minbedcoef, 
         majbedcoef, 
@@ -1985,8 +2269,9 @@ SELECT  minbedcoef,
         absmax,
         ROW_NUMBER() OVER (PARTITION BY branchnum ORDER BY absmin) as branch_zone,
         ST_AsText(ST_LineMerge((SELECT ST_UNION(geom) 
-        FROM {0}.visu_branchs as src 
-        WHERE src.branchnum = branchnum AND src.abs_start >= absmin AND src.abs_end <= absmax))) AS geom
+        FROM {schema}.visu_branchs as src 
+        WHERE src.branchnum = branchnum AND src.abs_start >= absmin AND 
+            src.abs_end <= absmax))) AS geom
 FROM
 (SELECT  minbedcoef, 
         majbedcoef, 
@@ -2000,11 +2285,11 @@ FROM
     (SELECT  t3.minbedcoef, 
             t3.majbedcoef, 
             t3.branchnum,
-             (SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-                                FROM  {0}.profiles WHERE active ORDER BY abscissa) t7 
+             (SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, 
+                               abscissa FROM  {schema}.profiles WHERE active ORDER BY abscissa) t7 
              WHERE  nombre2 = num2) as absmin ,  
-            (SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, abscissa 
-                                    FROM  {0}.profiles WHERE active ORDER BY abscissa) t8 
+            (SELECT  abscissa FROM (SELECT  ROW_NUMBER() OVER(ORDER BY abscissa) AS nombre2, 
+                                 abscissa FROM  {schema}.profiles WHERE active ORDER BY abscissa) t8 
              WHERE  nombre2 = num) as absmax,
             num2, 
             num
@@ -2024,7 +2309,8 @@ FROM
                     Lead (branchnum,1) OVER (ORDER BY abscissa) AS bp1,
                     Lead (minbedcoef,1) OVER (ORDER BY abscissa) as mibp1,
                     Lead (majbedcoef,1) OVER (ORDER BY abscissa) as mabp1
-                    FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 ORDER BY abscissa ) t1 
+                    FROM {schema}.profiles WHERE active ORDER BY abscissa) as t0 
+                        ORDER BY abscissa ) t1 
          WHERE num != -1 ORDER BY branchnum) t3
          JOIN
         (SELECT  minbedcoef,majbedcoef, branchnum, num2, abscissa FROM
@@ -2046,15 +2332,16 @@ FROM
                    Lag (branchnum,1) OVER (ORDER BY abscissa) AS bm1,
                    Lag (minbedcoef,1) OVER (ORDER BY abscissa) as mibm1,
                    Lag (majbedcoef,1) OVER (ORDER BY abscissa) as mabm1
-                   FROM {0}.profiles WHERE active ORDER BY abscissa) as t0 
-             ORDER BY abscissa ) t1
+                   FROM {schema}.profiles WHERE active ORDER BY abscissa) 
+                        as t0 ORDER BY abscissa ) t1
          WHERE num2 != -1 ORDER BY branchnum) t4
          ON t3.minbedcoef=t4.minbedcoef and t3.majbedcoef=t4.majbedcoef 
          and t3.branchnum =t4.branchnum and num2< num  ORDER BY absmin ,  absmax ) t9) t10
 WHERE (num2 != numm1 OR numm1 is NULL)
 
         """
-        (results, nam_col) = self.run_query(sql.format(self.SCHEMA), fetch=True, namvar=True)
+        qry = pgsql.SQL(sql).format(schema=self.schema_id)
+        (results, nam_col) = self.run_query(qry, fetch=True, namvar=True)
 
         dico_ks = {
             "branch": [],
@@ -2063,7 +2350,7 @@ WHERE (num2 != numm1 OR numm1 is NULL)
             "majbedcoef": [],
             "zoneabsstart": [],
             "zoneabsend": [],
-            "geom": []
+            "geom": [],
         }
 
         for minbedcoef, majbedcoef, branch, minp, maxp, branche_zone, geom in results:
@@ -2079,21 +2366,28 @@ WHERE (num2 != numm1 OR numm1 is NULL)
 
     def check_valid_profil(self):
         """
-        Check if profile intersect multiBranch or MultiPoint
+        Check profiles that intersect multiple branches or produce MultiPoint intersections.
+
+        Returns:
+            list[int]: Profile IDs considered invalid.
         """
-        sql = """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
-                       {0}.branchs as b WHERE ST_INTERSECTS(p.geom, b.geom) )
+        sql = """SELECT pid, count(*) FROM (SELECT p.gid as pid ,b.gid as bid 
+            From  {schema}.profiles AS p,
+                       {schema}.branchs as b WHERE ST_INTERSECTS(p.geom, b.geom) )
                        AS nb GROUP BY pid Having count(*)>1;"""
-        results = self.run_query(sql.format(self.SCHEMA), fetch=True)
+        qry = pgsql.SQL(sql).format(schema=self.schema_id)
+        results = self.run_query(qry, fetch=True)
         lst_profil_err = []
         if results:
             if len(results) > 0:
                 for val in results:
                     lst_profil_err.append(val[0])
 
-        sql = """SELECT p.gid as pid ,b.gid as bid From  {0}.profiles AS p,
-                {0}.branchs as b WHERE  st_geometrytype(ST_Intersection(p.geom, b.geom))='ST_MultiPoint';"""
-        results = self.run_query(sql.format(self.SCHEMA), fetch=True)
+        sql = """SELECT p.gid as pid ,b.gid as bid From  {schema}.profiles AS p,
+                {schema}.branchs as b
+                 WHERE  st_geometrytype(ST_Intersection(p.geom, b.geom))='ST_MultiPoint';"""
+        qry = pgsql.SQL(sql).format(schema=self.schema_id)
+        results = self.run_query(qry, fetch=True)
         if results:
             if len(results) > 0:
                 for val in results:
@@ -2102,28 +2396,28 @@ WHERE (num2 != numm1 OR numm1 is NULL)
 
     def list_trigger(self, table, schema=None):
         """
-        list trigger for a schema and a table
+        List trigger names for a given table and schema.
+
+        Args:
+            table (str): Table name.
+            schema (str | None): Schema name (defaults to current schema).
+
+        Returns:
+            list[str]: Trigger names.
         """
         if schema is None:
             schema = self.SCHEMA
-        sql = """SELECT table_name,trigger_schema,trigger_name	
-	            FROM (select event_object_schema as table_schema,
-                event_object_table as table_name,
-               trigger_schema,
-               trigger_name,
-               string_agg(event_manipulation, ',') as event,
-               action_timing as activation,
-               action_condition as condition,
-               action_statement as definition
-                from information_schema.triggers
-                group by 1,2,3,4,6,7,8
-                order by table_schema,
-                         table_name) as lst_triggger
-                WHERE table_name='{}' and trigger_schema='{}'
-                ;""".format(
-            table, schema
+        qry = pgsql.SQL(
+            "SELECT table_name, trigger_schema, trigger_name "
+            "FROM (SELECT event_object_schema AS table_schema, "
+            "event_object_table AS table_name, trigger_schema, trigger_name, "
+            "string_agg(event_manipulation, ',') AS event, action_timing AS activation, "
+            "action_condition AS condition, action_statement AS definition "
+            "FROM information_schema.triggers GROUP BY 1,2,3,4,6,7,8 "
+            "ORDER BY table_schema, table_name) AS lst_triggger "
+            "WHERE table_name=%s AND trigger_schema=%s"
         )
-        results = self.run_query(sql, fetch=True)
+        results = self.run_query(qry, fetch=True, params=[table, schema])
         lst_trigger = []
         if results:
             if len(results) > 0:

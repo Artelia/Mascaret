@@ -16,7 +16,7 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 
 import os
 import posixpath
@@ -25,7 +25,8 @@ from qgis.PyQt.QtCore import QUrl, QEventLoop, QTimer, qVersion
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import QgsNetworkAccessManager
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
+
 
 class ClassDownloadMasc:
     """

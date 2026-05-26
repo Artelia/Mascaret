@@ -16,14 +16,7 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
-
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+"""
 
 from .ScoreDistWidget import ScoreDistWidget
 from .ScoreParamWidget import ScoreParamWidget

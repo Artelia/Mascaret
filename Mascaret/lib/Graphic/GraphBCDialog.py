@@ -24,18 +24,16 @@ import os
 import re
 import numpy as np
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import qVersion
+from qgis.PyQt.QtWidgets import QButtonGroup, QDialog, QWidget
+from qgis.PyQt.uic import loadUi
 
-from ..Function import filter_xy_by_time_ensur
+from ..Function import filter_xy_by_time_ensur, safe_eval_numeric
 from .GraphHydro import GraphHydroLaw
 from ..HydroLawsDialog import dico_typ_law
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
+
+QT_VERSION = [int(v) for v in qVersion().split(".")][0]
 
 
 class GraphBCDialog(QDialog):
@@ -78,38 +76,25 @@ class GraphBCDialog(QDialog):
             self.tabWidget.setTabEnabled(id_assim, False)
             self.tabWidget.setTabOrder(self.wdgt_law, self.wdgt_obs)
 
-        if d_res.get('id_run'):
+        if d_res.get("id_run"):
             self.tabWidget.setTabEnabled(id_assim, True)
 
     def select_ana_param(self):
-        sql = f"""
-        SELECT
-            r.id AS id_run,
-            r.run,
-            r.scenario,
-            a.id_ctrl,
-            ar.var,
-            ar.val
-        FROM
-            {self.mdb.SCHEMA}.runs r
-        JOIN
-            {self.mdb.SCHEMA}.assim_res_law a
-                ON r.id = a.id_runs
-        LEFT JOIN
-            {self.mdb.SCHEMA}.assim_res ar
-                ON ar.id_runs = r.id
-               AND ar.id_ctrl = a.id_ctrl
-        WHERE
-            RIGHT(r.scenario, LENGTH('_ana_ctrl_law')) = '_ana_ctrl_law'
-            AND a.name_law = '{self.param['name']}'
-            AND a.source_law = '{self.param['couche']}'
-        ORDER BY
-            r.id,
-            a.id_ctrl,
-            ar.var;
-        """
+        sql = (
+            "SELECT r.id AS id_run, r.run, r.scenario, a.id_ctrl, ar.var, ar.val "
+            "FROM {schema}.runs r "
+            "JOIN {schema}.assim_res_law a ON r.id = a.id_runs "
+            "LEFT JOIN {schema}.assim_res ar ON ar.id_runs = r.id AND ar.id_ctrl = a.id_ctrl "
+            "WHERE RIGHT(r.scenario, LENGTH('_ana_ctrl_law')) = '_ana_ctrl_law' "
+            "AND a.name_law = %s AND a.source_law = %s "
+            "ORDER BY r.id, a.id_ctrl, ar.var;"
+        )
         (results, nam_col) = self.mdb.run_query(
-            sql, fetch=True, namvar=True
+            sql,
+            fetch=True,
+            namvar=True,
+            params=[self.param["name"], self.param["couche"]],
+            schema=True,
         )
         if not results:
             return {}
@@ -373,25 +358,30 @@ class GraphBCObs(QWidget):
                 dt = datetime.timedelta(hours=int(delta))
                 if self.cur_event:
                     sql_query = (
-                        "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
-                        "UNNEST(valeur) as valeur FROM {4}.observations "
-                        "WHERE code = '{0}' AND type='{3}') t "
-                        " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                        "ORDER BY date".format(
-                            cd_hydro, self.events[self.cur_event]["starttime"] + dt,
-                                      self.events[self.cur_event]["endtime"] + dt,
-                            type, self.mdb.SCHEMA
-                        )
+                        "SELECT date, valeur FROM (SELECT code, type, UNNEST(date) AS date, "
+                        "UNNEST(valeur) AS valeur FROM {schema}.observations "
+                        "WHERE code = %s AND type = %s) t "
+                        "WHERE date >= %s AND date <= %s AND valeur > -999.9 "
+                        "ORDER BY date"
                     )
+                    params = [
+                        cd_hydro,
+                        type,
+                        self.events[self.cur_event]["starttime"] + dt,
+                        self.events[self.cur_event]["endtime"] + dt,
+                    ]
 
                 else:
-                    sql_query = """SELECT  id, UNNEST(date) as date, 
-                                UNNEST(valeur) as valeur  FROM  {2}.observations 
-                                WHERE code ='{0}'AND type = '{1}'
-                                ORDER BY code, date;""".format(
-                        cd_hydro, type, self.mdb.SCHEMA
+                    sql_query = (
+                        "SELECT id, UNNEST(date) AS date, UNNEST(valeur) AS valeur "
+                        "FROM {schema}.observations "
+                        "WHERE code = %s AND type = %s "
+                        "ORDER BY code, date;"
                     )
-                obs[cd_hydro] = self.mdb.query_todico(sql_query, verbose=False)
+                    params = [cd_hydro, type]
+                obs[cd_hydro] = self.mdb.query_todico(
+                    sql_query, params=params, schema=True
+                )
 
                 if not liste_date:
                     liste_date = [x - dt for x in obs[cd_hydro]["date"]]
@@ -409,10 +399,9 @@ class GraphBCObs(QWidget):
                     else:
                         val = None
                     calc = pattern.sub(str(val), calc, 1)
-
                 try:
-                    resultat = eval(calc)
-                except:
+                    resultat = safe_eval_numeric(calc)
+                except (ValueError, SyntaxError, TypeError, ZeroDivisionError):
                     resultat = None
 
                 data["date"].append(t)
@@ -478,7 +467,7 @@ class GraphBCAssim(QWidget):
         self.cur_run = None
 
         self.cb_run.clear()
-        list_run = list(set(self.assim_info.get('run', [])))
+        list_run = list(set(self.assim_info.get("run", [])))
         if list_run:
             for name in list_run:
                 self.cb_run.addItem(name, name)
@@ -486,22 +475,23 @@ class GraphBCAssim(QWidget):
             self.cb_run.addItem("No run", None)
         self.cur_run = self.cb_run.currentData()
 
-    def find_coef(self,name_ctrl):
+    def find_coef(self, name_ctrl):
         if self.cur_run is None:
             return 1, 0
         resultats = {
-            self.assim_info['var'][i] : self.assim_info['val'][i]
-            for i in range(len(self.assim_info['run']))
-            if self.assim_info['run'][i] == self.cur_run and self.assim_info['scenario'][i] == name_ctrl
+            self.assim_info["var"][i]: self.assim_info["val"][i]
+            for i in range(len(self.assim_info["run"]))
+            if self.assim_info["run"][i] == self.cur_run
+            and self.assim_info["scenario"][i] == name_ctrl
         }
-        val_min = resultats.get('coefA_val_min', None)
-        val_max = resultats.get('coefA_val_max', None)
+        val_min = resultats.get("coefA_val_min", None)
+        val_max = resultats.get("coefA_val_max", None)
         if not val_max:
-            val_max = resultats.get('coefB_val_max', None)
+            val_max = resultats.get("coefB_val_max", None)
         if not val_min:
-            val_min = resultats.get('coefB_val_min', None)
+            val_min = resultats.get("coefB_val_min", None)
 
-        return resultats.get('coefA', 1), resultats.get('coefB', 0), val_min, val_max
+        return resultats.get("coefA", 1), resultats.get("coefB", 0), val_min, val_max
 
     def init_event_changed(self):
         """
@@ -512,23 +502,22 @@ class GraphBCAssim(QWidget):
         self.events = {}
         self.cb_event.blockSignals(True)
         self.cb_event.clear()
-        runs = self.assim_info.get('run', [])
+        runs = self.assim_info.get("run", [])
 
         scenarios = [
-            self.assim_info["scenario"][i]
-            for i, run in enumerate(runs)
-            if run == self.cur_run
+            self.assim_info["scenario"][i] for i, run in enumerate(runs) if run == self.cur_run
         ]
         list_scen_str = [f"'{scen.replace('_ana_ctrl_law', '')}'" for scen in list(set(scenarios))]
-        list_event = self.mdb.select("events", where=f"name IN ({','.join(list_scen_str)})", order="starttime",
-                                     verbose=False)
+        list_event = self.mdb.select(
+            "events", where=f"name IN ({','.join(list_scen_str)})", order="starttime"
+        )
 
         if len(list_event["name"]) > 0:
             for id, name in enumerate(list_event["name"]):
-                name_ctrl = name + '_ana_ctrl_law'
+                name_ctrl = name + "_ana_ctrl_law"
                 self.cb_event.addItem(name_ctrl, name_ctrl)
-                id_law= None
-                start_time_law= None
+                id_law = None
+                start_time_law = None
                 if self.if_law:
                     condition = """geom_obj='{0}'
                                                         AND starttime <= '{1:%Y-%m-%d %H:%M}'
@@ -537,10 +526,10 @@ class GraphBCAssim(QWidget):
                         self.param["name"], list_event["starttime"][id], list_event["endtime"][id]
                     )
                     rows = self.mdb.select("law_config", condition)
-                    id_law = rows.get('id', [])
+                    id_law = rows.get("id", [])
                     if len(id_law) > 0:
                         id_law = id_law[0]
-                        start_time_law = rows.get('starttime', [None])[0]
+                        start_time_law = rows.get("starttime", [None])[0]
 
                 coefa, coefb, valmin, valmax = self.find_coef(name_ctrl)
                 self.events[name_ctrl] = {
@@ -551,7 +540,7 @@ class GraphBCAssim(QWidget):
                     "valmin": valmin,
                     "valmax": valmax,
                     "id_law": id_law,
-                    "start_time_law": start_time_law
+                    "start_time_law": start_time_law,
                 }
             self.cur_event = self.cb_event.currentData()
 
@@ -616,25 +605,30 @@ class GraphBCAssim(QWidget):
                 dt = datetime.timedelta(hours=int(delta))
                 if self.cur_event:
                     sql_query = (
-                        "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
-                        "UNNEST(valeur) as valeur FROM {4}.observations "
-                        "WHERE code = '{0}' AND type='{3}') t "
-                        " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                        "ORDER BY date".format(
-                            cd_hydro, self.events[self.cur_event]["starttime"] + dt,
-                                      self.events[self.cur_event]["endtime"] + dt,
-                            type, self.mdb.SCHEMA
-                        )
+                        "SELECT date, valeur FROM (SELECT code, type, UNNEST(date) AS date, "
+                        "UNNEST(valeur) AS valeur FROM {schema}.observations "
+                        "WHERE code = %s AND type = %s) t "
+                        "WHERE date >= %s AND date <= %s AND valeur > -999.9 "
+                        "ORDER BY date"
                     )
+                    params = [
+                        cd_hydro,
+                        type,
+                        self.events[self.cur_event]["starttime"] + dt,
+                        self.events[self.cur_event]["endtime"] + dt,
+                    ]
 
                 else:
-                    sql_query = """SELECT  id, UNNEST(date) as date,
-                                UNNEST(valeur) as valeur  FROM  {2}.observations
-                                WHERE code ='{0}'AND type = '{1}'
-                                ORDER BY code, date;""".format(
-                        cd_hydro, type, self.mdb.SCHEMA
+                    sql_query = (
+                        "SELECT id, UNNEST(date) AS date, UNNEST(valeur) AS valeur "
+                        "FROM {schema}.observations "
+                        "WHERE code = %s AND type = %s "
+                        "ORDER BY code, date;"
                     )
-                obs[cd_hydro] = self.mdb.query_todico(sql_query, verbose=False)
+                    params = [cd_hydro, type]
+                obs[cd_hydro] = self.mdb.query_todico(
+                    sql_query, params=params, schema=True
+                )
 
                 if not liste_date:
                     liste_date = [x - dt for x in obs[cd_hydro]["date"]]
@@ -655,17 +649,20 @@ class GraphBCAssim(QWidget):
                 valmin = self.events[self.cur_event]["valmin"]
                 valmax = self.events[self.cur_event]["valmax"]
                 try:
-                    resultat = eval(calc)
-                    resultat_ctrl = self.events[self.cur_event]["coefA"] * resultat + self.events[self.cur_event][
-                        "coefB"]
+                    resultat = safe_eval_numeric(calc)
+
+                    resultat_ctrl = (
+                        self.events[self.cur_event]["coefA"] * resultat
+                        + self.events[self.cur_event]["coefB"]
+                    )
                     if valmin and valmax:
                         if resultat_ctrl < valmin:
                             resultat_ctrl = valmin
                         elif resultat_ctrl > valmax:
                             resultat_ctrl = valmax
 
-                except Exception as err:
-                    print(err)
+                except (ValueError, SyntaxError, TypeError, ZeroDivisionError) as err:
+                    print(f"Error evaluating expression '{calc}': {err}")
                     resultat = None
                     resultat_ctrl = None
 
@@ -683,9 +680,6 @@ class GraphBCAssim(QWidget):
         update data
         :return:
         """
-        obs = {}
-        liste_date = []
-
         if self.param["type"] == 1:
             type = "Q"
         elif self.param["type"] == 2:
@@ -699,29 +693,34 @@ class GraphBCAssim(QWidget):
             return
 
         # id_law
-        id_law = self.events[self.cur_event]['id_law']
+        id_law = self.events[self.cur_event]["id_law"]
         if not id_law:
             return
-        idx_var = self.dico_obs[type]['graph']["x"]["var"]
-        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
-            self.mdb.SCHEMA, id_law, idx_var
+        idx_var = self.dico_obs[type]["graph"]["x"]["var"]
+        sql = (
+            "SELECT value FROM {schema}.law_values WHERE "
+            "id_law = %s AND id_var = %s ORDER BY id_order"
         )
-        rows = self.mdb.run_query(sql, fetch=True)
-        lst_x = [self.events[self.cur_event]["start_time_law"] +
-                 datetime.timedelta(seconds=r[0]) for r in rows]
-        idy_var = self.dico_obs[type]['graph']["y"]["var"][0]
-        sql = "SELECT value FROM {0}.law_values WHERE id_law = {1} and id_var = {2} ORDER BY id_order".format(
-            self.mdb.SCHEMA, id_law, idy_var
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_law, idx_var], schema=True)
+        lst_x = [
+            self.events[self.cur_event]["start_time_law"] + datetime.timedelta(seconds=r[0])
+            for r in rows
+        ]
+        idy_var = self.dico_obs[type]["graph"]["y"]["var"][0]
+        sql = (
+            "SELECT value FROM {schema}.law_values WHERE "
+            "id_law = %s AND id_var = %s ORDER BY id_order"
         )
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(sql, fetch=True, params=[id_law, idy_var], schema=True)
         lst_y = [r[0] for r in rows]
 
         start = self.events[self.cur_event]["starttime"]
         end = self.events[self.cur_event]["endtime"]
         x_filt, y_filt = filter_xy_by_time_ensur(lst_x, lst_y, start, end)
-        data = {"date": x_filt, "val": y_filt,
-                "val_ctrl": self.events[self.cur_event]["coefA"] * np.array(y_filt) \
-                            + self.events[self.cur_event]["coefB"]}
+        data = {
+            "date": x_filt,
+            "val": y_filt,
+            "val_ctrl": self.events[self.cur_event]["coefA"] * np.array(y_filt)
+            + self.events[self.cur_event]["coefB"],
+        }
         self.graph_obj.init_graph_obs_assim(data, self.dico_obs[type])
-
-

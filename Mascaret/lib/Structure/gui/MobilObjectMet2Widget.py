@@ -19,12 +19,9 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.uic import loadUi
 
 from .FctDialog import ctrl_set_value, ctrl_get_value, fill_qcombobox
 
@@ -46,71 +43,131 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.filling_tab = False
         self.graph = None
         self.lvls = [int(), int()]
-        self.dvelo = {'open': {'old_unit': 1, 'val': 1.},
-                      'close': {'old_unit': 1, 'val': 1.}}
-        self.ui = loadUi(os.path.join(self.mgis.masplugPath,
-                                      "ui/structures/ui_mobil_object_met2.ui"),
-                         self)
+        self.dvelo = {"open": {"old_unit": 1, "val": 1.0}, "close": {"old_unit": 1, "val": 1.0}}
+        self.ui = loadUi(
+            os.path.join(self.mgis.masplugPath, "ui/structures/ui_mobil_object_met2.ui"), self
+        )
 
-        if self.typ_obj == 'weir':
-            self.obj_table = 'weirs'
-            self.mob_table = 'weirs_mob_val'
-            self.mob_table_id = 'id_weirs'
+        if self.typ_obj == "weir":
+            self.obj_table = "weirs"
+            self.mob_table = "weirs_mob_val"
+            self.mob_table_id = "id_weirs"
             self.ui.tit_break.hide()
             self.ui.line_break.hide()
             self.ui.grp_break.hide()
             self.ui.cb_dir.hide()
             self.ui.lbl_dir.hide()
-        elif self.typ_obj == 'link':
-            self.obj_table = 'links'
-            self.mob_table = 'links_mob_val'
-            self.mob_table_id = 'id_links'
+        elif self.typ_obj == "link":
+            self.obj_table = "links"
+            self.mob_table = "links_mob_val"
+            self.mob_table_id = "id_links"
             self.ui.cc_temp_break.hide()
             self.ui.cc_clapet.hide()
 
         self.d_var = {
-            "DIRFG": {"ctrl": self.ui.cb_dir, "cc": None, "vdef": 'D', "typ": str},
-            "VELOFGOPEN": {"ctrl": self.ui.sb_open_vel, "cc": None, "vdef": 1., "typ": float},
+            "DIRFG": {"ctrl": self.ui.cb_dir, "cc": None, "vdef": "D", "typ": str},
+            "VELOFGOPEN": {"ctrl": self.ui.sb_open_vel, "cc": None, "vdef": 1.0, "typ": float},
             "UNITVELO": {"ctrl": self.ui.cb_unit_open_vel, "cc": None, "vdef": 1, "typ": int},
-            "VELOFGCLOSE": {"ctrl": self.ui.sb_close_vel, "cc": self.ui.cc_close_vel,
-                            "cdef": self.ui.sb_open_vel, "typ": float},
-            "UNITVELC": {"ctrl": self.ui.cb_unit_close_vel, "cc": self.ui.cc_close_vel,
-                         "cdef": self.ui.cb_unit_open_vel, "typ": int},
-            "ZMAXFG": {"ctrl": self.ui.sb_stop_elev, "cc": None, "vdef": 0., "typ": float},
-            "ZINITREG": {"ctrl": self.ui.sb_init_lvl, "cc": self.ui.cc_init_lvl,
-                         "vdef": 0., "typ": float},
-            "VREG": {"ctrl": self.ui.cb_var_regul, "cc": self.ui.cc_var_regul,
-                     "vdef": 'Z', "typ": str},
-            "USEBASIN": {"ctrl": self.ui.cb_typ_control, "cc": self.ui.cc_control,
-                         "vdef": False, "typ": to_bool},
-            "NUMBASINREG": {"ctrl": self.ui.cb_basin, "cc": self.ui.cc_control,
-                            "vdef": 0, "typ": int},
-            "PK": {"ctrl": self.ui.sb_abscissa, "cc": self.ui.cc_control,
-                   "vdef": 0., "typ": float},
-            "VREGCLOS": {"ctrl": self.ui.sb_close_lvl, "cc": None, "vdef": 0., "typ": float},
-            "VREGOPEN": {"ctrl": self.ui.sb_open_lvl, "cc": self.ui.cc_open_lvl,
-                         "cdef": self.ui.sb_close_lvl, "typ": float},
-            "CRITDTREG": {"ctrl": self.ui.cb_step_time, "cc": self.ui.cc_step_time,
-                          "vdef": 'NDTREG', "typ": str},
-            "NDTREG": {"ctrl": self.ui.sb_step_count, "cc": self.ui.cc_step_time,
-                       "vdef": 1, "typ": int},
-            "DTREG": {"ctrl": self.ui.sb_step_time, "cc": self.ui.cc_step_time,
-                      "vdef": 0., "typ": float},
-            "ZINCRFG": {"ctrl": self.ui.sb_z_inc, "cc": self.ui.cc_z_inc,
-                        "vdef": 999., "typ": float},
-            "VBREAKREG": {"ctrl": self.ui.sb_break_val, "cc": self.ui.cc_break_val,
-                          "vdef": 9999., "typ": float},
-            "BPERMREG": {"ctrl": self.ui.cc_temp_break, "cc": None,
-                         "vdef": False, "typ": to_bool},
-            "ZFINALREG": {"ctrl": self.ui.sb_break_lvl, "cc": self.ui.cc_break_lvl,
-                          "vdef": 0., "typ": float},
-            "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None,
-                       "vdef": False, "typ": to_bool},
-            "MAINTFIRST": {"ctrl": self.ui.cc_maint_first, "cc": None,
-                           "vdef": True, "typ": to_bool},
-            "WRITEREG": {"ctrl": self.ui.sb_step_write, "cc": self.ui.cc_write,
-                         "vdef": 1, "typ": int},
-
+            "VELOFGCLOSE": {
+                "ctrl": self.ui.sb_close_vel,
+                "cc": self.ui.cc_close_vel,
+                "cdef": self.ui.sb_open_vel,
+                "typ": float,
+            },
+            "UNITVELC": {
+                "ctrl": self.ui.cb_unit_close_vel,
+                "cc": self.ui.cc_close_vel,
+                "cdef": self.ui.cb_unit_open_vel,
+                "typ": int,
+            },
+            "ZMAXFG": {"ctrl": self.ui.sb_stop_elev, "cc": None, "vdef": 0.0, "typ": float},
+            "ZINITREG": {
+                "ctrl": self.ui.sb_init_lvl,
+                "cc": self.ui.cc_init_lvl,
+                "vdef": 0.0,
+                "typ": float,
+            },
+            "VREG": {
+                "ctrl": self.ui.cb_var_regul,
+                "cc": self.ui.cc_var_regul,
+                "vdef": "Z",
+                "typ": str,
+            },
+            "USEBASIN": {
+                "ctrl": self.ui.cb_typ_control,
+                "cc": self.ui.cc_control,
+                "vdef": False,
+                "typ": to_bool,
+            },
+            "NUMBASINREG": {
+                "ctrl": self.ui.cb_basin,
+                "cc": self.ui.cc_control,
+                "vdef": 0,
+                "typ": int,
+            },
+            "PK": {
+                "ctrl": self.ui.sb_abscissa,
+                "cc": self.ui.cc_control,
+                "vdef": 0.0,
+                "typ": float,
+            },
+            "VREGCLOS": {"ctrl": self.ui.sb_close_lvl, "cc": None, "vdef": 0.0, "typ": float},
+            "VREGOPEN": {
+                "ctrl": self.ui.sb_open_lvl,
+                "cc": self.ui.cc_open_lvl,
+                "cdef": self.ui.sb_close_lvl,
+                "typ": float,
+            },
+            "CRITDTREG": {
+                "ctrl": self.ui.cb_step_time,
+                "cc": self.ui.cc_step_time,
+                "vdef": "NDTREG",
+                "typ": str,
+            },
+            "NDTREG": {
+                "ctrl": self.ui.sb_step_count,
+                "cc": self.ui.cc_step_time,
+                "vdef": 1,
+                "typ": int,
+            },
+            "DTREG": {
+                "ctrl": self.ui.sb_step_time,
+                "cc": self.ui.cc_step_time,
+                "vdef": 0.0,
+                "typ": float,
+            },
+            "ZINCRFG": {
+                "ctrl": self.ui.sb_z_inc,
+                "cc": self.ui.cc_z_inc,
+                "vdef": 999.0,
+                "typ": float,
+            },
+            "VBREAKREG": {
+                "ctrl": self.ui.sb_break_val,
+                "cc": self.ui.cc_break_val,
+                "vdef": 9999.0,
+                "typ": float,
+            },
+            "BPERMREG": {"ctrl": self.ui.cc_temp_break, "cc": None, "vdef": False, "typ": to_bool},
+            "ZFINALREG": {
+                "ctrl": self.ui.sb_break_lvl,
+                "cc": self.ui.cc_break_lvl,
+                "vdef": 0.0,
+                "typ": float,
+            },
+            "CLAPET": {"ctrl": self.ui.cc_clapet, "cc": None, "vdef": False, "typ": to_bool},
+            "MAINTFIRST": {
+                "ctrl": self.ui.cc_maint_first,
+                "cc": None,
+                "vdef": True,
+                "typ": to_bool,
+            },
+            "WRITEREG": {
+                "ctrl": self.ui.sb_step_write,
+                "cc": self.ui.cc_write,
+                "vdef": 1,
+                "typ": int,
+            },
         }
 
         self.ui.cb_dir.currentIndexChanged.connect(self.direction_changed)
@@ -156,19 +213,14 @@ class ClassMobilObjectMet2Widget(QWidget):
         Initialize the user interface.
         :return: None
         """
-        fill_qcombobox(self.ui.cb_step_time, [["NDTREG", "N Time Step"],
-                                              ["DTREG", "Time Step"]])
+        fill_qcombobox(self.ui.cb_step_time, [["NDTREG", "N Time Step"], ["DTREG", "Time Step"]])
 
-        fill_qcombobox(self.ui.cb_typ_control, [[False, "Abscissa"],
-                                                [True, "Basin"]])
+        fill_qcombobox(self.ui.cb_typ_control, [[False, "Abscissa"], [True, "Basin"]])
 
         for cb in [self.ui.cb_unit_close_vel, self.ui.cb_unit_open_vel]:
-            fill_qcombobox(cb, [[1, "m/s"],
-                                [60, "m/min"],
-                                [3600, "m/h"]])
+            fill_qcombobox(cb, [[1, "m/s"], [60, "m/min"], [3600, "m/h"]])
 
-        fill_qcombobox(self.ui.cb_var_regul, [["Z", "Water level"],
-                                              ["Q", "Flow rate"]])
+        fill_qcombobox(self.ui.cb_var_regul, [["Z", "Water level"], ["Q", "Flow rate"]])
 
     def input_def_values(self):
         """
@@ -242,12 +294,11 @@ class ClassMobilObjectMet2Widget(QWidget):
         :return: None
         """
         val_unit = ctrl_get_value(self.ui.cb_unit_open_vel)
-        val = self.dvelo['open']['val'] / self.dvelo['open']['old_unit'] * val_unit
+        val = self.dvelo["open"]["val"] / self.dvelo["open"]["old_unit"] * val_unit
         ctrl_set_value(self.ui.sb_open_vel, val)
         if not self.ui.cc_close_vel.isChecked():
             self.set_def_ctrl_value(self.ui.cb_unit_close_vel)
-        self.dvelo['open'].update({'old_unit': val_unit,
-                                   'val': val})
+        self.dvelo["open"].update({"old_unit": val_unit, "val": val})
 
     def close_velocity_unit_changed(self):
         """
@@ -255,10 +306,9 @@ class ClassMobilObjectMet2Widget(QWidget):
         :return: None
         """
         val_unit = ctrl_get_value(self.ui.cb_unit_close_vel)
-        val = self.dvelo['close']['val'] / self.dvelo['close']['old_unit'] * val_unit
+        val = self.dvelo["close"]["val"] / self.dvelo["close"]["old_unit"] * val_unit
         ctrl_set_value(self.ui.sb_close_vel, val)
-        self.dvelo['close'].update({'old_unit': val_unit,
-                                    'val': val})
+        self.dvelo["close"].update({"old_unit": val_unit, "val": val})
 
     def enab_initial_level(self, cs):
         """
@@ -298,15 +348,15 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.ui.sb_open_lvl.setSuffix(" m³/s")
             self.ui.sb_close_lvl.setSuffix(" m³/s")
             self.ui.sb_break_val.setSuffix(" m³/s")
-            self.ui.lbl_close_lvl.setText('Closing flowrate value')
-            self.ui.cc_open_lvl.setText('Opening flowrate value')
-            self.d_var["VREGCLOS"]["vdef"] = 0.
+            self.ui.lbl_close_lvl.setText("Closing flowrate value")
+            self.ui.cc_open_lvl.setText("Opening flowrate value")
+            self.d_var["VREGCLOS"]["vdef"] = 0.0
         else:
             self.ui.sb_open_lvl.setSuffix(" m")
             self.ui.sb_close_lvl.setSuffix(" m")
             self.ui.sb_break_val.setSuffix(" m")
-            self.ui.lbl_close_lvl.setText('Closing level value')
-            self.ui.cc_open_lvl.setText('Opening level value')
+            self.ui.lbl_close_lvl.setText("Closing level value")
+            self.ui.cc_open_lvl.setText("Opening level value")
             self.d_var["VREGCLOS"]["vdef"] = self.lvls[0]
 
         self.set_def_ctrl_value(self.ui.sb_close_lvl)
@@ -375,7 +425,7 @@ class ClassMobilObjectMet2Widget(QWidget):
         :return: None
         """
         if idx == 1:
-            self.ui.sb_step_time.setValue(1.)
+            self.ui.sb_step_time.setValue(1.0)
             self.ui.lbl_step_count.hide()
             self.ui.sb_step_count.hide()
             self.ui.lbl_step_time.show()
@@ -387,7 +437,7 @@ class ClassMobilObjectMet2Widget(QWidget):
             self.ui.sb_step_time.hide()
             self.ui.lbl_step_count.show()
             self.ui.sb_step_count.show()
-            self.ui.sb_step_time.setValue(0.)
+            self.ui.sb_step_time.setValue(0.0)
 
     def enab_max_increment(self, cs):
         """
@@ -430,11 +480,19 @@ class ClassMobilObjectMet2Widget(QWidget):
 
             if self.typ_obj == "weir":
 
-                fill_qcombobox(self.ui.cb_dir, [["D", "bottom"]],
-                               icn=os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
-                sql = "SELECT COALESCE(abscissa, 0.) as absc, COALESCE(z_crest, 0.) as lvl FROM {0}.{1} " \
-                      "WHERE gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
-                rows = self.mdb.run_query(sql, fetch=True)
+                fill_qcombobox(
+                    self.ui.cb_dir,
+                    [["D", "bottom"]],
+                    icn=os.path.join(
+                        self.mgis.masplugPath, "lib", "Structure", "images", "{}_fg.png"
+                    ),
+                    size=32,
+                )
+                sql = (
+                    "SELECT COALESCE(abscissa, 0.) as absc, COALESCE(z_crest, 0.) as lvl "
+                    "FROM {schema}.weirs WHERE gid = %s"
+                )
+                rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj], schema=True)
                 cur_abs, cur_z = rows[0]
                 self.lvls = [cur_z, cur_z]
                 self.d_var["ZMAXFG"]["vdef"] = cur_z
@@ -448,31 +506,55 @@ class ClassMobilObjectMet2Widget(QWidget):
                 fill_qcombobox(self.ui.cb_basin, [[0, "None"]])
                 self.ui.cb_typ_control.hide()
 
-            elif self.typ_obj == 'link':
-                sql = "SELECT type, nature, COALESCE(abscissa, 0.) as absc, COALESCE(links.level, 0.) as lvl, " \
-                      "COALESCE(crosssection, 0.) as cs_l, COALESCE(width, 1.) as w_l, " \
-                      "basinstart, bas_sta.name, basinend , bas_end.name " \
-                      "FROM ({0}.{1} " \
-                      "LEFT JOIN {0}.basins as bas_sta on basinstart = bas_sta.basinnum) " \
-                      "LEFT JOIN {0}.basins as bas_end on basinend = bas_end.basinnum " \
-                      "WHERE links.gid = {2}".format(self.mdb.SCHEMA, self.obj_table, self.cur_obj)
-                rows = self.mdb.run_query(sql, fetch=True)
-                typ_link, nat_link, cur_abs, cur_z, cs_link, wid_link, \
-                    b_sta_id, b_sta_name, b_end_id, b_end_name = rows[0]
+            elif self.typ_obj == "link":
+                sql = (
+                    "SELECT type, nature, COALESCE(abscissa, 0.) as absc, "
+                    "COALESCE(links.level, 0.) as lvl, "
+                    "COALESCE(crosssection, 0.) as cs_l, COALESCE(width, 1.) as w_l, "
+                    "basinstart, bas_sta.name, basinend, bas_end.name "
+                    "FROM ({schema}.links "
+                    "LEFT JOIN {schema}.basins as bas_sta on basinstart = bas_sta.basinnum) "
+                    "LEFT JOIN {schema}.basins as bas_end on basinend = bas_end.basinnum "
+                    "WHERE links.gid = %s"
+                )
+                rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj], schema=True)
+                (
+                    typ_link,
+                    nat_link,
+                    cur_abs,
+                    cur_z,
+                    cs_link,
+                    wid_link,
+                    b_sta_id,
+                    b_sta_name,
+                    b_end_id,
+                    b_end_name,
+                ) = rows[0]
 
-                if str(nat_link) != '2':
+                if str(nat_link) != "2":
                     fill_qcombobox(self.ui.cb_basin, [[b_sta_id, b_sta_name]])
                     self.d_var["USEBASIN"]["vdef"] = False
                     self.ui.cb_typ_control.show()
                 else:
-                    fill_qcombobox(self.ui.cb_basin, [[b_sta_id, "Start basin ({})".format(b_sta_name)],
-                                                      [b_end_id, "End basin ({})".format(b_end_name)]])
+                    fill_qcombobox(
+                        self.ui.cb_basin,
+                        [
+                            [b_sta_id, "Start basin ({})".format(b_sta_name)],
+                            [b_end_id, "End basin ({})".format(b_end_name)],
+                        ],
+                    )
                     self.d_var["USEBASIN"]["vdef"] = True
                     self.ui.cb_typ_control.hide()
 
-                if str(typ_link) != '4':
-                    fill_qcombobox(self.ui.cb_dir, [["D", "bottom"]],
-                                   icn=os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
+                if str(typ_link) != "4":
+                    fill_qcombobox(
+                        self.ui.cb_dir,
+                        [["D", "bottom"]],
+                        icn=os.path.join(
+                            self.mgis.masplugPath, "lib", "Structure", "images", "{}_fg.png"
+                        ),
+                        size=32,
+                    )
                     self.lvls = [cur_z, cur_z]
                     self.d_var["ZMAXFG"]["vdef"] = cur_z
                     self.d_var["ZINITREG"]["vdef"] = cur_z
@@ -482,9 +564,14 @@ class ClassMobilObjectMet2Widget(QWidget):
                     self.d_var["NUMBASINREG"]["vdef"] = b_sta_id
                 else:
                     self.lvls = [cur_z, cur_z + (cs_link / wid_link)]
-                    fill_qcombobox(self.ui.cb_dir, [["D", "bottom"],
-                                                    ["U", "top"]],
-                                   icn=os.path.join(self.mgis.masplugPath, "Structure/images/{}_fg.png"), size=32)
+                    fill_qcombobox(
+                        self.ui.cb_dir,
+                        [["D", "bottom"], ["U", "top"]],
+                        icn=os.path.join(
+                            self.mgis.masplugPath, "lib", "Structure", "images", "{}_fg.png"
+                        ),
+                        size=32,
+                    )
                     self.d_var["ZMAXFG"]["vdef"] = cur_z
                     self.d_var["ZINITREG"]["vdef"] = cur_z
                     self.d_var["VREGCLOS"]["vdef"] = cur_z
@@ -499,14 +586,19 @@ class ClassMobilObjectMet2Widget(QWidget):
         self.input_def_values()
         if self.cur_obj:
             l_var = list(self.d_var.keys())
-            txt_var = "('{}')".format("', '".join(l_var))
-
             d_rec = dict()
-            sql = "SELECT name_var, id_order, value FROM {0}.{1} WHERE {2} = {3} " \
-                  "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
-                                               self.mob_table_id, self.cur_obj, txt_var)
-            rows = self.mdb.run_query(sql, fetch=True)
-            for (nm_var, rang_var, value) in rows:
+            if self.typ_obj == "weir":
+                sql = (
+                    "SELECT name_var, id_order, value FROM {schema}.weirs_mob_val "
+                    "WHERE id_weirs = %s AND name_var = ANY(%s)"
+                )
+            else:
+                sql = (
+                    "SELECT name_var, id_order, value FROM {schema}.links_mob_val "
+                    "WHERE id_links = %s AND name_var = ANY(%s)"
+                )
+            rows = self.mdb.run_query(sql, fetch=True, params=[self.cur_obj, l_var], schema=True)
+            for nm_var, rang_var, value in rows:
                 d_rec[nm_var] = {"def": rang_var, "val": value}
 
             for nm_prm, saved_prm in d_rec.items():
@@ -518,13 +610,15 @@ class ClassMobilObjectMet2Widget(QWidget):
 
                 if nm_prm == "VELOFGOPEN" and "UNITVELO" in d_rec.keys():
                     conv_value = conv_value * float(d_rec["UNITVELO"]["val"])
-                    self.dvelo['open'].update({'old_unit': float(d_rec["UNITVELO"]["val"]),
-                                               'val': conv_value})
+                    self.dvelo["open"].update(
+                        {"old_unit": float(d_rec["UNITVELO"]["val"]), "val": conv_value}
+                    )
 
                 if nm_prm == "VELOFGCLOSE" and "UNITVELC" in d_rec.keys():
                     conv_value = conv_value * float(d_rec["UNITVELC"]["val"])
-                    self.dvelo['close'].update({'old_unit': float(d_rec["UNITVELC"]["val"]),
-                                                'val': conv_value})
+                    self.dvelo["close"].update(
+                        {"old_unit": float(d_rec["UNITVELC"]["val"]), "val": conv_value}
+                    )
 
                 ctrl_set_value(prm["ctrl"], conv_value, cc_is_checked=True)
                 if prm["cc"] and saved_prm["def"] == 0:
@@ -547,7 +641,6 @@ class ClassMobilObjectMet2Widget(QWidget):
         """
         recs = []
         l_var = list(self.d_var.keys())
-        txt_var = "('{}')".format("', '".join(l_var))
 
         for nm_var, prm in self.d_var.items():
             idx_time = 0
@@ -565,18 +658,31 @@ class ClassMobilObjectMet2Widget(QWidget):
 
             recs.append([self.cur_obj, idx_time, nm_var, val])
 
-        sql = "DELETE FROM {0}.{1} WHERE {2} = {3} " \
-              "AND name_var IN {4}".format(self.mdb.SCHEMA, self.mob_table,
-                                           self.mob_table_id, self.cur_obj, txt_var)
+        if self.typ_obj == "weir":
+            self.mdb.delete(
+                "weirs_mob_val",
+                where="id_weirs = %s AND name_var = ANY(%s)",
+                params=[self.cur_obj, l_var],
+            )
+        else:
+            self.mdb.delete(
+                "links_mob_val",
+                where="id_links = %s AND name_var = ANY(%s)",
+                params=[self.cur_obj, l_var],
+            )
 
-        self.mdb.execute(sql)
+        if self.typ_obj == "weir":
+            sql = (
+                "INSERT INTO {schema}.weirs_mob_val (id_weirs, id_order, name_var, value) "
+                "VALUES (%s, %s, %s, cast(%s as text))"
+            )
+        else:
+            sql = (
+                "INSERT INTO {schema}.links_mob_val (id_links, id_order, name_var, value) "
+                "VALUES (%s, %s, %s, cast(%s as text))"
+            )
 
-        sql = "INSERT INTO {0}.{1} ({2}, id_order, name_var, value) " \
-              "VALUES (%s, %s, %s, cast(%s as text))".format(self.mdb.SCHEMA,
-                                                             self.mob_table,
-                                                             self.mob_table_id)
-
-        self.mdb.run_query(sql, many=True, list_many=recs)
+        self.mdb.run_query(sql, many=True, list_many=recs, schema=True)
 
         self.widget_closed.emit()
 

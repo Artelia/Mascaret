@@ -22,17 +22,14 @@ import os
 from datetime import timedelta
 
 import numpy as np
-from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog
+from qgis.PyQt.uic import loadUi
+
 
 from .Function import del_accent
-from ..ui.custom_control import ClassWarningBox, _qt_is_checked
+from ..ui.custom_control import ClassWarningBox, _qt_is_checked, get_qt_checked, get_qt_unchecked, exec_dialog
 
-QT_VERSION = [int(v) for v in qVersion().split('.')][0]
 
 class ClassNameModel(QDialog):
     """
@@ -43,9 +40,11 @@ class ClassNameModel(QDialog):
         QDialog.__init__(self)
         self.ui = loadUi(os.path.join(mgis.masplugPath, "ui/name_model.ui"), self)
         self.bt_valid_name.clicked.connect(self.valid)
-        self.new_name = '{}-{}'.format(run, scen)
+        self.new_name = "{}-{}".format(run, scen)
         self.le_model.setText(self.new_name)
-        self.lbl_cas.setText('Run: {}, Scenario: {}, Station: {}, code: {}'.format(run, scen, station, code))
+        self.lbl_cas.setText(
+            "Run: {}, Scenario: {}, Station: {}, code: {}".format(run, scen, station, code)
+        )
 
     def valid(self):
         self.new_name = del_accent(self.le_model.text().strip())
@@ -64,10 +63,7 @@ class ClassExportDataRun(QDialog):
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/export_data_run.ui"), self)
         self.box = ClassWarningBox()
         self.model_prof = None
-        if QT_VERSION >5:
-            self.qt_check = Qt.CheckState
-        else:
-            self.qt_check = Qt
+        self.qt_check = get_qt_checked()
 
         self.init_gui()
 
@@ -79,13 +75,15 @@ class ClassExportDataRun(QDialog):
         self.d_run2id = {}
         # for observation link between obs var and result var
         where = "var IN ('Z','Q')"
-        dvar = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'])
+        dvar = self.mdb.select(
+            "results_var", where=where, order="id", list_var=["id", "name", "var"]
+        )
         self.typ2id = {}
-        for idx, var in enumerate(dvar['var']):
-            if var == 'Z':
-                self.typ2id['H'] = {'id': dvar['id'][idx], 'name': dvar['name'][idx], 'var': var}
+        for idx, var in enumerate(dvar["var"]):
+            if var == "Z":
+                self.typ2id["H"] = {"id": dvar["id"][idx], "name": dvar["name"][idx], "var": var}
             else:
-                self.typ2id[var] = {'id': dvar['id'][idx], 'name': dvar['name'][idx], 'var': var}
+                self.typ2id[var] = {"id": dvar["id"][idx], "name": dvar["name"][idx], "var": var}
         # ****
 
         self.model_prof, self.id_to_name_prof = self.profil_mod()
@@ -143,7 +141,7 @@ class ClassExportDataRun(QDialog):
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
             if _qt_is_checked(check_item, check_level="full"):
-                check_item.setCheckState(self.qt_check.Unchecked)
+                check_item.setCheckState()
 
     def allselect_var(self):
         """
@@ -161,7 +159,7 @@ class ClassExportDataRun(QDialog):
 
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if _qt_is_checked(check_item,check_level="full"):
+            if not _qt_is_checked(check_item, check_level="full"):
                 check_item.setCheckState(self.qt_check.Checked)
 
     def toggled_chang_format(self):
@@ -182,7 +180,7 @@ class ClassExportDataRun(QDialog):
                           (bool) exit status
         """
         lst_abs = self.get_name_abs_mod(self.mod_lst)
-        lst_name = self.get_name_abs_mod(self.mod_lst, 'name')
+        lst_name = self.get_name_abs_mod(self.mod_lst, "name")
         # if self.mod_lst in ("Profiles"):
         #     sql = "SELECT DISTINCT type FROM {0}.observations WHERE code " \
         #           "IN (SELECT code FROM {0}.outputs WHERE active " \
@@ -190,25 +188,31 @@ class ClassExportDataRun(QDialog):
         #           "AND abscissa IN ({1}));".format(self.mdb.SCHEMA,
         #                                            ','.join([str(abs) for abs in lst_abs]))
         # else:
-        sql = "SELECT DISTINCT type FROM {0}.observations WHERE code " \
-              "IN (SELECT code FROM {0}.outputs WHERE active " \
-              "AND code is not NULL AND name IN ({2}) " \
-              "AND abscissa IN ({1}));".format(self.mdb.SCHEMA,
-                                               ','.join([str(abs) for abs in lst_abs]),
-                                               ','.join(["'{}'".format(txt) for txt in lst_name]))
-        dtmp = self.mdb.query_todico(sql)
+        sql = (
+            "SELECT DISTINCT type FROM {schema}.observations WHERE code IN ("
+            "SELECT code FROM {schema}.outputs WHERE active "
+            "AND code IS NOT NULL AND name = ANY(%s::text[]) "
+            "AND abscissa = ANY(%s::double precision[]))"
+        )
+        dtmp = self.mdb.query_todico(sql, schema=True, params=[lst_name, lst_abs])
         if dtmp is None:
             return model_var, row_to_name_var
         lastrow = len(row_to_name_var.keys())
-        for id, var in enumerate(dtmp['type']):
-            name = self.typ2id[var]['name']
-            row_to_name_var[id + lastrow] = {"id": self.typ2id[var]['id'], 'name': name,
-                                             'var': self.typ2id[var]['var'], 'obs': True}
+        for id, var in enumerate(dtmp["type"]):
+            name = self.typ2id[var]["name"]
+            row_to_name_var[id + lastrow] = {
+                "id": self.typ2id[var]["id"],
+                "name": name,
+                "var": self.typ2id[var]["var"],
+                "obs": True,
+            }
             # Utilisation de QStandardItem pour représenter les cases à cocher
-            nname = '{} - obs - {}'.format(var, name)
+            nname = "{} - obs - {}".format(var, name)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(self.qt_check.Unchecked)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
+            check_item.setCheckState(
+                 get_qt_unchecked()
+            )  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
             check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_var.appendRow(check_item)
@@ -216,31 +220,33 @@ class ClassExportDataRun(QDialog):
 
     def obs_mod(self):
         """
-                Creation of a QStandardItemModel for variable
-                :return : (QStandardItemMode) model list,
-                          (dict) dict[row]={'id': index variable, 'name' : name, 'var':short name},
-                          (bool) exit status
-                """
+        Creation of a QStandardItemModel for variable
+        :return : (QStandardItemMode) model list,
+                  (dict) dict[row]={'id': index variable, 'name' : name, 'var':short name},
+                  (bool) exit status
+        """
         list_row = self.get_mod(self.mod_lst)
         list_run = self.get_list_runs()
         model_obs = QStandardItemModel()
         row_to_name_obs = {}
-        exit_status = False
         if len(list_run) == 0 or len(list_row) == 0:
             return model_obs, row_to_name_obs
-        where = "var IN ('Z','Q') AND id in (SELECT DISTINCT var FROM {}.results " \
-                "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in list_run]))
-        dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'])
-        if dtmp is None:
-            dtmp = {'name': []}
-        for id, name in enumerate(dtmp['name']):
-            var = dtmp['var'][id]
-            row_to_name_obs[id] = {"id": dtmp['id'][id], 'name': dtmp['name'][id], 'var': var, 'obs': False}
+        sql = (
+            "SELECT rv.id, rv.name, rv.var "
+            "FROM {schema}.results_var rv "
+            "WHERE rv.var IN ('Z','Q') "
+            "AND rv.id IN (SELECT DISTINCT var FROM {schema}.results WHERE id_runs = ANY(%s)) "
+            "ORDER BY rv.id"
+        )
+        rows = self.mdb.run_query(sql, fetch=True, params=[list_run], schema=True)
+        for id, row in enumerate(rows):
+            id_var, name, var = row
+            row_to_name_obs[id] = {"id": id_var, "name": name, "var": var, "obs": False}
             # Utilisation de QStandardItem pour représenter les cases à cocher
-            nname = '{} - {}'.format(var, name)
+            nname = "{} - {}".format(var, name)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setCheckState( get_qt_unchecked())
             check_item.setSelectable(False)
             model_obs.appendRow(check_item)
 
@@ -262,18 +268,22 @@ class ClassExportDataRun(QDialog):
         exit_status = False
         if len(list_run) == 0 or len(list_row) == 0:
             return model_var, row_to_name_var, exit_status
-        where = "id in (SELECT DISTINCT var FROM {}.results " \
-                "WHERE id_runs in ({})) AND  type_res NOT IN " \
-                "('weirs', 'struct', 'basin', 'link')".format(self.mdb.SCHEMA, ','.join([str(val) for val in list_run]))
-        dtmp = self.mdb.select("results_var", where=where, order="id", list_var=['id', 'name', 'var'])
-        for id, name in enumerate(dtmp['name']):
-            var = dtmp['var'][id]
-            row_to_name_var[id] = {"id": dtmp['id'][id], 'name': dtmp['name'][id], 'var': var, 'obs': False}
+        sql = (
+            "SELECT rv.id, rv.name, rv.var "
+            "FROM {schema}.results_var rv "
+            "WHERE rv.id IN (SELECT DISTINCT var FROM {schema}.results WHERE id_runs = ANY(%s)) "
+            "AND rv.type_res NOT IN ('weirs', 'struct', 'basin', 'link') "
+            "ORDER BY rv.id"
+        )
+        rows = self.mdb.run_query(sql, fetch=True, params=[list_run], schema=True)
+        for id, row in enumerate(rows):
+            id_var, name, var = row
+            row_to_name_var[id] = {"id": id_var, "name": name, "var": var, "obs": False}
             # Utilisation de QStandardItem pour représenter les cases à cocher
-            nname = '{} - {}'.format(var, name)
+            nname = "{} - {}".format(var, name)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setCheckState( get_qt_unchecked())
             check_item.setSelectable(False)
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_var.appendRow(check_item)
@@ -298,9 +308,9 @@ class ClassExportDataRun(QDialog):
             obj = self.model_out
         elif model == "Stations":
             obj = self.model_sta
-        elif model == 'CSV':
+        elif model == "CSV":
             obj = self.model_var
-        elif model == 'OTAMIN':
+        elif model == "OTAMIN":
             obj = self.model_obs
 
         list_row_mod = []
@@ -341,9 +351,16 @@ class ClassExportDataRun(QDialog):
         if not self.id_to_run:
             return
         old_row = self.id_to_run.copy()
-        self.model_scen, self.id_to_run = self.run_scenar_mod(ignore_init=self.ch_ignor.checkState())
-        new_row = [key for key, value in self.id_to_run.items() if any(
-            key_old in old_row and value["id"] == old_row[key_old]['id'] for key_old in lst_row)]
+        self.model_scen, self.id_to_run = self.run_scenar_mod(
+            ignore_init=_qt_is_checked(self.ch_ignor, check_level="full")
+        )
+        new_row = [
+            key
+            for key, value in self.id_to_run.items()
+            if any(
+                key_old in old_row and value["id"] == old_row[key_old]["id"] for key_old in lst_row
+            )
+        ]
         self.add_scen(new_row)
         self.model_scen.itemChanged.connect(self.scen_item_changed)
         self.treev_scenar.setModel(self.model_scen)
@@ -388,7 +405,7 @@ class ClassExportDataRun(QDialog):
                 self.rb_otamin.hide()
             self.model_var, self.row_to_name_var, exit_status = self.var_mod()
             if not exit_status:
-                self.box.info('No data found.')
+                self.box.info("No data found.")
                 return
             self.model_obs, self.row_to_name_obs = self.obs_mod()
             self.mod_lst_var = "CSV"
@@ -418,14 +435,13 @@ class ClassExportDataRun(QDialog):
         """
         for row in range(self.model_scen.rowCount()):
             run_item = self.model_scen.item(row)
-            if _qt_is_checked(run_item, check_level="any"):
+            if not _qt_is_checked(run_item, check_level="any"):
                 run_item.setCheckState(self.qt_check.Checked)
 
             for child_row in range(run_item.rowCount()):
                 scen_item = run_item.child(child_row)
-                if _qt_is_checked(scen_item, check_level="any"):
+                if not _qt_is_checked(scen_item, check_level="any"):
                     scen_item.setCheckState(self.qt_check.Checked)
-
 
     def add_scen(self, lst):
         """
@@ -446,7 +462,6 @@ class ClassExportDataRun(QDialog):
             if _qt_is_checked(run_item, check_level="any") and cmpt == nb_child:
                 run_item.setCheckState(self.qt_check.Checked)
 
-
     def clear_scen(self):
         """
         Clear the scenario which are selected
@@ -455,11 +470,11 @@ class ClassExportDataRun(QDialog):
         for row in range(self.model_scen.rowCount()):
             run_item = self.model_scen.item(row)
             if _qt_is_checked(run_item, check_level="full"):
-                run_item.setCheckState(self.qt_check.Unchecked)
+                run_item.setCheckState(get_qt_unchecked())
             for child_row in range(run_item.rowCount()):
                 scen_item = run_item.child(child_row)
                 if _qt_is_checked(scen_item, check_level="full"):
-                    scen_item.setCheckState(self.qt_check.Unchecked)
+                    scen_item.setCheckState( get_qt_unchecked())
 
     def clear_check(self, model):
         """
@@ -480,7 +495,7 @@ class ClassExportDataRun(QDialog):
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
             if _qt_is_checked(check_item, check_level="full"):
-                check_item.setCheckState(self.qt_check.Unchecked)
+                check_item.setCheckState( get_qt_unchecked())
 
     def allselect(self, model):
         """
@@ -500,7 +515,7 @@ class ClassExportDataRun(QDialog):
 
         for row in range(obj.rowCount()):
             check_item = obj.item(row)
-            if _qt_is_checked(check_item, check_level="any"):
+            if not _qt_is_checked(check_item, check_level="any"):
                 check_item.setCheckState(self.qt_check.Checked)
 
     def run_scenar_mod(self, ignore_init=False):
@@ -512,27 +527,31 @@ class ClassExportDataRun(QDialog):
         """
         self.d_run2id = {}
         tree_model = QStandardItemModel()
-        dtmp = self.mdb.select_distinct('run', "runs")
+        dtmp = self.mdb.select_distinct("run", "runs")
         if dtmp is None:
             return tree_model, None
-        lst_runs = dtmp['run']
+        lst_runs = dtmp["run"]
         id_to_run = {}
         for row, run in enumerate(lst_runs):
-
             item = QStandardItem(run)
             item.setCheckable(True)
-            item.setCheckState(self.qt_check.Unchecked)
-            dtmp = self.mdb.select("runs", where="run='{}'".format(run), list_var=['id', 'scenario'])
+            item.setCheckState( get_qt_unchecked())
+            dtmp = self.mdb.select(
+                "runs",
+                where="run = %s",
+                params=[run],
+                list_var=["id", "scenario"],
+            )
             cmpt = 0
-            for id, scen in enumerate(dtmp['scenario']):
-                if scen[-5:] == '_init' and ignore_init:
+            for id, scen in enumerate(dtmp["scenario"]):
+                if scen[-5:] == "_init" and ignore_init:
                     continue
-                self.d_run2id[(run, scen)] = dtmp['id'][id]
+                self.d_run2id[(run, scen)] = dtmp["id"][id]
                 run_item = QStandardItem(scen)
                 run_item.setCheckable(True)
-                run_item.setCheckState(self.qt_check.Unchecked)
+                run_item.setCheckState( get_qt_unchecked())
                 item.appendRow(run_item)
-                id_to_run[(row, cmpt)] = {'id': dtmp['id'][id]}
+                id_to_run[(row, cmpt)] = {"id": dtmp["id"][id]}
                 cmpt += 1
             tree_model.appendRow(item)
         return tree_model, id_to_run
@@ -545,83 +564,116 @@ class ClassExportDataRun(QDialog):
                   (dict) dict[row]={"abscissa": pk, "gid": index geometry, "name": name}
         """
         if len(lst_runs) > 0:
-            where = "active AND abscissa IN " \
-                    "(SELECT DISTINCT pknum FROM {}.results " \
-                    "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in lst_runs]))
+            sql = (
+                "SELECT p.gid, p.name, p.abscissa "
+                "FROM {schema}.profiles p "
+                "WHERE p.active AND p.abscissa IN "
+                "(SELECT DISTINCT pknum FROM {schema}.results WHERE id_runs = ANY(%s)) "
+                "ORDER BY p.abscissa"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, params=[lst_runs], schema=True)
         else:
-            where = "active"
-        dtmp = self.mdb.select("profiles", where=where, order="abscissa", list_var=['gid', 'name', 'abscissa'])
+            sql = (
+                "SELECT p.gid, p.name, p.abscissa FROM {schema}.profiles p "
+                "WHERE p.active ORDER BY p.abscissa"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, schema=True)
 
         id_to_name_prof = {}
         model_prof = QStandardItemModel()
-        for id, name in enumerate(dtmp['name']):
-            pk = dtmp['abscissa'][id]
-            id_to_name_prof[id] = {"abscissa": pk, 'gid': dtmp['gid'][id], 'name': dtmp['name'][id]}
+        for id, row in enumerate(rows):
+            gid, name, pk = row
+            id_to_name_prof[id] = {"abscissa": pk, "gid": gid, "name": name}
             # Utilisation de QStandardItem pour représenter les cases à cocher
-            nname = '{} - {}'.format(name, pk)
+            nname = "{} - {}".format(name, pk)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(self.qt_check.Unchecked)  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
+            check_item.setCheckState(
+                 get_qt_unchecked()
+            )  # Vous pouvez également utiliser Qt.Checked pour cocher par défaut
             check_item.setSelectable(False)  # Pour rendre seulement la case à cocher cliquable
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_prof.appendRow(check_item)
         return model_prof, id_to_name_prof
 
     def outputs_mod(self, lst_runs=[]):
-        """   Creation of a QStandardItemModel for the outputs
+        """Creation of a QStandardItemModel for the outputs
         :param lst_runs :(list) runs list
         :return : (QStandardItemMode) model list  ,
                   (dict) dict[row]={"abscissa": pk, "gid": index geometry, "name": name}"""
         if len(lst_runs) > 0:
-            where = "active AND abscissa IN " \
-                    "(SELECT DISTINCT pknum FROM {}.results " \
-                    "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in lst_runs]))
+            sql = (
+                "SELECT o.gid, o.name, o.abscissa "
+                "FROM {schema}.outputs o "
+                "WHERE o.active AND o.abscissa IN "
+                "(SELECT DISTINCT pknum FROM {schema}.results WHERE id_runs = ANY(%s)) "
+                "ORDER BY o.abscissa"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, params=[lst_runs], schema=True)
         else:
-            where = "active"
-        dtmp = self.mdb.select("outputs", where=where, order="abscissa", list_var=['gid', 'name', 'abscissa'])
+            sql = (
+                "SELECT o.gid, o.name, o.abscissa FROM {schema}.outputs o "
+                "WHERE o.active ORDER BY o.abscissa"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, schema=True)
 
         id_to_name_out = {}
         model_out = QStandardItemModel()
-        for id, name in enumerate(dtmp['name']):
-            pk = dtmp['abscissa'][id]
-            id_to_name_out[id] = {"abscissa": pk, 'gid': dtmp['gid'][id], 'name': dtmp['name'][id]}
+        for id, row in enumerate(rows):
+            gid, name, pk = row
+            id_to_name_out[id] = {"abscissa": pk, "gid": gid, "name": name}
             # Utilisation de QStandardItem pour représenter les cases à cocher
-            nname = '{} - {}'.format(name, pk)
+            nname = "{} - {}".format(name, pk)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setCheckState( get_qt_unchecked())
             check_item.setSelectable(False)
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_out.appendRow(check_item)
         return model_out, id_to_name_out
 
     def stations_mod(self, lst_runs=[]):
-        """   Creation of a QStandardItemModel for the stations
+        """Creation of a QStandardItemModel for the stations
         :param lst_runs :(list) runs list
         :return : (QStandardItemMode) model list  ,
-                  (dict) dict[row]={"abscissa": pk, "gid": index geometry, "name": name, 'code': 'code station'}"""
+                  (dict) dict[row]={"abscissa": pk, "gid": index geometry,
+                  "name": name, 'code': 'code station'}
+        """
 
         if len(lst_runs) > 0:
-            where = "active AND code is not NULL AND abscissa IN " \
-                    "(SELECT DISTINCT pknum FROM {}.results " \
-                    "WHERE id_runs in ({}))".format(self.mdb.SCHEMA, ','.join([str(val) for val in lst_runs]))
+            sql = (
+                "SELECT o.gid, o.name, o.abscissa, o.code, o.zero "
+                "FROM {schema}.outputs o "
+                "WHERE o.active AND o.code is not NULL AND o.abscissa IN "
+                "(SELECT DISTINCT pknum FROM {schema}.results WHERE id_runs = ANY(%s)) "
+                "ORDER BY o.abscissa"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, params=[lst_runs], schema=True)
         else:
-            where = "active AND code is not NULL"
-
-        dtmp = self.mdb.select("outputs", where=where, order="abscissa",
-                               list_var=['gid', 'name', 'abscissa', 'code', 'zero'])
+            sql = (
+                "SELECT o.gid, o.name, o.abscissa, o.code, o.zero "
+                "FROM {schema}.outputs o "
+                "WHERE o.active AND o.code is not NULL "
+                "ORDER BY o.abscissa"
+            )
+            rows = self.mdb.run_query(sql, fetch=True, schema=True)
 
         id_to_name_sta = {}
         model_sta = QStandardItemModel()
-        for id, name in enumerate(dtmp['name']):
-            pk = dtmp['abscissa'][id]
-            id_to_name_sta[id] = {"abscissa": pk, 'name': dtmp['name'][id],
-                                  'gid': dtmp['gid'][id], 'code': dtmp['code'][id], 'zero': dtmp['zero'][id]}
+        for id, row in enumerate(rows):
+            gid, name, pk, code, zero = row
+            id_to_name_sta[id] = {
+                "abscissa": pk,
+                "name": name,
+                "gid": gid,
+                "code": code,
+                "zero": zero,
+            }
             # Utilisation de QStandardItem pour représenter les cases à cocher
-            nname = '{} - {}'.format(name, pk)
+            nname = "{} - {}".format(name, pk)
             check_item = QStandardItem(nname)
             check_item.setCheckable(True)
-            check_item.setCheckState(self.qt_check.Unchecked)
+            check_item.setCheckState( get_qt_unchecked())
             check_item.setSelectable(False)
             # Ajout de l'élément de texte et de la case à cocher au modèle
             model_sta.appendRow(check_item)
@@ -708,14 +760,34 @@ class ClassExportDataRun(QDialog):
         self.model_sta, self.id_to_name_sta = self.stations_mod(lst)
         self.change_lst(self.mod_lst)
         # find the checkboxes
-        new_prof = [key for key, value in self.id_to_name_prof.items() if any(
-            key_old in old_prof and value["abscissa"] == old_prof[key_old]["abscissa"] for key_old in lst_pr)]
-        new_sta = [key for key, value in self.id_to_name_sta.items() if any(
-            key_old in old_sta and value["abscissa"] == old_sta[key_old]["abscissa"]
-            and value["name"] == old_out[key_old]["name"] for key_old in lst_sta)]
-        new_out = [key for key, value in self.id_to_name_out.items() if any(
-            key_old in old_out and value["abscissa"] == old_out[key_old]["abscissa"]
-            and value["name"] == old_out[key_old]["name"] for key_old in lst_out)]
+        new_prof = [
+            key
+            for key, value in self.id_to_name_prof.items()
+            if any(
+                key_old in old_prof and value["abscissa"] == old_prof[key_old]["abscissa"]
+                for key_old in lst_pr
+            )
+        ]
+        new_sta = [
+            key
+            for key, value in self.id_to_name_sta.items()
+            if any(
+                key_old in old_sta
+                and value["abscissa"] == old_sta[key_old]["abscissa"]
+                and value["name"] == old_out[key_old]["name"]
+                for key_old in lst_sta
+            )
+        ]
+        new_out = [
+            key
+            for key, value in self.id_to_name_out.items()
+            if any(
+                key_old in old_out
+                and value["abscissa"] == old_out[key_old]["abscissa"]
+                and value["name"] == old_out[key_old]["name"]
+                for key_old in lst_out
+            )
+        ]
         # checks the new the checkboxes
         self.add_check("Profiles", new_prof)
         self.add_check("Outputs", new_out)
@@ -769,159 +841,230 @@ class ClassExportDataRun(QDialog):
         """
         Create otamin file
         """
-        self.mgis.add_info('Create files :')
+        self.mgis.add_info("Create files :")
         for id_run in lst_run:
-            drun = self.mdb.select("runs", where="id='{}'".format(id_run), list_var=['run', 'scenario', 'init_date'])
-            scen = drun['scenario'][0]
-            run = drun['run'][0]
-            init_date = drun['init_date'][0]
+            drun = self.mdb.select(
+                "runs",
+                where="id = %s",
+                params=[id_run],
+                list_var=["run", "scenario", "init_date"],
+            )
+            scen = drun["scenario"][0]
+            run = drun["run"][0]
+            init_date = drun["init_date"][0]
             if init_date is None:
                 continue
 
             for stat in lst_pr:
-                dlg = ClassNameModel(self.mgis, run, scen, dico_mod[stat]['name'], dico_mod[stat]['code'])
-                if QT_VERSION > 5:
-                    dlg.exec()  # PyQt6
-                else:
-                    dlg.exec_()  # PyQt5
+                dlg = ClassNameModel(
+                    self.mgis, run, scen, dico_mod[stat]["name"], dico_mod[stat]["code"]
+                )
+                exec_dialog(dlg)
                 nmodel = dlg.new_name
-                dvar = self.mdb.select('results_var', where="var in ('ZREF', 'Z', 'Q')", list_var=['id', 'var', 'name'])
+                dvar = self.mdb.select(
+                    "results_var", where="var in ('ZREF', 'Z', 'Q')", list_var=["id", "var", "name"]
+                )
                 dtyp = {}
 
-                for row, id in enumerate(dvar['id']):
-                    if dvar['var'][row] == 'Z':
-                        dtyp['H'] = {'id': id, 'name': dvar['name'][row]}
+                for row, id in enumerate(dvar["id"]):
+                    if dvar["var"][row] == "Z":
+                        dtyp["H"] = {"id": id, "name": dvar["name"][row]}
                     else:
-                        dtyp[dvar['var'][row]] = {'id': id, 'name': dvar['name'][row]}
+                        dtyp[dvar["var"][row]] = {"id": id, "name": dvar["name"][row]}
                 lstvar = []
 
                 for row in dico_var.keys():
-                    if dico_var[row]['var'] == 'Z' and 'H' not in lstvar and dico_var[row]['obs']:
-                        lstvar.append('H')
-                    elif dico_var[row]['var'] == 'Q' and 'Q' not in lstvar and dico_var[row]['obs']:
-                        lstvar.append('Q')
+                    if dico_var[row]["var"] == "Z" and "H" not in lstvar and dico_var[row]["obs"]:
+                        lstvar.append("H")
+                    elif dico_var[row]["var"] == "Q" and "Q" not in lstvar and dico_var[row]["obs"]:
+                        lstvar.append("Q")
                 for var in lstvar:
-                    where = "id_runs={} AND var={} AND pknum={}".format(id_run, dtyp[var]['id'],
-                                                                        dico_mod[stat]['abscissa'])
-                    dmodel = self.mdb.select("results", where=where, list_var=['time', 'val'])
-                    dmodel['date'] = [init_date + timedelta(seconds=time_) for time_ in dmodel['time']]
+                    dmodel = self.mdb.select(
+                        "results",
+                        where="id_runs = %s AND var = %s AND pknum = %s",
+                        params=[id_run, dtyp[var]["id"], dico_mod[stat]["abscissa"]],
+                        list_var=["time", "val"],
+                    )
+                    dmodel["date"] = [
+                        init_date + timedelta(seconds=time_) for time_ in dmodel["time"]
+                    ]
                     if dmodel is None:
                         # self.box.info('No data found for the model.\n'
                         #               'The model {} and type {} is ignored.'.format(nmodel, var))
                         continue
 
-                    if len(dmodel['val']) == 0:
+                    if len(dmodel["val"]) == 0:
                         # self.box.info('No data found for the model.\n'
                         #               'The model {} and type {} is ignored.'.format(nmodel, var))
                         continue
 
                     sql_query = (
-                        "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
-                        "UNNEST(valeur) as valeur FROM {4}.observations "
-                        "WHERE code = '{0}' AND type='{3}') t "
-                        " WHERE date>='{1}' AND date<='{2}' AND valeur > -999.9 "
-                        "ORDER BY date".format(
-                            dico_mod[stat]['code'], dmodel['date'][0], dmodel['date'][-1], var, self.mdb.SCHEMA
-                        )
+                        "SELECT date, valeur FROM ("
+                        "SELECT code, type, UNNEST(date) AS date, UNNEST(valeur) AS valeur "
+                        "FROM {schema}.observations WHERE code = %s AND type = %s"
+                        ") t WHERE date >= %s AND date <= %s AND valeur > -999.9 "
+                        "ORDER BY date"
                     )
-                    obs_val = self.mdb.query_todico(sql_query)
-                    if len(obs_val['date']) == 0:
+                    obs_val = self.mdb.query_todico(
+                        sql_query,
+                        schema=True,
+                        params=(
+                            dico_mod[stat]["code"],
+                            var,
+                            dmodel["date"][0],
+                            dmodel["date"][-1],
+                        ),
+                    )
+                    if len(obs_val["date"]) == 0:
                         # self.box.info('No data found for the observation.\n'
-                        #               'The code  {} and type {} is ignored.'.format(dico_mod[stat]['code'], var))
+                        #               f'The code {dico_mod[stat]['code']}
+                        #               f'and type {var} is ignored.')
                         continue
 
-                    date_x = np.array([dt.timestamp() for dt in dmodel['date']])
-                    date_interp = np.array([dt.timestamp() for dt in obs_val['date']])
+                    date_x = np.array([dt.timestamp() for dt in dmodel["date"]])
+                    date_interp = np.array([dt.timestamp() for dt in obs_val["date"]])
 
-                    interp_val = np.interp(date_interp, date_x, dmodel['val'])
+                    interp_val = np.interp(date_interp, date_x, dmodel["val"])
 
-                    name_file = '{}_{}_000{}.csv'.format(dico_mod[stat]['code'][:8], nmodel[:10], var)
+                    name_file = "{}_{}_000{}.csv".format(
+                        dico_mod[stat]["code"][:8], nmodel[:10], var
+                    )
 
-                    with open(os.path.join(folder_name_path, name_file), 'w') as filein:
-                        filein.write('Stations;{}\n'.format(dico_mod[stat]['code']))
+                    with open(os.path.join(folder_name_path, name_file), "w") as filein:
+                        filein.write("Stations;{}\n".format(dico_mod[stat]["code"]))
                         filein.write("Grandeurs;{}\n".format(var))
                         filein.write("Modeles;{}\n".format(nmodel))
                         filein.write("# JJ-MM-AAAA HH:MM;OBS;PREV\n")
-                        for date_w, val_obs, val_mod in zip(obs_val['date'], obs_val['valeur'], interp_val):
-                            if var == 'H':
-                                filein.write('{};{};{}\n'.format(date_w.strftime("%m-%d-%Y %H:%M"),
-                                                                 val_obs + dico_mod[stat]['zero'], val_mod))
+                        for date_w, val_obs, val_mod in zip(
+                            obs_val["date"], obs_val["valeur"], interp_val
+                        ):
+                            if var == "H":
+                                filein.write(
+                                    "{};{};{}\n".format(
+                                        date_w.strftime("%m-%d-%Y %H:%M"),
+                                        val_obs + dico_mod[stat]["zero"],
+                                        val_mod,
+                                    )
+                                )
                             else:
-                                filein.write('{};{};{}\n'.format(date_w.strftime("%m-%d-%Y %H:%M"),
-                                                                 val_obs, val_mod))
-                    self.mgis.add_info('{} : Model: {}-{}, Code: {}, '
-                                       'Type: {}, Output: {}'.format(name_file, run,
-                                                                     scen,
-                                                                     dico_mod[stat]['code'],
-                                                                     var, dico_mod[stat]['name']))
+                                filein.write(
+                                    "{};{};{}\n".format(
+                                        date_w.strftime("%m-%d-%Y %H:%M"), val_obs, val_mod
+                                    )
+                                )
+                    self.mgis.add_info(
+                        "{} : Model: {}-{}, Code: {}, "
+                        "Type: {}, Output: {}".format(
+                            name_file,
+                            run,
+                            scen,
+                            dico_mod[stat]["code"],
+                            var,
+                            dico_mod[stat]["name"],
+                        )
+                    )
 
     def csv_file(self, dico_mod, dico_var, lst_var, lst_pr, lst_run, folder_name_path):
-        """ Creat csv file"""
+        """Creat csv file"""
         # Run; Scenario; Variable , date; Valeur
-        self.mgis.add_info('Create files :')
+        self.mgis.add_info("Create files :")
         for idx in lst_pr:
-            nam_pk = dico_mod[idx]['name']
-            abs = dico_mod[idx]['abscissa']
-            name_file = '{}-{}.csv'.format(nam_pk, abs)
+            nam_pk = dico_mod[idx]["name"]
+            abs = dico_mod[idx]["abscissa"]
+            name_file = "{}-{}.csv".format(nam_pk, abs)
 
-            with open(os.path.join(folder_name_path, name_file), 'w') as filein:
+            with open(os.path.join(folder_name_path, name_file), "w") as filein:
                 for id_run in lst_run:
-                    drun = self.mdb.select("runs", where="id='{}'".format(id_run),
-                                           list_var=['run', 'scenario', 'init_date'])
-                    scen = drun['scenario'][0]
-                    run = drun['run'][0]
-                    init_date = drun['init_date'][0]
+                    drun = self.mdb.select(
+                        "runs",
+                        where="id = %s",
+                        params=[id_run],
+                        list_var=["run", "scenario", "init_date"],
+                    )
+                    scen = drun["scenario"][0]
+                    run = drun["run"][0]
+                    init_date = drun["init_date"][0]
                     date_var = False
                     if init_date is not None:
                         date_var = True
 
-                    lst_obs_var = [dico_var[idx]['var'] for idx in lst_var if dico_var[idx]['obs']]
+                    lst_obs_var = [dico_var[idx]["var"] for idx in lst_var if dico_var[idx]["obs"]]
                     if date_var:
                         filein.write("# Run; Scenario; Variables; Dates; Values \n")
                     else:
                         filein.write("# Run; Scenario; Variables; Times; Values \n")
                     for row in lst_var:
-                        if not dico_var[row]['obs']:
-                            where = "id_runs={} AND var={} AND pknum={}".format(id_run, dico_var[row]['id'],
-                                                                                abs)
-                            dmodel = self.mdb.select("results", where=where, list_var=['time', 'val'])
-                            if len(dmodel['time']) == 0:
+                        if not dico_var[row]["obs"]:
+                            dmodel = self.mdb.select(
+                                "results",
+                                where="id_runs = %s AND var = %s AND pknum = %s",
+                                params=[id_run, dico_var[row]["id"], abs],
+                                list_var=["time", "val"],
+                            )
+                            if len(dmodel["time"]) == 0:
                                 continue
-                            for idt, tps in enumerate(dmodel['time']):
+                            for idt, tps in enumerate(dmodel["time"]):
                                 if date_var:
                                     date_w = init_date + timedelta(seconds=tps)
                                     filein.write(
-                                        '{};{};{};{};{} \n'.format(run, scen, dico_var[row]['var'],
-                                                                   date_w.strftime("%m-%d-%Y %H:%M"),
-                                                                   dmodel['val'][idt]))
+                                        "{};{};{};{};{} \n".format(
+                                            run,
+                                            scen,
+                                            dico_var[row]["var"],
+                                            date_w.strftime("%m-%d-%Y %H:%M"),
+                                            dmodel["val"][idt],
+                                        )
+                                    )
                                 else:
-                                    filein.write('{};{};{};{};{} \n'.format(run, scen, dico_var[row]['var'],
-                                                                            tps, dmodel['val'][idt]))
+                                    filein.write(
+                                        "{};{};{};{};{} \n".format(
+                                            run,
+                                            scen,
+                                            dico_var[row]["var"],
+                                            tps,
+                                            dmodel["val"][idt],
+                                        )
+                                    )
 
                     if date_var:
-                        where = "id_runs={} AND pknum={}".format(id_run, abs)
-                        lst_time = self.mdb.select_distinct('time', "results", where=where, ordre='time')
-
-                        lst_date = [init_date + timedelta(seconds=time_) for time_ in lst_time['time']]
+                        dict_times = self.mdb.select_distinct(
+                            "time",
+                            "results",
+                            where="id_runs = %s AND pknum = %s",
+                            ordre="time",
+                            params=(id_run, abs),
+                        )
+                        lst_time = dict_times["time"] if dict_times else []
+                        lst_date = [init_date + timedelta(seconds=time_) for time_ in lst_time]
 
                         for var in lst_obs_var:
-                            if var == 'Z':
-                                var = 'H'
+                            if var == "Z":
+                                var = "H"
                             sql_query = (
-                                "SELECT date, valeur FROM (SELECT code,type, UNNEST(date) as date, "
-                                "UNNEST(valeur) as valeur FROM {3}.observations "
-                                "WHERE code = (SELECT DISTINCT code FROM {3}.outputs WHERE active AND name='{4}' AND abscissa={5}) AND type='{2}') t "
-                                " WHERE date>='{0}' AND date<='{1}' AND valeur > -999.9 "
-                                "ORDER BY date".format(
-                                    lst_date[0], lst_date[-1], var, self.mdb.SCHEMA, nam_pk, abs
-                                )
+                                "SELECT date, valeur FROM ("
+                                "SELECT code, type, UNNEST(date) AS date, UNNEST(valeur) AS valeur "
+                                "FROM {schema}.observations WHERE code = ("
+                                "SELECT DISTINCT code FROM {schema}.outputs "
+                                "WHERE active AND name = %s AND abscissa = %s"
+                                ") AND type = %s"
+                                ") t WHERE date >= %s AND date <= %s AND valeur > -999.9 "
+                                "ORDER BY date"
                             )
-                            # print(sql_query)
-                            obs_val = self.mdb.query_todico(sql_query)
-                            if len(obs_val['valeur']) == 0:
+                            obs_val = self.mdb.query_todico(
+                                sql_query,
+                                schema=True,
+                                params=(nam_pk, abs, var, lst_date[0], lst_date[-1]),
+                            )
+                            if len(obs_val["valeur"]) == 0:
                                 continue
 
-                            for idt, tps in enumerate(obs_val['date']):
+                            for idt, tps in enumerate(obs_val["date"]):
                                 filein.write(
-                                    '{};{};{};{};{} \n'.format(run, scen, '{}-{}'.format(var, 'obs'),
-                                                               tps.strftime("%m-%d-%Y %H:%M"), obs_val['valeur'][idt]))
+                                    "{};{};{};{};{} \n".format(
+                                        run,
+                                        scen,
+                                        "{}-{}".format(var, "obs"),
+                                        tps.strftime("%m-%d-%Y %H:%M"),
+                                        obs_val["valeur"][idt],
+                                    )
+                                )

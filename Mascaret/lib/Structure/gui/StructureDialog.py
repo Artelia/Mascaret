@@ -19,12 +19,9 @@ email                :
 """
 import os
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtCore import QT_VERSION, Qt
+from qgis.PyQt.QtWidgets import QDialog, QTreeWidgetItem
+from qgis.PyQt.uic import loadUi
 
 from .GraphStructure import GraphStructure
 from .StructureCreateDialog import ClassStructureCreateDialog
@@ -60,7 +57,7 @@ class ClassStructureDialog(QDialog):
 
     def fill_lst_struct(self, id=None):
         rows = self.mdb.run_query(
-            "SELECT gid, name FROM {0}.profiles".format(self.mdb.SCHEMA), fetch=True
+            "SELECT gid, name FROM {schema}.profiles", fetch=True, schema=True
         )
         dico_profil = {r[0]: r[1] for r in rows}
         self.tree_struct.clear()
@@ -72,18 +69,18 @@ class ClassStructureDialog(QDialog):
             qt_itm_sel = Qt.ItemIsSelectable
         for id_type, elem in self.tbst.dico_struc_typ.items():
             typ_itm = QTreeWidgetItem()
-            typ_itm.setFlags( qt_itm_ena )
+            typ_itm.setFlags(qt_itm_ena)
             typ_itm.setData(0, 32, id_type)
             typ_itm.setText(0, elem["name"])
             self.tree_struct.addTopLevelItem(typ_itm)
             sql = (
-                "SELECT id, name, id_prof_ori, method, comment,active FROM {0}.struct_config "
-                "WHERE type = '{1}' ORDER BY name".format(self.mdb.SCHEMA, id_type)
+                "SELECT id, name, id_prof_ori, method, comment, active FROM {schema}.struct_config "
+                "WHERE type = %s ORDER BY name"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, params=[id_type], schema=True)
             for row in rows:
                 ouv_itm = QTreeWidgetItem()
-                ouv_itm.setFlags(qt_itm_ena |  qt_itm_sel)
+                ouv_itm.setFlags(qt_itm_ena | qt_itm_sel)
                 ouv_itm.setData(0, 32, int(row[0]))
                 ouv_itm.setText(0, row[1])
                 ouv_itm.setData(1, 32, int(row[2]))
@@ -149,22 +146,9 @@ class ClassStructureDialog(QDialog):
             itm = self.tree_struct.selectedItems()[0]
             id_struct = itm.data(0, 32)
 
-            sql = "DELETE FROM {0}.profil_struct WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct
-            )
-            self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_elem_param WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct
-            )
-            self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_elem WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct
-            )
-            self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_param WHERE id_config = {1}".format(
-                self.mdb.SCHEMA, id_struct
-            )
-            self.mdb.execute(sql)
-            sql = "DELETE FROM {0}.struct_config WHERE id = {1}".format(self.mdb.SCHEMA, id_struct)
-            self.mdb.execute(sql)
+            self.mdb.delete("profil_struct", where="id_config = %s", params=[id_struct])
+            self.mdb.delete("struct_elem_param", where="id_config = %s", params=[id_struct])
+            self.mdb.delete("struct_elem", where="id_config = %s", params=[id_struct])
+            self.mdb.delete("struct_param", where="id_config = %s", params=[id_struct])
+            self.mdb.delete("struct_config", where="id = %s", params=[id_struct])
             self.fill_lst_struct()

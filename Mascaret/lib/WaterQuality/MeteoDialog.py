@@ -21,19 +21,25 @@ import os
 from datetime import datetime, timedelta
 
 from matplotlib.dates import date2num
-from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtCore import QDate, QDateTime, QT_VERSION, QTime, QVariant, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QKeySequence
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
+from qgis.PyQt.QtWidgets import (
+    QButtonGroup,
+    QDialog,
+    QDoubleSpinBox,
+    QFileDialog,
+    QItemEditorFactory,
+    QMessageBox,
+    QShortcut,
+    QStyledItemDelegate,
+)
+from qgis.PyQt.uic import loadUi
 
 from .ClassTableWQ import ClassTableWQ
 from .Graph_WQ import GraphMeteo
 from ..Function import data_to_float, data_to_date
 
-from ...ui.custom_control import _qt_is_checked
+from ...ui.custom_control import _qt_is_checked, get_qt_unchecked
 
 
 class ClassMeteoDialog(QDialog):
@@ -49,7 +55,7 @@ class ClassMeteoDialog(QDialog):
         self.graph_edit = None
         self.date_ref = None
         self.list_var = []
-
+        self.qt_ucheck = get_qt_unchecked()
 
         self.ui = loadUi(os.path.join(self.mgis.masplugPath, "ui/ui_meteo.ui"), self)
         self.ui.de_date.hide()
@@ -87,8 +93,8 @@ class ClassMeteoDialog(QDialog):
     def display_graph_home(self):
         """Display graph"""
         if self.ui.lst_sets.selectedIndexes():
-            l = self.ui.lst_sets.selectedIndexes()[0].row()
-            config = int(self.ui.lst_sets.model().item(l, 0).text())
+            line = self.ui.lst_sets.selectedIndexes()[0].row()
+            config = int(self.ui.lst_sets.model().item(line, 0).text())
             self.graph_home.init_graph(config)
         else:
             self.graph_home.init_graph(None)
@@ -108,8 +114,11 @@ class ClassMeteoDialog(QDialog):
         self.ui.lst_sets.setModelColumn(1)
         self.ui.lst_sets.selectionModel().selectionChanged.connect(self.display_graph_home)
 
-        sql = "SELECT * FROM {0}.meteo_config ORDER BY name".format(self.mdb.SCHEMA)
-        rows = self.mdb.run_query(sql, fetch=True)
+        rows = self.mdb.run_query(
+            "SELECT * FROM {schema}.meteo_config ORDER BY name",
+            fetch=True,
+            schema=True,
+        )
 
         for i, row in enumerate(rows):
             for j, field in enumerate(row):
@@ -138,25 +147,23 @@ class ClassMeteoDialog(QDialog):
         """
         Select configuration
         """
-        if QT_VERSION > 5:
-            qt_ucheck = Qt.CheckState.Unchecked
-        else:
-            qt_ucheck = Qt.Unchecked
+        
         self.ui.lst_sets.model().blockSignals(True)
         for r in range(self.ui.lst_sets.model().rowCount()):
             if r != itm.row():
-                self.ui.lst_sets.model().item(r, 1).setCheckState(qt_ucheck)
+                self.ui.lst_sets.model().item(r, 1).setCheckState(self.qt_ucheck)
         self.ui.lst_sets.model().blockSignals(False)
 
-        sql = "UPDATE {0}.meteo_config SET active = 'f'".format(self.mdb.SCHEMA)
-        self.mdb.run_query(sql)
-
+        self.mdb.run_query(
+            "UPDATE {schema}.meteo_config SET active = %s", params=[False], schema=True
+        )
         if _qt_is_checked(itm, check_level="full"):
-            id = str(self.ui.lst_sets.model().item(itm.row(), 0).text())
-            sql = "UPDATE {0}.meteo_config SET active = 't' WHERE id = {1}".format(
-                self.mdb.SCHEMA, id
+            conf_id = int(self.ui.lst_sets.model().item(itm.row(), 0).text())
+            self.mdb.run_query(
+                "UPDATE {schema}.meteo_config SET active = %s WHERE id = %s",
+                params=[True, conf_id],
+                schema=True,
             )
-            self.mdb.run_query(sql)
 
     def check_date_ref(self, state):
         """check reference date"""
@@ -232,11 +239,13 @@ class ClassMeteoDialog(QDialog):
         if self.cur_set != -1:
             c = 0
             for var in self.list_var:
-                sql = (
-                    "SELECT time, value FROM {0}.laws_meteo WHERE id_config = {1} AND id_var = {2} "
-                    "ORDER BY time".format(self.mdb.SCHEMA, self.cur_set, var[0])
+                rows = self.mdb.run_query(
+                    "SELECT time, value FROM {schema}.laws_meteo "
+                    "WHERE id_config = %s AND id_var = %s ORDER BY time",
+                    fetch=True,
+                    params=[self.cur_set, var[0]],
+                    schema=True,
                 )
-                rows = self.mdb.run_query(sql, fetch=True)
 
                 if c == 0:
                     model.insertRows(0, len(rows))
@@ -448,10 +457,10 @@ class ClassMeteoDialog(QDialog):
         # charger les informations
         # changer de page
         if self.ui.lst_sets.selectedIndexes():
-            l = self.ui.lst_sets.selectedIndexes()[0].row()
-            self.cur_set = int(self.ui.lst_sets.model().item(l, 0).text())
-            self.ui.txt_name.setText(self.ui.lst_sets.model().item(l, 1).text())
-            date_str = str(self.ui.lst_sets.model().item(l, 2).text())
+            line = self.ui.lst_sets.selectedIndexes()[0].row()
+            self.cur_set = int(self.ui.lst_sets.model().item(line, 0).text())
+            self.ui.txt_name.setText(self.ui.lst_sets.model().item(line, 1).text())
+            date_str = str(self.ui.lst_sets.model().item(line, 2).text())
             if date_str == "None":
                 self.ui.cb_date.setChecked(False)
                 date = QDateTime(QDate().currentDate(), QTime(0, 0, 0))
@@ -467,9 +476,9 @@ class ClassMeteoDialog(QDialog):
         # charger les informations
         # changer de page
         if self.ui.lst_sets.selectedIndexes():
-            l = self.ui.lst_sets.selectedIndexes()[0].row()
-            id_set = self.ui.lst_sets.model().item(l, 0).text()
-            name_set = self.ui.lst_sets.model().item(l, 1).text()
+            line = self.ui.lst_sets.selectedIndexes()[0].row()
+            id_set = self.ui.lst_sets.model().item(line, 0).text()
+            name_set = self.ui.lst_sets.model().item(line, 1).text()
             if QT_VERSION > 5:
                 ok_button = QMessageBox.StandardButton.Ok
                 cancel_button = QMessageBox.StandardButton.Cancel
@@ -477,22 +486,16 @@ class ClassMeteoDialog(QDialog):
                 ok_button = QMessageBox.Ok
                 cancel_button = QMessageBox.Cancel
             if (
-                    QMessageBox.question(
-                        self,
-                        "Meteo Settings",
-                        "Delete {} ?".format(name_set),
-                        cancel_button | ok_button,
-                    )
+                QMessageBox.question(
+                    self,
+                    "Meteo Settings",
+                    "Delete {} ?".format(name_set),
+                    cancel_button | ok_button,
+                )
             ) == ok_button:
                 self.mgis.add_info("Deletion of {} Meteo Setting".format(name_set), dbg=True)
-                self.mdb.execute(
-                    "DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(
-                        self.mdb.SCHEMA, id_set
-                    )
-                )
-                self.mdb.execute(
-                    "DELETE FROM {0}.meteo_config WHERE id = {1}".format(self.mdb.SCHEMA, id_set)
-                )
+                self.mdb.delete("laws_meteo", where="id_config = %s", params=[int(id_set)])
+                self.mdb.delete("meteo_config", where="id = %s", params=[int(id_set)])
                 self.fill_lst_conf()
 
     def new_time(self):
@@ -526,14 +529,15 @@ class ClassMeteoDialog(QDialog):
             self.update_courbe("all")
 
     def chg_time(self, v):
+        idx = self.bg_time.id(v)
         unit = ["s", "min", "h", "day", "date"]
         for i in range(5):
-            if i == v:
+            if i == idx:
                 self.ui.tab_sets.setColumnHidden(i, False)
             else:
                 self.ui.tab_sets.setColumnHidden(i, True)
         if not self.filling_tab:
-            self.graph_edit.maj_unit_x(unit[v])
+            self.graph_edit.maj_unit_x(unit[idx])
             self.update_courbe("all")
 
     def accept_page2(self):
@@ -550,27 +554,28 @@ class ClassMeteoDialog(QDialog):
             date_set = "Null"
         if self.cur_set == -1:
             self.mgis.add_info("Addition of {} Meteo Setting".format(name_set), dbg=True)
-            self.mdb.execute(
-                "INSERT INTO {0}.meteo_config (name, starttime, active) VALUES ('{1}', {2}, 'f')".format(
-                    self.mdb.SCHEMA, name_set, date_set
-                )
+            self.mdb.run_query(
+                "INSERT INTO {schema}.meteo_config (name, starttime, active) VALUES (%s, %s, %s)",
+                params=[
+                    name_set,
+                    None if date_set == "Null" else data_to_date(date_set.replace("'", "")),
+                    False,
+                ],
+                schema=True,
             )
-            res = self.mdb.run_query(
-                "SELECT Max(id) FROM {0}.meteo_config".format(self.mdb.SCHEMA), fetch=True
-            )
-            self.cur_set = res[0][0]
+            res = self.mdb.select_max("meteo_config", "id")
+            self.cur_set = res
         else:
-            self.mgis.add_info("Editing of {} Meteo Setting".format(name_set), dbg=True)
-            self.mdb.execute(
-                "UPDATE {0}.meteo_config SET name = '{1}', starttime = {2} WHERE id = {3}".format(
-                    self.mdb.SCHEMA, name_set, date_set, self.cur_set
-                )
+            self.mdb.run_query(
+                "UPDATE {schema}.meteo_config SET name = %s, starttime = %s WHERE id = %s",
+                params=[
+                    name_set,
+                    None if date_set == "Null" else data_to_date(date_set.replace("'", "")),
+                    self.cur_set,
+                ],
+                schema=True,
             )
-            self.mdb.execute(
-                "DELETE FROM {0}.laws_meteo WHERE id_config = {1}".format(
-                    self.mdb.SCHEMA, self.cur_set
-                )
-            )
+            self.mdb.delete("laws_meteo", where="id_config = %s", params=[self.cur_set])
 
         recs = []
         for r in range(self.ui.tab_sets.model().rowCount()):
@@ -585,11 +590,11 @@ class ClassMeteoDialog(QDialog):
                 )
 
         self.mdb.run_query(
-            "INSERT INTO {0}.laws_meteo (id_config, id_var, time, value) VALUES (%s, %s, %s, %s)".format(
-                self.mdb.SCHEMA
-            ),
+            "INSERT INTO {schema}.laws_meteo (id_config, id_var, time, value) "
+            "VALUES (%s, %s, %s, %s)",
             many=True,
             list_many=recs,
+            schema=True,
         )
 
         self.fill_lst_conf(self.cur_set)

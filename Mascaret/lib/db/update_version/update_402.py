@@ -103,10 +103,11 @@ class ClassUpdate402:
                         err = self.mdb.insert("law_config", tab, listimport)
                         if len(tab.keys()) > 0:
                             maxk = max(tab.keys())
-                            sql = "ALTER SEQUENCE {}.law_config_id_seq " "RESTART WITH {};".format(
-                                self.mdb.SCHEMA, maxk + 1
+                            sql = (
+                                f"ALTER SEQUENCE {{schema}}.law_config_id_seq "
+                                f"RESTART WITH {maxk + 1};"
                             )
-                            self.mdb.run_query(sql)
+                            self.mdb.run_query(sql, schema=True)
                         if err:
                             self.mgis.add_info("Error: Insert law_config")
                             self.cht.del_tab("law_config")

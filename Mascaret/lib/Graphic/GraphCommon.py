@@ -18,20 +18,16 @@ email                :
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.uic import *
-from qgis.core import *
-from qgis.gui import *
+from qgis.PyQt.QtWidgets import QApplication, QToolButton, QWidget
 
 try:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-except:
+except ImportError:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQT as FigureCanvas
 # ***************************
 try:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
-except:
+except ImportError:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 from matplotlib.figure import Figure
@@ -44,7 +40,6 @@ from datetime import datetime
 
 try:
     _encoding = QApplication.UnicodeUTF8
-
 
     def _translate(context, text, disambig):
         return QApplication.translate(context, text, disambig, _encoding)
@@ -85,8 +80,8 @@ class GraphCommon(QWidget):
         self.gid = gid
         self.coucheProfils = self.mgis.coucheProfils
         try:
-            self.liste = self.mdb.select("profiles", "", "abscissa", verbose=False)
-        except:
+            self.liste = self.mdb.select("profiles", "", "abscissa")
+        except Exception:
             self.mgis.add_info("Error Select profils")
             return
         self.position = self.liste["gid"].index(self.gid)
@@ -232,7 +227,7 @@ class CustNavigationToolbar(NavigationToolbar):
         # Stocker les limites initiales des axes
         self.par = parent
         self.update_limites = True
-        if hasattr(self.par, 'update_limites'):
+        if hasattr(self.par, "update_limites"):
             self.update_limites = self.par.update_limites
 
     def home(self, *args):
@@ -507,6 +502,7 @@ class GraphCommonNew:
                 self.main_axe.set_xlim(mini_x, maxi_x)
         self.fig.autofmt_xdate()
         self.canvas.draw()
+
 
 # class DraggableLegendNew:
 #     def __init__(self, axes):

@@ -60,7 +60,8 @@ class GraphStructure(GraphCommon):
         self.axes.add_patch(self.courbes["profil_poly"])
 
         # Dessin de l'ouvrage
-        # self.courbes['ouvrage_line'], = self.axes.plot([], [], zorder=10, c='black', label='ouvrage')
+        # self.courbes['ouvrage_line'], = self.axes.plot([], [], zorder=10, c='black',
+        #                                               label='ouvrage')
         self.courbes["ouvrage_poly"] = mpoly(
             [(0.0, 0.0), (0.0, 0.0)],
             zorder=9,
@@ -78,13 +79,8 @@ class GraphStructure(GraphCommon):
             self.courbes["elem"] = []
 
             param = {}
-            sql = (
-                "SELECT x, z FROM {0}.profil_struct WHERE id_config = {1} ORDER BY id_order".format(
-                    self.mdb.SCHEMA, config
-                )
-            )
-
-            rows = self.mdb.run_query(sql, fetch=True)
+            sql = "SELECT x, z FROM {schema}.profil_struct WHERE id_config = %s ORDER BY id_order"
+            rows = self.mdb.run_query(sql, fetch=True, params=[config], schema=True)
 
             dico_profil = {"x": [r[0] for r in rows], "z": [r[1] for r in rows]}
             minx, miny, maxx, maxy = (
@@ -102,15 +98,15 @@ class GraphStructure(GraphCommon):
                 [(dico_profil["x"][r], dico_profil["z"][r]) for r in range(len(dico_profil["x"]))]
             )
 
-            # sql = "SELECT type FROM {0}.struct_config WHERE id = {1} ".format(self.mdb.SCHEMA, config)
-            # rows = self.mdb.run_query(sql, fetch=True)
+            # sql = ("SELECT type FROM {schema}.struct_config WHERE id = %s "
+            # rows = self.mdb.run_query(sql, fetch=True,schema=True, params=[config])
             # typ_struct = rows[0][0]
 
             sql = (
-                "SELECT var, value FROM {0}.struct_param WHERE id_config = {1} "
-                "AND var IN ('ZTOPTAB', 'EPAITAB', 'FIRSTWD')".format(self.mdb.SCHEMA, config)
+                "SELECT var, value FROM {schema}.struct_param WHERE id_config = %s "
+                "AND var IN ('ZTOPTAB', 'EPAITAB', 'FIRSTWD')"
             )
-            rows = self.mdb.run_query(sql, fetch=True)
+            rows = self.mdb.run_query(sql, fetch=True, params=[config], schema=True)
             if not rows:
                 self.courbes["ouvrage_poly"].set_xy([(0.0, 0.0), (0.0, 0.0)])
                 self.update_limites(minx, miny, maxx, maxy)
@@ -137,10 +133,10 @@ class GraphStructure(GraphCommon):
                 )
 
                 sql = (
-                    "SELECT id_elem, type, ST_AsGeoJSON(polygon) FROM {0}.struct_elem WHERE id_config = {1} "
-                    "AND polygon is Not Null ORDER BY id_elem".format(self.mdb.SCHEMA, config)
+                    "SELECT id_elem, type, ST_AsGeoJSON(polygon) FROM {schema}.struct_elem "
+                    "WHERE id_config = %s AND polygon is Not Null ORDER BY id_elem"
                 )
-                lst_elem = self.mdb.run_query(sql, fetch=True)
+                lst_elem = self.mdb.run_query(sql, fetch=True, params=[config], schema=True)
                 for e, elem in enumerate(lst_elem):
                     if elem[1] == 0:
                         poly = geometry.shape(json.loads(elem[2]))

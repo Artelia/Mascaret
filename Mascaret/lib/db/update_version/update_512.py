@@ -34,11 +34,8 @@ class ClassUpdate512:
         valide = True
         valid = True
         if valide:
-            sql = "DROP TRIGGER IF EXISTS basins_chstate_active ON {}.basins;".format(
-                self.mdb.SCHEMA
-            )
-            err1 = self.mdb.run_query(sql)
-            tabs_sql = ["basins", Maso.basins]
+            sql = "DROP TRIGGER IF EXISTS basins_chstate_active ON {schema}.basins;"
+            self.mdb.run_query(sql, schema=True)
             obj = Maso.basins()
             obj.schema = self.mdb.SCHEMA
             sql = obj.pg_updat_actv()
@@ -72,19 +69,9 @@ class ClassUpdate512:
                         for ligne in file:
                             liste_value.append(ligne.replace("\n", "").split(";"))
                     liste_col = self.mdb.list_columns("parametres")
-                    var = ",".join(liste_col)
-                    valeurs = "("
-                    for k in liste_col:
-                        valeurs += "%s,"
-                    valeurs = valeurs[:-1] + ")"
 
                     self.mdb.delete("parametres")
-
-                    sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                        self.mdb.SCHEMA, "parametres", var, valeurs
-                    )
-
-                    self.mdb.run_query(sql, many=True, list_many=liste_value)
+                    self.mdb.insert_res("parametres", liste_value, liste_col)
                 except Exception:
                     valid = False
                     self.mgis.add_info("Error when parameters update")

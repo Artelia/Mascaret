@@ -16,12 +16,12 @@ email                :
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- """
+"""
 
 import json
 
 import numpy as np
-from shapely.geometry import *
+from shapely.geometry import GeometryCollection, LineString, Polygon, mapping
 from shapely.ops import unary_union
 
 
@@ -51,19 +51,19 @@ class ClassResProfil:
         self.id_run = None
 
     def init_cl(
-            self,
-            pk,
-            prof,
-            branch,
-            min_bed,
-            maj_bed,
-            id_run,
-            database=None,
-            plani=None,
-            ksmaj=None,
-            ksmin=None,
-            zmax=None,
-            dico_plani=None,
+        self,
+        pk,
+        prof,
+        branch,
+        min_bed,
+        maj_bed,
+        id_run,
+        database=None,
+        plani=None,
+        ksmaj=None,
+        ksmin=None,
+        zmax=None,
+        dico_plani=None,
     ):
         self.pk = pk
         self.id_run = id_run
@@ -233,7 +233,7 @@ class ClassResProfil:
         if id_d == -1:
             limit_pr = pr[id_g:]
         else:
-            limit_pr = pr[id_g: id_d + 1]
+            limit_pr = pr[id_g : id_d + 1]
 
         wow = []
         pzmax = max(zmax, pr[id_g, 1])
@@ -265,7 +265,7 @@ class ClassResProfil:
             z_level = z_level + pasz
 
             line = [(pr[id_g, 0] - 1, z_level), (pr[id_d, 0] + 1, z_level)]
-            point_fond = Point([x_fond, z_level])
+            # point_fond = Point([x_fond, z_level])
             line_disc = self.creat_line_width(poly, line, x_fond, z_level)
             if line_disc:
                 lst_line_disc.append(line_disc)
@@ -326,9 +326,10 @@ class ClassResProfil:
             if (profile[0] == profile[-1]).all():
                 # print('No profile')
                 continue
-            x_g, z_g = (profile[0, 0], profile[0, 1])
-            x_d, z_d = (profile[-1, 0], profile[-1, 1])
-
+            # x_g, z_g = (profile[0, 0], profile[0, 1])
+            # x_d, z_d = (profile[-1, 0], profile[-1, 1])
+            z_g = profile[0, 1]
+            z_d = profile[-1, 1]
             minz = np.min(profile[:, 1])
             id_f = np.where(profile[:, 1] == minz)[0]
             if len(id_f) > 1:
@@ -409,7 +410,7 @@ class ClassResProfil:
 
                     except Exception as err:
                         if self.debug:
-                            txt = ("Warning Plani \n" + err)
+                            txt = "Warning Plani \n" + err
                             return txt
             if self.mdb:
                 if point_bas:
@@ -420,22 +421,11 @@ class ClassResProfil:
     def insert_lst_mdb(self, list_insert, point_bas):
         if list_insert:
             col_tab = ["id_runs", "pknum", "id_type", "id_order", "line"]
-            var = ",".join(col_tab)
-            temp = []
-            for k in col_tab:
-                if k == "line":
-                    temp.append("ST_GeomFromGeoJSON(%s)")
-                else:
-                    temp.append("%s")
-            valeurs = "({})".format(",".join(temp))
             list_insert2 = []
             for lst in list_insert:
                 if lst not in list_insert2:
                     list_insert2.append(lst)
-            sql = "INSERT INTO {0}.{1}({2}) VALUES {3};".format(
-                self.mdb.SCHEMA, "runs_plani", var, valeurs
-            )
-            self.mdb.run_query(sql, many=True, list_many=list_insert2)
+            self.mdb.insert_res("runs_plani", list_insert2, col_tab)
 
         if point_bas:
             col_tab = ["id_runs", "type_res", "var", "val"]
@@ -604,30 +594,3 @@ def get_valeurs(z_level, poly):
 
 if __name__ == "__main__":
     pass
-    # **************************************************************
-    # **************************************************************
-
-    # min_bed = [300, 520]
-    # # maj_bed = [250,570]
-    # maj_bed = [300, 520]
-    # plani = 1
-    # file_av = r'C:\Users\mehdi-pierre.daou\Desktop\ana_schapi\test_visu\31546.45_-_pont_trevoux.csv'
-    # with open(file_av) as file:
-    #     lp = []
-    #     cpt = 0
-    #     for line in file:
-    #         if cpt != 0:
-    #             lst = line.replace('\n', '').split(';')
-    #             lp.append((float(lst[0]), float(lst[1])))
-    #         cpt += 1
-    # pr = lp.copy()
-    #
-    # pr_av = np.array(pr)
-    # fig2 = plt.figure(figsize=(6, 8))
-    # ax2 = fig2.add_subplot(111)
-    # ax2.plot(pr_av[:, 0], pr_av[:, 1])
-    # plt.show()
-    #
-    # cl_geo = ClassGeoProfil(pr, min_bed ,maj_bed)
-    # cl_geo.main()
-    # cl_geo.print_val()
