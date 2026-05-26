@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=7.0.1
+version=7.0.2
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    7.0.2 : Fixed bugs in the Mascaret library (Linux version)
+            Fixed issues with window title display and parameter handling (bubble); added assimilation parameter in menu
     7.0.1 : Fixed bugs in hydraulic structure law creation.
     7.0.0 : Refactoring of the Run execution process
             Add GUI for Run definition
