@@ -2,5 +2,5 @@
 # --------------------
 
 pytest
-pytest-cov>=2.11,<8
+pytest-cov>=7.1.0,<8
 semver>=2.13,<3.1
