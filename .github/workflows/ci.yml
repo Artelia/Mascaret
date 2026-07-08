@@ -7,14 +7,13 @@ on:
     branches:
       - main
     paths:
-      - 'mesh_tools/**'
       - '.docker/**'
       - '.github/ci.yml'
   pull_request:
     branches:
       - main
+      - Dev_exp
     paths:
-      - 'mesh_tools/**'
       - '.docker/**'
       - '.github/ci.yml'
 
