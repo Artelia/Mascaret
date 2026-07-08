@@ -46,6 +46,32 @@ jobs:
       - name: Run flake8
         run: flake8
 
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.9
+          architecture: x64
+
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - uses: actions/cache@v5.0.3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python requirements
+        run: pip install -r requirements/dev.txt
+
+      - name: Run bandit
+        run: bandit -r Mascaret -ll -f txt
+
   tests-unit:
     runs-on: ubuntu-latest
 
@@ -73,7 +99,7 @@ jobs:
         run: pytest tests/unit/
 
   release:
-    needs: [flake8, tests-unit]
+    needs: [flake8, bandit, tests-unit]
 
     runs-on: ubuntu-latest
     if: github.repository_owner == 'Artelia' && contains(github.ref, 'refs/tags/')
