@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=7.0.2
+version=7.0.3
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,7 +32,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-    7.0.3 : Fixed bugs in export-data: correct All Scenarii button behavior
+    7.0.3 : Remove the Mascaret library from the repository and automatically download it if it does not exist.
+            Fixed bugs in export-data: correct All Scenarii button behavior
             Fixed SQL security issues
             Prevent duplicate schema imports when the schema is already loaded
             Removed assimilation Edit button and enabled automatic editing

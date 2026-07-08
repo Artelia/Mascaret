@@ -237,6 +237,9 @@ class MascPlugDialog(QMainWindow):
         if not self.mdb:
             self.disable_actions_connection()
 
+        # Check API library
+        self.check_dll_api()
+
             # Menu action
         # visu Mascaret plugin
         self.ui.actionCross_section.triggered.connect(self.main_graph)
@@ -315,6 +318,53 @@ class MascPlugDialog(QMainWindow):
 
         self.dockwidgetAssim = None
         self.ui.actionAssimilation.triggered.connect(self.assimilation)
+
+    def check_dll_api(self):
+        """Check API shared libraries and optionally download them if missing."""
+        api_dir = os.path.join(self.masplugPath, "lib", "api")
+        required_files = ["libmascaret.dll", "libmascaret.so"]
+        missing_files = [
+            filename
+            for filename in required_files
+            if not os.path.isfile(os.path.join(api_dir, filename))
+        ]
+
+        if not missing_files:
+            return True
+
+        self.add_info(
+            "Missing API library files: {}".format(", ".join(missing_files)),
+            box=True,
+            btype="INFO",
+        )
+        ok_download = self.box.yes_no_q(
+            "Some Mascaret API libraries are missing ({}).\n"
+            "Do you want to download them now?".format(", ".join(missing_files))
+        )
+        if not ok_download:
+            return False
+
+        if not self.download_bin(dll_only=True):
+            self.add_info("API libraries download failed.", box=True, btype="CRITICAL")
+            return False
+
+        missing_after_download = [
+            filename
+            for filename in required_files
+            if not os.path.isfile(os.path.join(api_dir, filename))
+        ]
+        if missing_after_download:
+            self.add_info(
+                "API libraries are still missing after download: {}".format(
+                    ", ".join(missing_after_download)
+                ),
+                box=True,
+                btype="CRITICAL",
+            )
+            return False
+
+        self.add_info("API libraries successfully downloaded.")
+        return True
 
     def add_info(self, text, dbg=False, box=False, btype="INFO"):
         if dbg:
@@ -1168,18 +1218,38 @@ Version : {}
         dlg = ClassUpdatePk(self, self.iface)
         exec_dialog(dlg)
 
-    def download_bin(self):
-        """download the Mascaret executable"""
-        # url git
-
+    def download_bin(self, dll_only=False):
+        """
+        download the Mascaret executable
+        :param dll_only : if True, only the dll are downloaded
+        :return: True if all expected files are present after download
+        """
         url_base = "https://raw.githubusercontent.com/Artelia/Exe_Mascaret/"
-        # branch_test
         branch = "master"
         url_path = posixpath.join(url_base, branch)
         cl_load = ClassDownloadMasc(self.masplugPath, url_path, self)
-        dico = {"bin": ["mascaret.exe", "mascaret_linux", "conf.json"]}
 
-        cl_load.download_dir(dico)
+        files_to_download = {"lib/api": ["libmascaret.so", "libmascaret.dll"]}
+        if not dll_only:
+            files_to_download.update({"bin": ["mascaret.exe", "mascaret_linux", "conf.json"]})
+
+        cl_load.download_dir(files_to_download)
+
+        # Validate files after download to expose an explicit status to callers.
+        missing_files = []
+        for directory, filenames in files_to_download.items():
+            for filename in filenames:
+                path_file = os.path.join(self.masplugPath, directory, filename)
+                if not os.path.isfile(path_file):
+                    missing_files.append(path_file)
+
+        if missing_files:
+            self.add_info(
+                "Missing files after download: {}".format(", ".join(missing_files)),
+                dbg=True,
+            )
+            return False
+        return True
 
     def fct_scores(self):
         dlg = ClassScoresDialog(self)

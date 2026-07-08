@@ -17,4 +17,5 @@ Mascaret/.idea/*
 .idea/*
 .vscode/*
 .ruff_cache/*
-
+*.dll
+*.so
