@@ -232,8 +232,20 @@ class GraphResult(GraphCommonNew):
             for var in data["y_var"]:
                 axe, rg = self.data_to_curve[idx]
                 courbe = self.ax[axe]["curves"][rg]
-                courbe.set_data(data[data["x_var"]], data[var])
-                courbe.set_visible(True)
+                x_values = data.get(data.get("x_var", x_var), [])
+                y_values = data.get(var, [])
+
+                # Avoid matplotlib shape mismatch when one series is empty or inconsistent.
+                if x_values and y_values and len(x_values) == len(y_values):
+                    courbe.set_data(x_values, y_values)
+                    courbe.set_visible(True)
+                elif y_values and x_values:
+                    x_values = x_values[: len(y_values)]
+                    courbe.set_data(x_values, y_values)
+                    courbe.set_visible(True)
+                else:
+                    courbe.set_data([], [])
+                    courbe.set_visible(False)
                 idx += 1
 
         if all_vis:
