@@ -203,8 +203,9 @@ class GraphProfilResultDialog(QWidget):
                         self.val_prof_ref[pk]["zrightminbed"] = prof["zrightminbed"][id]
                         self.val_prof_ref[pk]["branch"] = prof["branchnum"][id]
 
-                    except Exception:
-                        pass
+                    except (KeyError, ValueError, TypeError, AttributeError):
+                        # Remove the incomplete entry so downstream code does not see partial data
+                        self.val_prof_ref.pop(pk, None)
 
     def get_profil_plani(self):
         self.plani_graph = {}

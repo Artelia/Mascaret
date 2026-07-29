@@ -1707,35 +1707,35 @@ class GraphProfil(GraphCommon):
 
     def zoom_fun(self, event):
         # get the current x and y limits
-        try:
-            base_scale = 1.5
-            cur_xlim = self.axes.get_xlim()
-            cur_ylim = self.axes.get_ylim()
-            cur_xrange = (cur_xlim[1] - cur_xlim[0]) * 0.5
-            cur_yrange = (cur_ylim[1] - cur_ylim[0]) * 0.5
-            xdata = event.xdata  # get event x location
-            ydata = event.ydata  # get event y location
-            # print(event.button)
-            if event.button == "up":
-                # deal with zoom in
-                scale_factor = 1 / base_scale
-            elif event.button == "down":
-                # deal with zoom out
-                scale_factor = base_scale
-            else:
-                # deal with something that should never happen
-                scale_factor = 1
-                # print event.button
-            # set new limits
-            self.axes.set_xlim(
-                [xdata - cur_xrange * scale_factor, xdata + cur_xrange * scale_factor]
-            )
-            self.axes.set_ylim(
-                [ydata - cur_yrange * scale_factor, ydata + cur_yrange * scale_factor]
-            )
-            self.fig.canvas.draw()  # force re-draw
-        except Exception:
-            pass
+        if event.xdata is None or event.ydata is None:
+            # cursor is outside the axes — nothing to zoom
+            return
+        base_scale = 1.5
+        cur_xlim = self.axes.get_xlim()
+        cur_ylim = self.axes.get_ylim()
+        cur_xrange = (cur_xlim[1] - cur_xlim[0]) * 0.5
+        cur_yrange = (cur_ylim[1] - cur_ylim[0]) * 0.5
+        xdata = event.xdata  # get event x location
+        ydata = event.ydata  # get event y location
+        # print(event.button)
+        if event.button == "up":
+            # deal with zoom in
+            scale_factor = 1 / base_scale
+        elif event.button == "down":
+            # deal with zoom out
+            scale_factor = base_scale
+        else:
+            # deal with something that should never happen
+            scale_factor = 1
+            # print event.button
+        # set new limits
+        self.axes.set_xlim(
+            [xdata - cur_xrange * scale_factor, xdata + cur_xrange * scale_factor]
+        )
+        self.axes.set_ylim(
+            [ydata - cur_yrange * scale_factor, ydata + cur_yrange * scale_factor]
+        )
+        self.fig.canvas.draw()  # force re-draw
 
     def reverse_prof(self):
         """

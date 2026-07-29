@@ -191,11 +191,7 @@ class TaskBLUE(QgsTask):
             if self.del_inter_assim:
                 target = os.path.join(path_scen, f"run_{self.ctrl_type}")
                 if os.path.isdir(target):
-                    try:
-                        shutil.rmtree(target, ignore_errors=True)
-                    except Exception:
-                        # Ignore all remaining errors to prevent task crash
-                        pass
+                    shutil.rmtree(target, ignore_errors=True)
         except subprocess.CalledProcessError as e:
             results["error"] = f"Process failed with exit code {e.returncode}: {e.stderr}"
         except Exception as e:

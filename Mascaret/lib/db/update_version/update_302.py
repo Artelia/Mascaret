@@ -174,8 +174,10 @@ class ClassUpdate302:
                                         )
                                         dico_zmax[pknum] = rows[0][0]
                                 list_value.append([id_runs, "opt", "zmax", json.dumps(dico_zmax)])
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                print(
+                                    f"Could not compute zmax for id_runs={id_runs}: {e}"
+                                )
                     sql = (
                         "INSERT INTO "
                         "{schema}.runs_graph(id_runs, type_res,var,val) "
