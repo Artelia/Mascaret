@@ -20,7 +20,7 @@ email                :
 """
 import copy
 import os
-from defusedxml.ElementTree import parse as et_parse
+from xml.etree.ElementTree import parse as et_parse
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
 from .Fct_model_file import fmt, check_none, indent, backup_file, to_float_or_zero
