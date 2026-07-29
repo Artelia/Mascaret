@@ -32,6 +32,8 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    7.0.4 : Fixed: replaced non-native Python module with QGIS-native implementation
+            Fixed bug preventing chart display errors when database data is incomplete
     7.0.3 : Remove the Mascaret library from the repository and automatically download it if it does not exist.
             Fixed bugs in export-data: correct All Scenarii button behavior
             Fixed SQL security issues
