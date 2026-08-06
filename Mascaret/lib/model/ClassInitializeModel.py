@@ -227,7 +227,7 @@ class ClassInitializeModel:
         """
         fichier_run = os.path.join(model_folder, "FichierCas.txt")
         with open(fichier_run, "w") as fichier:
-            fichier.write(f"'{name_xcas}'\n")
+            fichier.write(f"{name_xcas}\n")
 
     def mascaret_init(self, scen, up_param=None):
         """Initialize and prepare Mascaret model files for a scenario.
