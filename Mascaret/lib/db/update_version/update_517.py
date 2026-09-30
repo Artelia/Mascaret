@@ -17,7 +17,7 @@ email                :
  *                                                                         *
  ***************************************************************************/
 """
-from lib.ClassUpdateBedDialog import update_all_bed_geometry
+from Mascaret.lib.ClassUpdateBedDialog import update_all_bed_geometry
 from lib.db import MasObject as Maso
 
 

@@ -867,14 +867,7 @@ class ClassMasDatabase(object):
             :param  cascade (bool) : If CASCADE DROP
             :param verbose: (bool) display sql commande
         """
-        if cascade is True:
-            qry = (
-                """DROP SCHEMA {schema}.{table} CASCADE;"""
-                if cascade is True
-                else """DROP SCHEMA {schema}.{table};"""
-            )
-        else:
-            qry = """DROP SCHEMA {schema}.{table};"""
+        qry = pgsql.SQL("DROP TABLE {schema}.{table}" + (" CASCADE" if cascade else "") + ";")
         qry = qry.format(schema=self.schema_id, table=pgsql.Identifier(table_name))
         if verbose:
             self.mgis.add_info(qry.as_string(self.con))
