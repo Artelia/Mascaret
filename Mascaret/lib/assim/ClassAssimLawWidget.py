@@ -597,6 +597,9 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
 
         is_active = item.checkState() == self.qt_check_stat.Checked
         law_data = self.d_laws.get(self.cur_perturb_var, {}).get(id_law, {})
+        if law_data.get("active") == is_active:
+            return
+
         source_law = law_data.get("source_law", self.cur_source)
 
         sql = (
@@ -609,7 +612,6 @@ class ClassAssimLawWidget(BASE, FORM_CLASS):
         if id_law in self.d_laws.get(self.cur_perturb_var, {}):
             self.d_laws[self.cur_perturb_var][id_law]["active"] = is_active
 
-        self.display_laws()
         self.draw_law_rb()
         self.update_law_edit_state()
 
