@@ -51,8 +51,11 @@ class ClassSettingsDialog(QDialog):
         #     self.ui.apiChbox.hide()
         # api
         self.ui.apiChbox.setChecked(self.mgis.cond_api)
+        # forced task usage
+        self.mgis.task_use = True
         self.ui.taskQChbox.setChecked(self.mgis.task_use)
-
+        self.ui.taskQChbox.hide()
+        
         self.ui.debugModeChbox.setChecked(self.mgis.DEBUG)
         # DB
         # self.ui.db_loadAllChbox.setChecked(self.mgis.mdb.LOAD_ALL)
