@@ -837,4 +837,4 @@ class ClassBCWriter:
             self._write_obs_loi(
                 nom, type_, obs, liste_stations, obs_stations, pattern, ref_dates, date_debut
             )
-            return ""
+        return ""
