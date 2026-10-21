@@ -21,7 +21,7 @@ qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 
 
-version=7.0.7
+version=7.0.8
 
 author=Artelia
 email=mehdi-pierre.daou@arteliagroup.com
@@ -32,6 +32,7 @@ email=mehdi-pierre.daou@arteliagroup.com
 
 # Uncomment the following line and add your changelog:
 changelog=
+    7.0.8 : Fixed bug of Zbreak in hydraulic structures table.
     7.0.7 : Fixed multiple-observation handling for data assimilation.
     7.0.6 : Fixed redundant updates when the assimilation law state is unchanged.
             Fixed typos + icons
