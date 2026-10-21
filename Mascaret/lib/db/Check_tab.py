@@ -111,6 +111,7 @@ class CheckTab:
             "7.0.5",
             "7.0.6",
             "7.0.7",
+            "7.0.8",
         ]
         self.dico_modif = {
             "3.0.0": {
@@ -323,6 +324,14 @@ class CheckTab:
             "7.0.5": {},
             "7.0.6": {},
             "7.0.7": {},
+            "7.0.8":{ "alt_tab": [
+                    {"tab": "struct_config",
+                        "sql": [
+                            "ALTER TABLE {0}.struct_config ADD COLUMN IF "
+                            "NOT EXISTS zbreak double precision DEFAULT 10000;",
+                        ],
+                    },
+                ]},
             # '3.0.x': { },
         }
 

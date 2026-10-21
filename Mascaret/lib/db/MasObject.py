@@ -1730,6 +1730,7 @@ class struct_config(MasObject):
             ("id_prof_ori", "integer"),
             ("erase_flag", "boolean NOT NULL DEFAULT FALSE"),
             ("comment", "text"),
+            ("zbreak", "double precision"),
             ("CONSTRAINT cle_struct_conf", "PRIMARY KEY (id)"),
         ]
 
