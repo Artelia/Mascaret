@@ -19,3 +19,5 @@ Mascaret/.idea/*
 .ruff_cache/*
 *.dll
 *.so
+.knowledge/*
+_pr_*
