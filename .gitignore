@@ -15,3 +15,7 @@ icones/Thumbs.db
 *.phy
 Structure/test
 api/test.py
+*.dll
+*.so
+.knowledge/*
+_pr*.txt
