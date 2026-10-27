@@ -1397,7 +1397,6 @@ $BODY$
                 outs, err = p.communicate()
                 self.mgis.add_info("Import File :{0}".format(file), dbg=True)
                 # self.mgis.add_info("{0}".format(outs.code('utf-8')))
-                p.wait()
                 if len(err) > 0:
                     self.mgis.add_info(str(err))
                     # self.mgis.add_info("{0}".format(err.code('utf-8')))

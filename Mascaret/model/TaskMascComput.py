@@ -182,7 +182,6 @@ class TaskMascComput(QgsTask):
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
             )
-            p.wait()
             txt = "{0}".format(p.communicate()[0].decode("utf-8"))
             txt1 = "{0}".format(p.communicate()[1].decode("utf-8"))
             self.log_mess(txt, "InfoRun")
