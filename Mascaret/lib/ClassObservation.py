@@ -301,7 +301,6 @@ class ClassEventObsDialog(QDialog):
             succes, recs = self.read_octave(file_name_path)
         else:
             succes, recs = self.read_csv(file_name_path)
-
         # recs data frame
         dbls = None
         if succes:
@@ -336,13 +335,17 @@ class ClassEventObsDialog(QDialog):
             self.mdb.execute(sql, schema=True)
             recs = recs.drop(columns=["fichier"])
             recs = recs[["code", "date", "type", "comment", "valeur"]]
-
             rows_to_insert = []
+            msg_code = None
             for rec in recs.itertuples(index=False, name=None):
                 clean_row = []
-                for val in rec:
+                for idx, val in enumerate(rec):
                     if isinstance(val, str) and len(val) >= 2 and val[0] == "'" and val[-1] == "'":
-                        clean_row.append(val[1:-1])
+                        val = val[1:-1]
+                        if idx == 0:  # code column
+                            val = val[:10]
+                            msg_code = "Warning: Code truncated to 10 characters "
+                        clean_row.append(val)
                     else:
                         clean_row.append(val)
                 rows_to_insert.append(tuple(clean_row))
@@ -362,6 +365,8 @@ class ClassEventObsDialog(QDialog):
                 msg = "Incorrect format for observations"
                 QMessageBox.warning(None, "WARNING:", msg)
                 return
+            if msg_code:
+                QMessageBox.warning(None, "WARNING:", msg_code)
 
             # check if type and code existant
             dbls = self.mdb.run_query(
