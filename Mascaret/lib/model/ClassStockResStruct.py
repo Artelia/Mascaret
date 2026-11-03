@@ -300,6 +300,8 @@ class ClassStockResStruct:
                 pknum = self._get_weir_pknum(name)
                 if pknum is None:
                     continue
+                dico_pk[pknum] = pknum
+                dico_time[pknum] = data["TIME"]
                 values.append(
                     [
                         id_run,

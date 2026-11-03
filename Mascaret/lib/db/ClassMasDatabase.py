@@ -1242,6 +1242,8 @@ $BODY$
         """
         if where:
             where = "WHERE {0}".format(where)
+        else:
+            where = ""
 
         qry = pgsql.SQL("DELETE FROM {schema}.{table} {where} ;").format(
             schema=self.schema_id, table=pgsql.Identifier(table), where=pgsql.SQL(where)

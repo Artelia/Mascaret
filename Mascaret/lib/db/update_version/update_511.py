@@ -38,7 +38,7 @@ class ClassUpdate511:
         lst_tab = self.mdb.list_tables(schema=self.mdb.SCHEMA)
         lst_admin_tab = self.mdb.select("admin_tab", list_var=["table_"])
         if "results_old" in lst_tab:
-            self.mdb.drop_table("result_old")
+            self.mdb.drop_table("results_old")
         if "results_old" in lst_admin_tab["table_"]:
             self.mdb.delete("admin_tab", where="table_= 'results_old'")
             new_ver = self.cht.get_version()
