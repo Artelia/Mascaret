@@ -649,6 +649,8 @@ class ClassMobilObjectMet2Widget(QWidget):
                     idx_time = -1
 
             val = ctrl_get_value(prm["ctrl"], cc_is_checked=True)
+            if val is None and "vdef" in prm:
+                val = prm["vdef"]
             if nm_var == "VELOFGOPEN":
                 unit = ctrl_get_value(self.ui.cb_unit_open_vel, cc_is_checked=True)
                 val = val / unit
