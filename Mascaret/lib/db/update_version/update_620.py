@@ -203,8 +203,8 @@ class ClassUpdate620:
                     list_var=["gid", "linknum"],
                 )
                 conv = {numlink: gid for gid, numlink in zip(numlinks["gid"], numlinks["linknum"])}
-                id_typ = [conv[id] for id in id_typ]
-                dsrc[f"id_{typ}"] = [conv[id] for id in dsrc[f"id_{typ}"]]
+                id_typ = [conv[id] for id in id_typ if id in conv]
+                dsrc[f"id_{typ}"] = [conv.get(id) for id in dsrc[f"id_{typ}"]]
 
             lst_id = ",".join([f"'{id}'" for id in id_typ])
             if typ == "weirs":
@@ -215,6 +215,16 @@ class ClassUpdate620:
             info_value = self.mdb.select(
                 f"{typ}", where=f"gid IN ({lst_id})", order="gid", list_var=lst_typ
             )
+            found = set(info_value["gid"])
+            ignored = [id for id in id_typ if id not in found]
+            if ignored:
+                msg = f"{typ}_mob_val : id ignorés (absents de la table {typ}) : {ignored}"
+                print(f"[conv_tab {typ}] {msg}")
+                self.mgis.add_info(msg)
+            id_typ = [id for id in id_typ if id in found]
+            keep = [i for i, id in enumerate(dsrc[f"id_{typ}"]) if id in found]
+            dsrc = {col: [vals[i] for i in keep] for col, vals in dsrc.items()}
+
             # ***************** Convert values ********************
             d_zbas = {}
             for idx, nvar in enumerate(dsrc["name_var"]):
@@ -277,7 +287,7 @@ class ClassUpdate620:
                     err = self.mdb.update(f"{typ}", {idx: {"z_crest": val}}, var="gid")
                     if err:
                         break
-            if not err:
+            if not err and dtarget["name_var"]:
                 err = self.mdb.insert2(f"{typ}_mob_val", dtarget)
             if err:
                 self.mgis.add_info(f"Convert the {typ}_mob_val - ERROR")
