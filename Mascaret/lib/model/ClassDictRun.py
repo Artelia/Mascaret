@@ -359,6 +359,11 @@ class ClassDictRun:
         if not scen_data.get("name"):
             self.mgis.add_info("Warning: No scenario found.")
             return {}
+        # Truncate to the minute (observation resolution) so event bounds match observation dates
+        for key in ("starttime", "endtime"):
+            scen_data[key] = [
+                d.replace(second=0, microsecond=0) if d else d for d in scen_data[key]
+            ]
         return scen_data
 
     def get_folder(self, scen):

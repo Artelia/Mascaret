@@ -35,6 +35,8 @@ changelog=
     7.0.9 : Fixed NULL values saved for CRITDTREG and DIRFG in hydraulic structures.
             Fixed the index error in database updates 6.2.0 
             Fixed the SQL error in database updates 5.1.2 and 5.1.5.
+            Fixed laws starting one hour late: events dates truncated to the minute.
+            Fixed the initial crest level (ZINITREG) of mobile weirs in the initialisation run.
     7.0.8 : Fixed bug of Zbreak in hydraulic structures table.
             Fixed the limit code to 10 characters and add warning
     7.0.7 : Fixed multiple-observation handling for data assimilation.

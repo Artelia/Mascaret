@@ -75,22 +75,17 @@ def modif_seuil(mdb, seuil, dico_str):
                 seuil[ls].append(None)
     if any(seuil["active_mob"]):
         rows = mdb.run_query(
-            "SELECT id_weirs, name_var, value FROM {schema}.weirs_mob_val "
-            "WHERE id_weirs IN (SELECT gid FROM {schema}.weirs WHERE active_mob)",
+            "SELECT id_weirs, value FROM {schema}.weirs_mob_val "
+            "WHERE name_var = 'ZINITREG' "
+            "AND id_weirs IN (SELECT gid FROM {schema}.weirs WHERE active_mob)",
             fetch=True,
             schema=True,
         )
-        dico_mob = {"id_weirs": [], "name_var": [], "value": []}
-        for id_weirs, name_var, value in rows:
-            dico_mob["id_weirs"].append(id_weirs)
-            dico_mob["name_var"].append(name_var)
-            dico_mob["value"].append(value)
-        for id_w in dico_mob["id_weirs"]:
+        for id_w, value in rows or []:
             try:
                 id_s = seuil["gid"].index(id_w)
-                id_n = dico_mob["name_var"].index("ZINITREG")
-                seuil["z_crest"][id_s] = dico_mob["value"][id_n]
-            except ValueError:
+                seuil["z_crest"][id_s] = float(value)
+            except (ValueError, TypeError):
                 continue
     return seuil, loi_struct
 
